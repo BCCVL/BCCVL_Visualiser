@@ -24,5 +24,11 @@ Vagrant::Config.run do |config|
     puppet.manifest_file  = "centos_dependencies.pp"
     puppet.manifests_path = "puppet/manifests"
   end
+  
+  # Install Pyramid 
+  config.vm.provision :puppet do |puppet|
+    puppet.manifest_file  = "install_pyramid.pp"
+    puppet.manifests_path = "puppet/manifests"
+  end
 
 end

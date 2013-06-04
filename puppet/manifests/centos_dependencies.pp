@@ -89,6 +89,19 @@ class centos_dependencies{
     ensure    => present,
   }
 
+  # Allows for 'import setuptools' in python
+  package { "python-setuptools.noarch":
+    ensure    => present,
+  }
+
+  # Install virtualenv package
+  exec { 'easy_install virtualenv':
+    command => 'easy_install virtualenv',
+    path    => '/usr/local/bin/:/usr/bin/:/bin/',
+    require => Package['python-setuptools.noarch'],
+  }
+
+
 }
 
 include centos_dependencies
