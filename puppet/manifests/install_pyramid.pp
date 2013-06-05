@@ -17,6 +17,7 @@ class install_pyramid {
     timeout => 30 * 60,                        # Allow 30 mins to install
     require => Exec['virtualenv --no-site-packages env'],
   }
+
 }
 
 include install_pyramid

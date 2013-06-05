@@ -32,6 +32,10 @@
 # Allow Pyramid dev connections on tcp port 8080
 #
  iptables -A INPUT -p tcp -m state --state NEW -m tcp --dport 8080 -j ACCEPT
+#
+# Allow PostgreSQL dev connections on tcp port 5432
+#
+ iptables -A INPUT -p tcp -m state --state NEW -m tcp --dport 5432 -j ACCEPT
 
 #
 # Reject all other input/forward packets
