@@ -18,12 +18,12 @@ Getting Started
 3. Install the latest version of Vagrant: http://downloads.vagrantup.com/
 
 
-4. Add the vagrant-vbguest to ensure that your VM has guest additions installed
+4. Add the vagrant-vbguest plugin to ensure that your VM has guest additions installed
 
         vagrant plugin install vagrant-vbguest
 
     Note: If you don't do this, your guest additions will be removed by the first
-    yum update, and won't return :(
+    yum update, and won't return without manual intervention :(
 
 
 5. Clone this repo.
@@ -33,7 +33,7 @@ Getting Started
         git clone git://github.com/BCCVL/PyramidGeoVis.git
 
     _read and write_:
-    
+
         git clone git@github.com:BCCVL/PyramidGeoVis.git
 
 
