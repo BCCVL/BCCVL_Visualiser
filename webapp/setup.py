@@ -16,9 +16,9 @@ requires = [
     'waitress',
     ]
 
-setup(name='my_project',
+setup(name='webapp',
       version='0.0',
-      description='my_project',
+      description='webapp',
       long_description=README + '\n\n' + CHANGES,
       classifiers=[
         "Programming Language :: Python",
@@ -33,12 +33,12 @@ setup(name='my_project',
       packages=find_packages(),
       include_package_data=True,
       zip_safe=False,
-      test_suite='my_project',
+      test_suite='webapp',
       install_requires=requires,
       entry_points="""\
       [paste.app_factory]
-      main = my_project:main
+      main = webapp:main
       [console_scripts]
-      initialize_my_project_db = my_project.scripts.initializedb:main
+      initialize_webapp_db = webapp.scripts.initializedb:main
       """,
       )
