@@ -13,7 +13,7 @@ class install_pyramid {
   exec { 'easy_install pyramid':
     command => 'easy_install pyramid',
     cwd     => '/vagrant/env/bin',
-    path    => '/usr/local/bin/:/usr/bin/:/bin/',
+    path    => '/vagrant/env/bin/',
     timeout => 30 * 60,                        # Allow 30 mins to install
     require => Exec['virtualenv --no-site-packages env'],
   }
