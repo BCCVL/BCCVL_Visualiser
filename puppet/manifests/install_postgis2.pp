@@ -1,5 +1,13 @@
 class install_postgis2 {
 
+  package { 'postgresql92.x86_64':
+    ensure => latest,
+  }
+
+  package { 'postgresql92-libs':
+    ensure => latest,
+  }
+
   package { 'postgresql92-devel.x86_64':
     ensure => latest,
   }
