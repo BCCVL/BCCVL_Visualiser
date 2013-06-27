@@ -34,5 +34,8 @@ nosetests.xml
 .project
 .pydevproject
 
+# Virtual Env
+env
+
 # Vagrant
 .vagrant
