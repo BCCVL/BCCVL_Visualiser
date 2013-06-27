@@ -16,9 +16,9 @@ requires = [
     'waitress',
     ]
 
-setup(name='webapp',
+setup(name='WebApp',
       version='0.0',
-      description='webapp',
+      description='WebApp',
       long_description=README + '\n\n' + CHANGES,
       classifiers=[
         "Programming Language :: Python",
@@ -39,6 +39,6 @@ setup(name='webapp',
       [paste.app_factory]
       main = webapp:main
       [console_scripts]
-      initialize_webapp_db = webapp.scripts.initializedb:main
+      initialize_WebApp_db = webapp.scripts.initializedb:main
       """,
       )
