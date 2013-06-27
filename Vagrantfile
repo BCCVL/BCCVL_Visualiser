@@ -1,6 +1,13 @@
 # -*- mode: ruby -*-
 # vi: set ft=ruby :
 
+# The settings that will be used to create a postgresql environment for your pyramid webapp.
+# This includes a superuser, and a database that will have the postgis2 extensions.
+# When you change these, don't forget to also change them inside your app config.
+POSTGRESQL_SUPERUSER_USERNAME = "pyramid"
+POSTGRESQL_SUPERUSER_PASSWORD = "pyramid_password"
+POSTGRESQL_PYRAMID_DATABASE   = "pyramid_db"
+
 Vagrant::Config.run do |config|
   config.vm.box     = "centos-64-x64-vbox4210"
   config.vm.box_url = "http://puppet-vagrant-boxes.puppetlabs.com/centos-64-x64-vbox4210.box"
@@ -26,7 +33,7 @@ Vagrant::Config.run do |config|
     puppet.manifests_path = "puppet/manifests"
   end
 
-  # Install Pyramid 
+  # Install Pyramid
   config.vm.provision :puppet do |puppet|
     puppet.manifest_file  = "install_pyramid.pp"
     puppet.manifests_path = "puppet/manifests"
@@ -34,6 +41,11 @@ Vagrant::Config.run do |config|
 
   # Install PostGIS2
   config.vm.provision :puppet do |puppet|
+    puppet.facter = {
+      "postgresql_superuser_username" => POSTGRESQL_SUPERUSER_USERNAME,
+      "postgresql_superuser_password" => POSTGRESQL_SUPERUSER_PASSWORD,
+      "postgresql_pyramid_database"   => POSTGRESQL_PYRAMID_DATABASE,
+    }
     puppet.manifest_file  = "install_postgis2.pp"
     puppet.manifests_path = "puppet/manifests"
   end
