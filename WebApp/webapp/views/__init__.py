@@ -3,19 +3,22 @@ from pyramid.view import view_config
 
 from sqlalchemy.exc import DBAPIError
 
-from .models import (
+from webapp.models import (
     DBSession,
-#    MyModel,
+    Species,
+    Occurrence,
     )
 
 
-@view_config(route_name='home', renderer='templates/mytemplate.pt')
+@view_config(route_name='home', renderer='../templates/mytemplate.pt')
 def my_view(request):
-    return {'one': 'one', 'project': 'WebApp'}
-#    try:
-#        one = DBSession.query(MyModel).filter(MyModel.name == 'one').first()
-#    except DBAPIError:
-#        return Response(conn_err_msg, content_type='text/plain', status_int=500)
+    try:
+        one = DBSession.query(Species).filter(Species.name == 'one').first()
+    except DBAPIError:
+        return Response(conn_err_msg, content_type='text/plain', status_int=500)
+    return {'one': one, 'project': 'WebApp'}
+
+#def species_search_result(request):
 #    return {'one': one, 'project': 'WebApp'}
 
 conn_err_msg = """\
