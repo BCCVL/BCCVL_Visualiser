@@ -42,5 +42,6 @@ setup(name='WebApp',
       main = webapp:main
       [console_scripts]
       initialize_WebApp_db = webapp.scripts.initializedb:main
+      destroy_WebApp_db = webapp.scripts.destroydb:main
       """,
       )
