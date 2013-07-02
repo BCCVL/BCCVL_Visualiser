@@ -8,6 +8,10 @@ class install_postgis2 {
     ensure => latest,
   }
 
+#  package { 'postgresql-devel.x86_64':
+#    ensure => latest,
+#  }
+
   package { 'postgresql92-devel.x86_64':
     ensure => latest,
   }
@@ -55,6 +59,16 @@ class install_postgis2 {
   }~>
   # Create the PostGIS extension in the db
   exec { "sudo -u postgres psql -d $postgresql_pyramid_database -c \"CREATE EXTENSION POSTGIS;\"":
+    path        => '/usr/bin',
+    refreshonly => true,
+  }
+  # Add the pyramid test db
+  exec { "sudo -u postgres createdb $postgresql_pyramid_test_database -O $postgresql_superuser_username":
+    path        => '/usr/bin',
+    refreshonly => true,
+  }~>
+  # Create the PostGIS extension in the db
+  exec { "sudo -u postgres psql -d $postgresql_pyramid_test_database -c \"CREATE EXTENSION POSTGIS;\"":
     path        => '/usr/bin',
     refreshonly => true,
   }
