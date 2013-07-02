@@ -27,12 +27,21 @@ class install_postgis2 {
     require => Package['postgresql92-server'],
   }
 
+  # ensure the pg_hba.conf file allows local connections from pyramid user.
+  file { '/var/lib/pgsql/9.2/data/pg_hba.conf':
+    source  => [
+      "/vagrant/puppet/files/pg_hba.conf",
+    ],
+    require => Package["postgresql92-server"],
+  }
+
   # setup the postgresql service
   # only do this when postgis is installed
   exec { 'service postgresql-9.2 initdb':
     subscribe   => Package["postgis2_92"],
     refreshonly => true,
     path        => '/sbin/',
+    require     => File["/var/lib/pgsql/9.2/data/pg_hba.conf"],
   }
 
   # start the postgresql service
@@ -61,7 +70,7 @@ class install_postgis2 {
   exec { "sudo -u postgres psql -d $postgresql_pyramid_database -c \"CREATE EXTENSION POSTGIS;\"":
     path        => '/usr/bin',
     refreshonly => true,
-  }
+  }~>
   # Add the pyramid test db
   exec { "sudo -u postgres createdb $postgresql_pyramid_test_database -O $postgresql_superuser_username":
     path        => '/usr/bin',
