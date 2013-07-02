@@ -51,3 +51,8 @@ def self.Cat(a)
 
     hello = 's
     .
+
+ALA Web Services API
+===========================
+
+http://biocache.ala.org.au/ws
