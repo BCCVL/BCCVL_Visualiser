@@ -40,12 +40,6 @@ Vagrant::Config.run do |config|
     puppet.manifests_path = "puppet/manifests"
   end
 
-  # Install Pyramid
-  config.vm.provision :puppet do |puppet|
-    puppet.manifest_file  = "install_pyramid.pp"
-    puppet.manifests_path = "puppet/manifests"
-  end
-
   # Install PostGIS2
   config.vm.provision :puppet do |puppet|
     puppet.facter = {
@@ -57,5 +51,12 @@ Vagrant::Config.run do |config|
     puppet.manifest_file  = "install_postgis2.pp"
     puppet.manifests_path = "puppet/manifests"
   end
+
+  # Install Pyramid
+  config.vm.provision :puppet do |puppet|
+    puppet.manifest_file  = "install_pyramid.pp"
+    puppet.manifests_path = "puppet/manifests"
+  end
+
 
 end
