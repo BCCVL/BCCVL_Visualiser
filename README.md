@@ -1,13 +1,13 @@
-PyramidGeoVis
-=============
+BCCVL_Visualiser
+================
 
-A Pyramid web app to act as the Geo Server (Maps and Features) for the Plone client (PloneGeoVis). Expected to support WFS, GeoJSON, and WMS.
+A Pyramid web app to act as the Geo Server (Maps and Features) for the client. Expected to support WFS, GeoJSON, and WMS.
 
 Getting Started
 -------------------
 
 1. Install the latset version of git.
-    
+
     _ubuntu_ instructions:
 
         sudo apt-get install git-core
@@ -30,11 +30,11 @@ Getting Started
 
     _read only_:
 
-        git clone git://github.com/BCCVL/PyramidGeoVis.git
+        git clone git://github.com/BCCVL/BCCVL_Visualiser.git
 
     _read and write_:
 
-        git clone git@github.com:BCCVL/PyramidGeoVis.git
+        git clone git@github.com:BCCVL/BCCVL_Visualiser.git
 
 
 6. Now start your VM, this should be done from your repo folder (where the Vagrantfile is)
@@ -43,7 +43,7 @@ Getting Started
 
     Note: The first time you do this, it will download the _box_. The _box_ is
     CentOS 6 (x64). It will only download it once. Once it's downloaded, it will store it
-    locally for future use.
+    locally for future use. Once the machine comes up, it will be provisioned.
 
 
 7. Now your VM is up and running. You can ssh into your VM:
