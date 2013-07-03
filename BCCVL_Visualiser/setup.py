@@ -19,9 +19,9 @@ requires = [
     'waitress',
     ]
 
-setup(name='WebApp',
+setup(name='BCCVL_Visualiser',
       version='0.0',
-      description='WebApp',
+      description='BCCVL_Visualiser',
       long_description=README + '\n\n' + CHANGES,
       classifiers=[
         "Programming Language :: Python",
@@ -36,13 +36,13 @@ setup(name='WebApp',
       packages=find_packages(),
       include_package_data=True,
       zip_safe=False,
-      test_suite='webapp',
+      test_suite='bccvl_visualiser',
       install_requires=requires,
       entry_points="""\
       [paste.app_factory]
-      main = webapp:main
+      main = bccvl_visualiser:main
       [console_scripts]
-      initialize_WebApp_db = webapp.scripts.initializedb:main
-      destroy_WebApp_db = webapp.scripts.destroydb:main
+      initialize_BCCVL_Visualiser_db = bccvl_visualiser.scripts.initializedb:main
+      destroy_BCCVL_Visualiser_db = bccvl_visualiser.scripts.destroydb:main
       """,
       )

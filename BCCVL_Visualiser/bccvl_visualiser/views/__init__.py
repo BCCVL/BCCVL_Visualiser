@@ -3,7 +3,7 @@ from pyramid.view import view_config
 
 from sqlalchemy.exc import DBAPIError
 
-from webapp.models import (
+from bccvl_visualiser.models import (
     DBSession,
     Species,
     Occurrence,

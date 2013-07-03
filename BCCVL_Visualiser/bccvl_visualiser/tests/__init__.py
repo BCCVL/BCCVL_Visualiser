@@ -4,8 +4,8 @@ import pprint
 
 from pyramid import testing
 
-from webapp.models import DBSession
-from webapp.models import (
+from bccvl_visualiser.models import DBSession
+from bccvl_visualiser.models import (
     Base,
     Species,
     Occurrence,
@@ -51,7 +51,7 @@ class TestMyCode(unittest.TestCase):
         self.assertEqual(len(kookaburra.occurrences), 2)
 
     def test_ala_search(self):
-        from webapp.models import (
+        from bccvl_visualiser.models import (
             Species,
             )
         json_obj = Species.ala_search_for_species('kookaburra')
