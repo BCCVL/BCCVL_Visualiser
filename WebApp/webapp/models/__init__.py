@@ -11,9 +11,11 @@ from sqlalchemy.ext.declarative import declarative_base
 from sqlalchemy.orm import (
     scoped_session,
     sessionmaker,
+    relationship,
+    backref,
     )
 
-from geoalchemy import *
+from geoalchemy2 import *
 
 from zope.sqlalchemy import ZopeTransactionExtension
 
@@ -61,15 +63,14 @@ class Occurrence(Base):
     id = Column(Integer, primary_key=True)
     # The occurrence MUST be associated with a species
     species_id = Column(Integer, ForeignKey("species.id"), nullable=False)
-    location = GeometryColumn(Point(2))
+    species = relationship("Species", backref=backref('occurrences', order_by=id))
+    location = Column(Geometry(geometry_type='POINT', srid=DEFAULT_PROJECTION))
 
-    def __init__(self, species, location_wkt, projection=DEFAULT_PROJECTION):
+    def __init__(self, location_wkt, projection=DEFAULT_PROJECTION):
         """ Occurrence constructor
 
             Takes the following params:
-                * species      : The species the occurrence will be associated with
                 * location_wkt : A WKT description of the occurrence Point
                 * projection   : The projection as an integer
         """
-        self.species_id = species.id
-        self.location = WKTSpatialElement(location_wkt, projection)
+        self.location = WKTElement(location_wkt, srid=projection)

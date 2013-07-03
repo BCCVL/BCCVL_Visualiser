@@ -39,3 +39,6 @@ env
 
 # Vagrant
 .vagrant
+
+# Editor (vim) Swap Files
+.swp
