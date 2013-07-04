@@ -17,6 +17,7 @@ requires = [
     'zope.sqlalchemy',
     'requests',
     'waitress',
+    'pyramid_xmlrpc',
     ]
 
 setup(name='BCCVL_Visualiser',

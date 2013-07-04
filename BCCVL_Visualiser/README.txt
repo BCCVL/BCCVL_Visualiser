@@ -1,5 +1,5 @@
-WebApp README
-==================
+BCCVL_Visualiser README
+========================
 
 Getting Started
 ---------------
@@ -56,3 +56,7 @@ ALA Web Services API
 ===========================
 
 http://biocache.ala.org.au/ws
+
+Get all the occurrences zipped for EMU, using the LSID as the search keyword. Only give me the longitude, latitude and raw_taxon_name
+
+http://biocache.ala.org.au/ws/webportal/occurrences.gz?q=lsid:urn%3Alsid%3Abiodiversity.org.au%3Aafd.taxon%3Af5b22be3-b523-488a-89fc-39bd21aefb6d&fl=raw_taxon_name,longitude,latitude&pageSize=10000
