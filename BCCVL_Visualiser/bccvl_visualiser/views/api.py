@@ -35,12 +35,12 @@ class ApiView(BaseView):
         """Return the APIs avaialble in Plain Text"""
         return Response(str(self.as_dict()), content_type='text/plain')
 
-    @view_config(name='.xml')
-    def xml(self):
-        """Return the APIs avaialble in XML"""
+    @view_config(name='.xmlrpc')
+    def xmlrpc(self):
+        """Return the APIs avaialble in XMLRPC"""
         log = logging.getLogger(__name__)
         params, method = parse_xmlrpc_request(self.request)
-        log.debug('HERE IN XML LAND, Params: %s', params)
+        log.debug('HERE IN XMLRPC LAND, Params: %s', params)
         return xmlrpc_response(self.as_dict())
 
     def as_dict(self):

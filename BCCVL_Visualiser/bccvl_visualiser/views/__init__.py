@@ -48,16 +48,13 @@ class BaseView(object):
 
         return values
 
-@view_config(route_name='home', renderer='../templates/mytemplate.pt')
-def my_view(request):
+@view_config(route_name='home')
+def home_view(request):
     try:
-        one = DBSession.query(Species).filter(Species.name == 'one').first()
+        DBSession.query(Species).all()
     except DBAPIError:
         return Response(conn_err_msg, content_type='text/plain', status_int=500)
-    return {'one': one, 'project': 'BCCVL_Visualiser'}
-
-#def species_search_result(request):
-#    return {'one': one, 'project': 'WebApp'}
+    return Response('BCCVL Visualiser', content_type='text/plain')
 
 conn_err_msg = """\
 Pyramid is having a problem using your SQL database.  The problem
