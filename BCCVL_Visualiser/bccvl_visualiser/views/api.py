@@ -6,9 +6,7 @@ from pyramid_xmlrpc import *
 from sqlalchemy.exc import DBAPIError
 
 from bccvl_visualiser.models import (
-    DBSession,
-    Species,
-    Occurrence,
+    APICollection
     )
 
 from bccvl_visualiser.views import BaseView
@@ -19,29 +17,35 @@ import logging
 class ApiView(BaseView):
     """The API level view"""
 
-    @view_config(renderer='../templates/mytemplate.pt')
+    @view_config(renderer='../templates/api_template.pt')
     def __call__(self):
-        return {'one': 'test', 'project': 'BCCVL_Visualiser'}
+        return self._to_dict()
 
     @view_config(name='.json', renderer='json')
     def json(self):
         """Return the APIs avaialble in JSON"""
+
         log = logging.getLogger(__name__)
-        log.debug('HERE IN JSON LAND')
-        return self.as_dict()
+        log.debug('API JSON Request')
+
+        return self._to_dict()
 
     @view_config(name='.text')
     def text(self):
         """Return the APIs avaialble in Plain Text"""
-        return Response(str(self.as_dict()), content_type='text/plain')
+
+        return Response(str(self._to_dict()), content_type='text/plain')
 
     @view_config(name='.xmlrpc')
     def xmlrpc(self):
         """Return the APIs avaialble in XMLRPC"""
-        log = logging.getLogger(__name__)
-        params, method = parse_xmlrpc_request(self.request)
-        log.debug('HERE IN XMLRPC LAND, Params: %s', params)
-        return xmlrpc_response(self.as_dict())
 
-    def as_dict(self):
-        return { 'content': 'APIS' }
+        params, method = parse_xmlrpc_request(self.request)
+
+        log = logging.getLogger(__name__)
+        log.debug('API XMLRPC Request: Method: %s, Params: %s', method, params)
+
+        return xmlrpc_response(self._to_dict())
+
+    def _to_dict(self):
+        return APICollection.to_dict()

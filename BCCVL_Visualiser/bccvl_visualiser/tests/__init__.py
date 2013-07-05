@@ -4,17 +4,11 @@ import pprint
 
 from pyramid import testing
 
-from bccvl_visualiser.models import DBSession
-from bccvl_visualiser.models import (
-    Base,
-    Species,
-    Occurrence,
-)
+from bccvl_visualiser.models import *
 
 from sqlalchemy import create_engine
 
 pp = pprint.PrettyPrinter(indent=4)
-
 
 class TestMyCode(unittest.TestCase):
     def setUp(self):
@@ -59,3 +53,15 @@ class TestMyCode(unittest.TestCase):
 
         # Check that we found at least 2 species of Kookaburra
         self.assertTrue(len(json_obj) > 2, "Should find at least 2 species of kookaburra")
+
+    def test_api_class_inheritence(self):
+        self.assertEqual(RasterAPI.identifier(), 'raster')
+
+    def test_api_collection(self):
+        print APICollection.API_CLASSES
+        self.assertTrue(RasterAPI in APICollection.API_CLASSES)
+
+    def test_api_collection_to_dict(self):
+        api_dict = APICollection.to_dict()
+        print api_dict
+        self.assertEqual(api_dict['raster']['name'], 'raster')
