@@ -13,6 +13,18 @@ class centos_dependencies{
     ensure => present,
   }
 
+  package { "libpng-devel.x86_64":
+    ensure => present,
+  }
+
+  package { "gd-devel":
+    ensure => present,
+  }
+
+  package { "giflib-devel.x86_64":
+    ensure => present,
+  }
+
   package { "patch":
     ensure => present,
   }
@@ -49,46 +61,6 @@ class centos_dependencies{
     ensure => present,
   }
 
-  package { "libxml2-devel.x86_64":
-    ensure => present,
-  }
-
-  package { "libxml2-python.x86_64":
-    ensure => present,
-  }
-
-#  # Install libxml2.x86_64
-#  package { "libxml2.x86_64":
-#    provider  => rpm,
-#    ensure    => '2.7.8-1',
-#    source    => "ftp://xmlsoft.org/libxml2/libxml2-2.7.8-1.x86_64.rpm",
-#    require   => Exec['yum groupinstall "Development Tools"'],
-#  }
-#
-#  # Install libxml2-devel.x86_64
-#  package { "libxml2-devel.x86_64":
-#    provider  => rpm,
-#    ensure    => '2.7.8-1',
-#    source    => "ftp://xmlsoft.org/libxml2/libxml2-devel-2.7.8-1.x86_64.rpm",
-#    require   => Package['libxml2.x86_64'],
-#  }
-#
-#  # Install libxml2-python.x86_64
-#  package { "libxml2-python.x86_64":
-#    provider  => rpm,
-#    ensure    => '2.7.8-1',
-#    source    => "ftp://xmlsoft.org/libxml2/libxml2-python-2.7.8-1.x86_64.rpm",
-#    require   => Package['libxml2-devel.x86_64'],
-#  }
-
-  package { "libxslt-devel.x86_64":
-    ensure    => present,
-  }
-
-  package { "libxslt-python.x86_64":
-    ensure    => present,
-  }
-
   # Allows for 'import setuptools' in python
   package { "python-setuptools.noarch":
     ensure    => present,
@@ -114,6 +86,7 @@ class centos_dependencies{
     source => 'http://elgis.argeo.org/repos/6/elgis-release-6-6_0.noarch.rpm',
     provider => rpm,
   }
+
 
   # Install PostgreSQL and PostGIS repos
   package { 'pgdg-centos92-9.2-6':

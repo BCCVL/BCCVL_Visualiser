@@ -11,6 +11,15 @@ requires = [
     'SQLAlchemy',
     'GeoAlchemy2',
     'psycopg2',
+
+# mapscript is now installed during the buildout.
+# it is installed using the cmmi recipe (configure && make && make install)
+
+    # 'mapscript',        # Python Map Server implementation                        
+
+
+    'PIL',              # Python Imaging Library
+    'shapely',          # PostGIS-ish operations in python
     'transaction',
     'pyramid_tm',
     'pyramid_debugtoolbar',

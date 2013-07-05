@@ -8,10 +8,6 @@ class install_postgis2 {
     ensure => latest,
   }
 
-#  package { 'postgresql-devel.x86_64':
-#    ensure => latest,
-#  }
-
   package { 'postgresql92-devel.x86_64':
     ensure => latest,
   }
@@ -32,7 +28,7 @@ class install_postgis2 {
     source  => [
       "/vagrant/puppet/files/pg_hba.conf",
     ],
-    require => Package["postgresql92-server"],
+    require => Exec["service postgresql-9.2 initdb"],
   }
 
   # setup the postgresql service
@@ -41,7 +37,6 @@ class install_postgis2 {
     subscribe   => Package["postgis2_92"],
     refreshonly => true,
     path        => '/sbin/',
-    require     => File["/var/lib/pgsql/9.2/data/pg_hba.conf"],
   }
 
   # start the postgresql service
@@ -49,7 +44,7 @@ class install_postgis2 {
   service { 'postgresql-9.2':
     enable   => true,
     ensure   => 'running',
-    require  => Exec['service postgresql-9.2 initdb'],
+    require  => [ Exec['service postgresql-9.2 initdb'], File["/var/lib/pgsql/9.2/data/pg_hba.conf"] ],
   }
 
   # setup the pyramid postgis user
