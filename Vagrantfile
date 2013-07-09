@@ -9,6 +9,10 @@ POSTGRESQL_SUPERUSER_PASSWORD      = "pyramid_password"
 POSTGRESQL_PYRAMID_DATABASE        = "pyramid_db"
 POSTGRESQL_PYRAMID_TEST_DATABASE   = "pyramid_test_db"
 
+# Remove this once bitbucket certificates are updates for the various
+# python download sites (pypi, etc.).
+PYTHON_WGET_FLAGS = "--no-check-certificate"
+
 Vagrant::Config.run do |config|
   config.vm.box     = "centos-64-x64-vbox4210"
   config.vm.box_url = "http://puppet-vagrant-boxes.puppetlabs.com/centos-64-x64-vbox4210.box"
@@ -36,6 +40,9 @@ Vagrant::Config.run do |config|
 
   # Install Pythons
   config.vm.provision :puppet do |puppet|
+    puppet.facter = {
+      "python_wget_flags"       => PYTHON_WGET_FLAGS,
+    }
     puppet.manifest_file  = "install_pythons.pp"
     puppet.manifests_path = "puppet/manifests"
   end

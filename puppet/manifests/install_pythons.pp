@@ -24,6 +24,33 @@ class install_pythons {
     path    => '/tmp/Python-2.7.3/:/usr/local/bin/:/usr/bin/:/bin/',
   }
 
+  ##
+  # Install virtual env, and upgrade its setuptools version
+  ##
+  exec { "wget https://pypi.python.org/packages/source/v/virtualenv/virtualenv-1.9.1.tar.gz $python_wget_flags":
+    cwd     => '/tmp',
+    path    => '/usr/local/bin/:/usr/bin/:/bin/',
+    require => Exec['install python 2.7.3'],
+  }
+  ~>
+  exec { 'tar xvfz virtualenv-1.9.1.tar.gz':
+    cwd     => '/tmp',
+    path    => '/usr/local/bin/:/usr/bin/:/bin/',
+    creates => '/tmp/virtualenv-1.9.1',
+  }
+  ~>
+  exec { 'python2.7 virtualenv.py --distribute /vagrant/env':
+    cwd     => '/tmp/virtualenv-1.9.1',
+    path    => '/usr/local/bin/:/usr/bin/:/bin/',
+    creates => '/vagrant/env',
+  }
+  ~>
+  exec { 'pip install setuptools --upgrade':
+    path    => '/vagrant/env/bin/',
+    cwd     => '/tmp',
+  }
+
+
 }
 
 include install_pythons
