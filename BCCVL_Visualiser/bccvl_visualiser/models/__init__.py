@@ -18,5 +18,5 @@ DEFAULT_PROJECTION = 4326
 
 from bccvl_visualiser.models.species import (Species)
 from bccvl_visualiser.models.occurrence import (Occurrence)
-from bccvl_visualiser.models.raster_api import (RasterAPI)
+from bccvl_visualiser.models.raster_api import *
 from bccvl_visualiser.models.api_collection import (APICollection)

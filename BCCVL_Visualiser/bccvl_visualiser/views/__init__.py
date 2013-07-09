@@ -1,3 +1,5 @@
+import logging
+
 from pyramid.response import Response
 from pyramid.view import view_config
 from pyramid.i18n import get_localizer
@@ -47,6 +49,36 @@ class BaseView(object):
         }
 
         return values
+
+    def json(self):
+        """Return _to_dict as JSON"""
+
+        log = logging.getLogger(__name__)
+        log.debug('.json request')
+
+        return self._to_dict()
+
+    def text(self):
+        """Return the _to_dict as Plain Text"""
+
+        log = logging.getLogger(__name__)
+        log.debug('.text request')
+
+        return Response(str(self._to_dict()), content_type='text/plain')
+
+    def xmlrpc(self):
+        """Return _to_dict as an XMLRPC response"""
+
+        params, method = parse_xmlrpc_request(self.request)
+
+        log = logging.getLogger(__name__)
+        log.debug('XMLRPC request: Method: %s, Params: %s', method, params)
+
+        return xmlrpc_response(self._to_dict())
+
+    def _to_dict(self):
+        """Returns a dictionary version of this view (for JSON, XMLRPC and Text views)"""
+        raise NotImplementedError("Please Implement this method")
 
 @view_config(route_name='home')
 def home_view(request):
