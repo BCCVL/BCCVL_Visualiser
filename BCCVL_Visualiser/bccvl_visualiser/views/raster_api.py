@@ -1,6 +1,7 @@
 import logging
 import tempfile
 import mapscript
+import threading
 
 from pyramid.response import Response, FileResponse
 from pyramid.view import view_config, view_defaults
@@ -11,6 +12,9 @@ from sqlalchemy.exc import DBAPIError
 
 from bccvl_visualiser.models import *
 from bccvl_visualiser.views import BaseView
+
+MAPSCRIPT_RLOCK = threading.RLock()
+
 
 @view_defaults(route_name='raster_api')
 class BaseRasterAPIView(BaseView):
@@ -50,8 +54,12 @@ class RasterAPIViewv1(BaseRasterAPIView):
     def text(self):
         return super(RasterAPIViewv1, self).text()
 
-    @view_config(name='ows')
-    def ows(self):
+    @view_config(name='demo_map', renderer='../templates/api/raster/v1/demo_map.pt')
+    def demo_map(self):
+        return self._to_dict()
+
+    @view_config(name='wms')
+    def wms(self):
 
         log = logging.getLogger(__name__)
         log.debug('Processing ows request')
@@ -71,11 +79,16 @@ class RasterAPIViewv1(BaseRasterAPIView):
         layer_name = layers.split(',')[0]
         RasterAPIv1.set_data_for_map_layer_if_not_set(map, None, layer_name)
 
-        mapscript.msIO_installStdoutToBuffer()
-        retval = map.OWSDispatch(ows_request)
-        map_image_content_type = mapscript.msIO_stripStdoutBufferContentType()
-        map_image = mapscript.msIO_getStdoutBufferBytes()
-        mapscript.msIO_resetHandlers()
+        map_image = None
+        map_image_content_type = None
+
+        with MAPSCRIPT_RLOCK:
+            mapscript.msIO_installStdoutToBuffer()
+            retval = map.OWSDispatch(ows_request)
+            map_image_content_type = mapscript.msIO_stripStdoutBufferContentType()
+            map_image = mapscript.msIO_getStdoutBufferBytes()
+            mapscript.msIO_resetHandlers()
+
         response = Response(map_image, content_type=map_image_content_type)
 
         # log.debug("Map Content Type: %s", map_image_content_type)

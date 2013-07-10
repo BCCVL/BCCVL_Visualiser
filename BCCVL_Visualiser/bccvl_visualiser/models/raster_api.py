@@ -7,7 +7,6 @@ from bccvl_visualiser.models.api import (
     BaseAPI
     )
 
-
 class BaseRasterAPI(BaseAPI):
 
     @staticmethod

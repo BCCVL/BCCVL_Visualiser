@@ -88,7 +88,7 @@ def error_view(exc, request):
     response =  Response('Error: %s' % msg)
 
     log = logging.getLogger(__name__)
-    log.error('Error: %s, Params: %s', msg, request.params)
+    log.error('Error: %s, Params: %s', exc, request.params)
 
     response.status_int = 500
     return response

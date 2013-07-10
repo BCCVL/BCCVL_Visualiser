@@ -1,0 +1,50 @@
+<!DOCTYPE html>
+<html style="width:100%; height:100%">
+    <head>
+        <title>OpenLayers Example</title>
+        <script src="http://openlayers.org/api/OpenLayers.js"></script>
+        <script src="http://maps.google.com/maps/api/js?v=3&amp;sensor=false"></script>
+
+        <script defer="defer" type="text/javascript">
+
+            // DecLat, DecLng 
+            var geographic = new OpenLayers.Projection("EPSG:4326");
+
+            // Spherical Meters
+            // The official name for the 900913 (google) projection
+            var mercator = new OpenLayers.Projection("EPSG:3857");
+
+            var map;
+
+            function init() {
+                map = new OpenLayers.Map('map', {
+                    projection: mercator
+                })
+
+                var wms = new OpenLayers.Layer.WMS(
+                    'Demo WMS', // Layer Name
+                    './wms',    // Layer URL
+                    {
+                        transparent: "true",
+                        format: "image/png",
+                    },
+                    {
+                        isBaseLayer: false
+                    }
+                );
+
+
+                var osm = new OpenLayers.Layer.OSM();
+                var gmap = new OpenLayers.Layer.Google("Google Streets", {visibility: false});
+
+                map.addLayers([wms, osm, gmap])
+                map.addControl(new OpenLayers.Control.LayerSwitcher());
+                map.zoomToMaxExtent();
+            }
+        </script>
+
+    </head>
+    <body style="width:100%; height:100%" onload="init()">
+        <div style="width:100%; height:100%" id="map"></div>
+    </body>
+</html>

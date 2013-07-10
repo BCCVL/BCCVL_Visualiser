@@ -3,7 +3,7 @@
 MAP
 
     PROJECTION
-        "init=epsg:4326"
+        "init=epsg:3857"
     END
 
     # define the image type
