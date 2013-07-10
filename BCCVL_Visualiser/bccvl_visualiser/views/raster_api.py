@@ -54,10 +54,22 @@ class RasterAPIViewv1(BaseRasterAPIView):
     def ows(self):
 
         log = logging.getLogger(__name__)
-        log.debug('ows request')
+        log.debug('Processing ows request')
+
+        data_id = None
+        try:
+            data_id = self.request.GET.getone('data_id')
+        except:
+            log.warn('No data_id provided')
+            data_id = None
 
         map, ows_request = RasterAPIv1.\
             get_map_and_ows_request_from_from_request(self.request)
+
+        # Set the data for the first layer specified (unless already set)
+        layers = ows_request.getValueByName('LAYERS')
+        layer_name = layers.split(',')[0]
+        RasterAPIv1.set_data_for_map_layer_if_not_set(map, None, layer_name)
 
         mapscript.msIO_installStdoutToBuffer()
         retval = map.OWSDispatch(ows_request)
@@ -66,8 +78,8 @@ class RasterAPIViewv1(BaseRasterAPIView):
         mapscript.msIO_resetHandlers()
         response = Response(map_image, content_type=map_image_content_type)
 
-        log.debug("Map Content Type: %s", map_image_content_type)
-        log.debug("Map Contents:\n%s", map_image)
+        # log.debug("Map Content Type: %s", map_image_content_type)
+        # log.debug("Map Contents:\n%s", map_image)
 
 #        image_obj = map.draw()
 #        tf = tempfile.NamedTemporaryFile()

@@ -55,7 +55,7 @@ MAP
     # The layer for raster data, you can define multiple layers in one map file
     LAYER
 
-        NAME "DISTRIBUTION"
+        NAME "DEFAULT"
         TYPE RASTER
         STATUS ON
         PROCESSING "SCALE=AUTO"
@@ -64,7 +64,7 @@ MAP
             "init=epsg:4326"
         END
 
-        # DATA sample_250m_ascii_grid.asc
+        # DATA sample_250m_ascii_grid.tiff
 
         # SCALE the incoming data between 0 and 255
         PROCESSING "SCALE=AUTO"

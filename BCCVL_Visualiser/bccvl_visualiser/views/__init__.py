@@ -80,6 +80,19 @@ class BaseView(object):
         """Returns a dictionary version of this view (for JSON, XMLRPC and Text views)"""
         raise NotImplementedError("Please Implement this method")
 
+@view_config(context=Exception)
+def error_view(exc, request):
+    """ Error view, used to show exceptions."""
+
+    msg = exc.args[0] if exc.args else ""
+    response =  Response('Error: %s' % msg)
+
+    log = logging.getLogger(__name__)
+    log.error('Error: %s, Params: %s', msg, request.params)
+
+    response.status_int = 500
+    return response
+
 @view_config(route_name='home')
 def home_view(request):
     try:
