@@ -58,6 +58,13 @@ class RasterAPIViewv1(BaseRasterAPIView):
     def demo_map(self):
         return self._to_dict()
 
+    @view_config(name='map', renderer='../templates/api/raster/v1/map.pt')
+    def map(self):
+        return_dict = {
+            "data_ids": self.request.GET.getone('data_ids').split(','),
+        }
+        return return_dict
+
     @view_config(name='wms')
     def wms(self):
 

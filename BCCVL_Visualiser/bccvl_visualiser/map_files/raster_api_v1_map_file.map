@@ -69,8 +69,8 @@ MAP
         # SCALE the incoming data between 0 and 255
         PROCESSING "SCALE=AUTO"
 
-        # SCALE the data into "10" buckets (or steps)
-        PROCESSING "SCALE_BUCKETS=10"
+        # SCALE the data into "20" buckets (or steps)
+        PROCESSING "SCALE_BUCKETS=20"
 
         # Define the transparent of image. 100 is not transpartent.
         # 0 is totally transparent.
