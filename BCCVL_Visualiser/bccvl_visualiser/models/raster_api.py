@@ -39,16 +39,26 @@ class RasterAPIv1(BaseRasterAPI):
         return 1
 
     @staticmethod
-    def map_object_from_wms_request(
+    def get_map_and_ows_request_from_from_request(
         request,
         map_file=MAP_FILE_PATH
     ):
-        wms_request = mapscript.OWSRequest()
-        wms_request.loadParams()
+        """ Returns a mapscript.mapObj and a mapscript.OWSRequest
+
+            Given a request object, and optionally a map_file path,
+            generates a mapObj and a OWSRequest object.
+
+            The OWSRequest object will be generated using
+            the request's query_string.
+
+        """
 
         map = mapscript.mapObj(RasterAPIv1.MAP_FILE_PATH)
-        map.OWSRequest(wms_request)
-        return map
+
+        ows_request = mapscript.OWSRequest()
+        ows_request.loadParamsFromURL(request.query_string)
+
+        return map, ows_request
 
     @classmethod
     def to_dict(_class):

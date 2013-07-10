@@ -22,6 +22,7 @@ class install_pythons {
     command => 'configure --prefix=/usr/local && make && make altinstall',
     cwd     => '/tmp/Python-2.7.3',
     path    => '/tmp/Python-2.7.3/:/usr/local/bin/:/usr/bin/:/bin/',
+    creates => '/usr/local/bin/python2.7',
   }
 
   ##
