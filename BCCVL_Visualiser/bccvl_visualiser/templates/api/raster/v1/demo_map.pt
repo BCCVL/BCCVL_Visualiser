@@ -7,16 +7,16 @@
 
         <script defer="defer" type="text/javascript">
 
-            // DecLat, DecLng 
-            var geographic = new OpenLayers.Projection("EPSG:4326");
-
-            // Spherical Meters
-            // The official name for the 900913 (google) projection
-            var mercator = new OpenLayers.Projection("EPSG:3857");
-
-            var map;
+            var map, mercator, geographic;
 
             function init() {
+                // DecLat, DecLng 
+                geographic = new OpenLayers.Projection("EPSG:4326");
+
+                // Spherical Meters
+                // The official name for the 900913 (google) projection
+                mercator = new OpenLayers.Projection("EPSG:3857");
+
                 map = new OpenLayers.Map('map', {
                     projection: mercator
                 })
