@@ -1,0 +1,134 @@
+#simple version of map file
+
+MAP
+
+    PROJECTION
+        "init=epsg:3857"
+    END
+
+    # define the image type
+    IMAGETYPE PNG8
+
+    # define the area
+    EXTENT -180 -90 180 90
+    UNITS dd
+
+    # define the default size of output image
+    SIZE 256 256
+
+    # define where this mapfile will look for raster images
+    SHAPEPATH "/tmp/bccvl/csv/"
+
+    # define the background color
+    TRANSPARENT ON
+    IMAGECOLOR 255 255 255
+
+    # SCALEBAR object
+    SCALEBAR
+        LABEL
+            COLOR 0 0 0
+            ANTIALIAS true
+            SIZE large
+        END
+        STATUS ON
+    END
+
+    WEB
+        METADATA
+            # Enable all wms/wfs, etc. requests
+            "ows_enable_request" "*"
+        END
+    END
+
+    OUTPUTFORMAT
+        NAME "CSV"
+        DRIVER "OGR/CSV"
+        MIMETYPE "text/csv"
+        FORMATOPTION "LCO:GEOMETRY=AS_WKT"
+        FORMATOPTION "STORAGE=memory"
+#        FORMATOPTION "FORM=simple"
+#        FORMATOPTION "FILENAME=result.csv"
+    END
+
+    OUTPUTFORMAT
+        NAME "CSVSTREAM"
+        DRIVER "OGR/CSV"
+        MIMETYPE "text/csv; streamed"
+        FORMATOPTION "LCO:GEOMETRY=AS_WKT"
+        FORMATOPTION "STORAGE=stream"
+        FORMATOPTION "FORM=simple"
+        FORMATOPTION "FILENAME=result.csv"
+    END
+
+    OUTPUTFORMAT
+        NAME "geojson"
+        DRIVER "TEMPLATE"
+        MIMETYPE "application/json; subtype=geojson"
+        FORMATOPTION "FILE=/tmp/bccvl/csv/rfc36.tmpl"
+        FORMATOPTION "STORAGE=memory"
+    END
+
+    LAYER
+
+        NAME "DEFAULT"
+
+        CONNECTION "
+        <OGRVRTDataSource>
+            <OGRVRTLayer  name='input'>
+                <SrcDataSource>/tmp/bccvl/csv/input.csv</SrcDataSource>
+                <LayerSRS>WGS84</LayerSRS>
+                <GeometryField encoding='PointFromColumns' x='Longitude' y='Latitude'/>
+                <GeometryType>wkbPoint</GeometryType>
+            </OGRVRTLayer>
+        </OGRVRTDataSource>"
+        CONNECTIONTYPE OGR
+        METADATA
+                "wms_srs"   "4326"
+                "wms_title" "default"
+                "wfs_getfeature_formatlist" "csv,ogrgml,shapezip,midmif,geojson,csvstream"
+        END
+        SIZEUNITS PIXELS
+        STATUS ON
+        TOLERANCE 0
+        TOLERANCEUNITS PIXELS
+        TYPE POINT
+        UNITS METERS
+        CLASS
+                STYLE
+                        COLOR 255 0 0
+                        MAXSIZE 100
+                        MINSIZE 1
+                        SIZE 6
+                        SYMBOL "star"
+                END
+        END
+
+    END
+
+    LAYER
+        NAME "BACKUP"
+        CONNECTIONTYPE OGR
+        CONNECTION "input.csv"
+
+        METADATA
+            "wfs_title"         "DEFAULT"
+            "wfs_description"   "DEFAULT"
+            "wfs_featureid"     "ID"
+            "wfs_srs"           "EPSG:27700"
+            "wfs_getfeature_formatlist" "csv,ogrgml,shapezip,midmif,geojson,csvstream"
+            "gml_include_items" "all"
+            "gml_types"         "auto"
+            "wfs_geomtype"      "Geometry"
+        END
+
+        TYPE POINT
+        STATUS ON
+        PROJECTION
+            "init=epsg:27700"
+        END
+
+        DUMP TRUE
+
+    END
+
+END

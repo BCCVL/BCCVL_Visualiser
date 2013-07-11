@@ -22,7 +22,7 @@ raster image files.\
         return desc
 
 class RasterAPIv1(BaseRasterAPI):
-    """ v1 of the version of the Raster API"""
+    """ v1 of the Raster API"""
 
     DEFAULT_LAYER_NAME='DEFAULT'
 
@@ -31,6 +31,7 @@ class RasterAPIv1(BaseRasterAPI):
         "..",
         "map_files",
         "raster_api_v1_map_file.map"
+#        "occurrence_api_v1_map_file.map"
     )
 
     @staticmethod
@@ -49,6 +50,9 @@ class RasterAPIv1(BaseRasterAPI):
 
             The OWSRequest object will be generated using
             the request's query_string.
+
+            Additionally, default OWS params will be set if
+            not already set.
 
         """
 
@@ -88,11 +92,11 @@ class RasterAPIv1(BaseRasterAPI):
 
     @classmethod
     def to_dict(_class):
-        """Returns a dict representation of the API
+        """ Returns a dict representation of the API
 
-           This dict identifies the API, and its
-           general purpose. More specific information about the
-           API is defined at the specific version level of the API.
+            This dict identifies the API, and its
+            general purpose. More specific information about the
+            API is defined at the specific version level of the API.
         """
         return_dict = {
             'name':         _class.identifier(),

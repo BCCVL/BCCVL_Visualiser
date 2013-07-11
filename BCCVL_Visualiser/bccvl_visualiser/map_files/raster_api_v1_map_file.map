@@ -64,13 +64,11 @@ MAP
             "init=epsg:4326"
         END
 
-        # DATA sample_250m_ascii_grid.tiff
-
         # SCALE the incoming data between 0 and 255
         PROCESSING "SCALE=AUTO"
 
-        # SCALE the data into "20" buckets (or steps)
-        PROCESSING "SCALE_BUCKETS=20"
+        # SCALE the data into "10" buckets (or steps)
+        PROCESSING "SCALE_BUCKETS=10"
 
         # Define the transparent of image. 100 is not transpartent.
         # 0 is totally transparent.
@@ -81,7 +79,7 @@ MAP
         # COLORRANGE and DATARANGE are paired to generate gradient color
         CLASSITEM "[pixel]"
         CLASS
-            NAME "pixel"
+            NAME "-"
             EXPRESSION ([pixel]>0)
             STYLE
                 COLORRANGE  255 255 255 0 128 255
