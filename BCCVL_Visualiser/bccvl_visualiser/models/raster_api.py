@@ -2,9 +2,10 @@ import mapscript
 import os
 
 from bccvl_visualiser.models import TextWrapper
+from bccvl_visualiser.models.mapscript_helper import MapScriptHelper
 
 from bccvl_visualiser.models.api import (
-    BaseAPI
+    BaseAPI,
     )
 
 class BaseRasterAPI(BaseAPI):
@@ -25,14 +26,9 @@ class RasterAPIv1(BaseRasterAPI):
     """ v1 of the Raster API"""
 
     DEFAULT_LAYER_NAME='DEFAULT'
-
-    MAP_FILE_PATH = os.path.join(
-        os.path.dirname(os.path.realpath(__file__)),
-        "..",
-        "map_files",
-        "raster_api_v1_map_file.map"
-#        "occurrence_api_v1_map_file.map"
-    )
+    MAP_FILE_NAME='raster_api_v1_map_file.map'
+    TEST_250M_DATA_FILE_NAME='sample_250m_ascii_grid.tiff'
+    TEST_1KM_DATA_FILE_NAME='sample_1km_ascii_grid.tiff'
 
     @staticmethod
     def version():
@@ -41,7 +37,7 @@ class RasterAPIv1(BaseRasterAPI):
     @staticmethod
     def get_map_and_ows_request_from_from_request(
         request,
-        map_file=MAP_FILE_PATH
+        map_file_name=MAP_FILE_NAME
     ):
         """ Returns a mapscript.mapObj and a mapscript.OWSRequest
 
@@ -56,11 +52,9 @@ class RasterAPIv1(BaseRasterAPI):
 
         """
 
-        map = mapscript.mapObj(RasterAPIv1.MAP_FILE_PATH)
+        map, ows_request = MapScriptHelper.get_map_and_ows_request_from_from_request(request, map_file_name)
 
-        ows_request = mapscript.OWSRequest()
-        ows_request.loadParamsFromURL(request.query_string)
-
+        # Set the raster API v1's defaults on the OWS request.
         RasterAPIv1._set_ows_default_params_if_not_set(ows_request)
 
         return map, ows_request
@@ -82,7 +76,7 @@ class RasterAPIv1(BaseRasterAPI):
 
         if layer != None and layer.data == None:
             if data_id == None:
-                layer.data = 'sample_250m_ascii_grid.tiff'
+                layer.data = RasterAPIv1.TEST_250M_DATA_FILE_NAME
             else:
                 # TODO -> This is where we should talk to the data manager and
                 # get access to the data file.

@@ -16,7 +16,7 @@ class BasePointAPI(BaseAPI):
     @staticmethod
     def description():
         desc = """\
-The point API is responsible for processing \
+The point API is responsible for visualising \
 point data in CSV files.\
 """
         return desc
@@ -25,13 +25,7 @@ class PointAPIv1(BasePointAPI):
     """ v1 of the Point API"""
 
     DEFAULT_LAYER_NAME='DEFAULT'
-
-    MAP_FILE_PATH = os.path.join(
-        os.path.dirname(os.path.realpath(__file__)),
-        "..",
-        "map_files",
-        "point_api_v1_map_file.map"
-    )
+    MAP_FILE_NAME = 'point_api_v1_map_file.map'
 
     @staticmethod
     def version():
@@ -48,7 +42,7 @@ class PointAPIv1(BasePointAPI):
         return_dict = {
             'name':         _class.identifier(),
             'description':  _class.description(),
-            'version': _class.version()
+            'version':      _class.version()
         }
 
         return return_dict
