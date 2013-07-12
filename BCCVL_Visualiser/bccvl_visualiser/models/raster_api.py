@@ -35,7 +35,7 @@ class RasterAPIv1(BaseRasterAPI):
         return 1
 
     @staticmethod
-    def get_map_and_ows_request_from_from_request(
+    def get_map_and_ows_request_from_request(
         request,
         map_file_name=MAP_FILE_NAME
     ):
@@ -52,7 +52,7 @@ class RasterAPIv1(BaseRasterAPI):
 
         """
 
-        map, ows_request = MapScriptHelper.get_map_and_ows_request_from_from_request(request, map_file_name)
+        map, ows_request = MapScriptHelper.get_map_and_ows_request_from_request(request, map_file_name)
 
         # Set the raster API v1's defaults on the OWS request.
         RasterAPIv1._set_ows_default_params_if_not_set(ows_request)

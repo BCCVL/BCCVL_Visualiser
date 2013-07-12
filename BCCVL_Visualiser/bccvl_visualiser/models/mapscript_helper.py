@@ -1,8 +1,26 @@
 import mapscript
 import logging
 import os
+import threading
+
 
 class MapScriptHelper(object):
+
+    MAPSCRIPT_RLOCK = threading.RLock()
+
+    @staticmethod
+    def get_path_to_map_data_file(request, data_file_name):
+        log = logging.getLogger(__name__)
+
+        settings = request.registry.settings
+        map_data_files_root_path = settings['bccvl.mapscript.map_data_files_root_path']
+
+        return_value = os.path.join(map_data_files_root_path, data_file_name)
+
+        log.debug('Map data files root path: %s', map_data_files_root_path)
+        log.debug('Map data file path: %s', return_value)
+
+        return return_value
 
     @staticmethod
     def get_map_file_path(request, map_file_name):
@@ -28,7 +46,7 @@ class MapScriptHelper(object):
 
 
     @staticmethod
-    def get_map_and_ows_request_from_from_request(request, map_file_name):
+    def get_map_and_ows_request_from_request(request, map_file_name):
         """ Returns a mapscript.mapObj and a mapscript.OWSRequest
 
             Given a request object, and optionally a map_file path,
@@ -42,7 +60,37 @@ class MapScriptHelper(object):
         map_file_path = MapScriptHelper.get_map_file_path(request, map_file_name)
         map = mapscript.mapObj(map_file_path)
 
+        MapScriptHelper._set_map_defaults_if_not_set(request, map)
+
         ows_request = mapscript.OWSRequest()
-        ows_request.loadParamsFromURL(request.query_string)
+
+        log = logging.getLogger(__name__)
+
+        ############################################
+        #
+        # NOTE / XXX / IMPORTANT
+        #
+        ############################################
+        #
+        # loadParamsFromURL causes a seg fault if passed an empty string.
+        # Don't pass it an empty string...
+
+        if request.query_string.strip() != '':
+            ows_request.loadParamsFromURL(request.query_string)
+        else:
+            log.debug("Passed an empty query string, so skipping OWSRequest.loadParamsFromURL")
+
 
         return map, ows_request
+
+    @staticmethod
+    def _set_map_defaults_if_not_set(request, map):
+        log = logging.getLogger(__name__)
+
+        settings = request.registry.settings
+        map_data_files_root_path = settings['bccvl.mapscript.map_data_files_root_path']
+
+        if map.shapepath == None:
+            log.debug("Setting mapObj.shapepath as not already set. Set to: %s", map_data_files_root_path)
+            map.shapepath = map_data_files_root_path
+

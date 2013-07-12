@@ -1,7 +1,6 @@
 import logging
 import tempfile
 import mapscript
-import threading
 
 from pyramid.response import Response, FileResponse
 from pyramid.view import view_config, view_defaults
@@ -14,9 +13,10 @@ from bccvl_visualiser.models import *
 from bccvl_visualiser.views import BaseView
 
 
-@view_defaults(route_name='raster_api')
-class BaseRasterAPIView(BaseView):
-    """The Base Raster API level view '/api/raster'"""
+
+@view_defaults(route_name='point_api')
+class BasePointAPIView(BaseView):
+    """The Base Point API level view '/api/point'"""
 
     @view_config(renderer='../templates/api_template.pt')
     def __call__(self):
@@ -24,21 +24,21 @@ class BaseRasterAPIView(BaseView):
 
     @view_config(name='.json', renderer='json')
     def json(self):
-        return super(BaseRasterAPIView, self).json()
+        return super(BasePointAPIView, self).json()
 
     @view_config(name='.text')
     def text(self):
-        return super(BaseRasterAPIView, self).text()
+        return super(BasePointAPIView, self).text()
 
     @view_config(name='.xmlrpc')
     def xmlrpc(self):
-        return super(BaseRasterAPIView, self).xmlrpc()
+        return super(BasePointAPIView, self).xmlrpc()
 
     def _to_dict(self):
-        return BaseRasterAPI.get_human_readable_inheritors_version_dict()
+        return BasePointAPI.get_human_readable_inheritors_version_dict()
 
-@view_defaults(route_name='raster_api_v1')
-class RasterAPIViewv1(BaseRasterAPIView):
+@view_defaults(route_name='point_api_v1')
+class PointAPIViewv1(BasePointAPIView):
 
     @view_config(renderer='../templates/api_template.pt')
     def __call__(self):
@@ -46,25 +46,18 @@ class RasterAPIViewv1(BaseRasterAPIView):
 
     @view_config(name='.json', renderer='json')
     def json(self):
-        return super(RasterAPIViewv1, self).json()
+        return super(PointAPIViewv1, self).json()
 
     @view_config(name='.text')
     def text(self):
-        return super(RasterAPIViewv1, self).text()
+        return super(PointAPIViewv1, self).text()
 
-    @view_config(name='demo_map', renderer='../templates/api/raster/v1/demo_map.pt')
+    @view_config(name='demo_map', renderer='../templates/api/point/v1/demo_map.pt')
     def demo_map(self):
         return self._to_dict()
 
-    @view_config(name='map', renderer='../templates/api/raster/v1/map.pt')
-    def map(self):
-        return_dict = {
-            "data_ids": self.request.GET.getone('data_ids').split(','),
-        }
-        return return_dict
-
-    @view_config(name='wms')
-    def wms(self):
+    @view_config(name='wfs')
+    def wfs(self):
 
         log = logging.getLogger(__name__)
         log.debug('Processing ows request')
@@ -76,13 +69,12 @@ class RasterAPIViewv1(BaseRasterAPIView):
             log.warn('No data_id provided')
             data_id = None
 
-        map, ows_request = RasterAPIv1.\
+        map, ows_request = PointAPIv1.\
             get_map_and_ows_request_from_request(self.request)
 
         # Set the data for the first layer specified (unless already set)
-        layers = ows_request.getValueByName('LAYERS')
-        layer_name = layers.split(',')[0]
-        RasterAPIv1.set_data_for_map_layer_if_not_set(map, data_id, layer_name)
+        layer_name = ows_request.getValueByName('LAYER')
+        PointAPIv1.set_connection_for_map_connection_if_not_set(self.request, map, data_id, layer_name)
 
         map_image = None
         map_image_content_type = None
@@ -96,21 +88,11 @@ class RasterAPIViewv1(BaseRasterAPIView):
 
         response = Response(map_image, content_type=map_image_content_type)
 
-        # log.debug("Map Content Type: %s", map_image_content_type)
-        # log.debug("Map Contents:\n%s", map_image)
-
-#        image_obj = map.draw()
-#        tf = tempfile.NamedTemporaryFile()
-#        log.debug('tempfile %s', tf)
-#        path = os.path.abspath(tf.name)
-#        image_obj.save(path)
-#        response = FileResponse(path, request=self.request, content_type='image/jpeg')
-#
         return response
 
     @view_config(name='.xmlrpc')
     def xmlrpc(self):
-        return super(RasterAPIViewv1, self).xmlrpc()
+        return super(PointAPIViewv1, self).xmlrpc()
 
     def _to_dict(self):
-        return RasterAPIv1.to_dict()
+        return PointAPIv1.to_dict()

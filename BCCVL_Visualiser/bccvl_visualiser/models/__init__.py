@@ -20,4 +20,5 @@ from bccvl_visualiser.models.mapscript_helper import *
 from bccvl_visualiser.models.species import *
 from bccvl_visualiser.models.occurrence import *
 from bccvl_visualiser.models.raster_api import *
+from bccvl_visualiser.models.point_api import *
 from bccvl_visualiser.models.api_collection import *

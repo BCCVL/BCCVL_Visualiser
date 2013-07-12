@@ -1,0 +1,21 @@
+// mapserver template
+[resultset layer=DEFAULT]
+{
+  "type": "FeatureCollection",
+  "features": [
+    [feature trimlast=","]
+    {
+      "type": "Feature",
+      "id": "[myuniqueid]",
+      "geometry": {
+        "type": "Point",
+        "coordinates": [[longitude], [latitude]]
+      },
+      "properties": {
+        "raw_taxa_name": "[raw_taxa_name]"
+      }
+    },
+    [/feature]
+  ]
+}
+[/resultset]

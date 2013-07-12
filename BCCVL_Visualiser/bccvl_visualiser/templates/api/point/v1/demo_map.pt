@@ -1,0 +1,62 @@
+<!DOCTYPE html>
+<html style="width:100%; height:100%">
+    <head>
+        <title>Point API V1 Demo Map (WFS Example)</title>
+        <script src="http://openlayers.org/api/OpenLayers.js"></script>
+        <script src="http://maps.google.com/maps/api/js?v=3&amp;sensor=false"></script>
+
+        <script defer="defer" type="text/javascript">
+
+            var map, mercator, geographic;
+
+            function init() {
+                // DecLat, DecLng 
+                geographic = new OpenLayers.Projection("EPSG:4326");
+
+                // Spherical Meters
+                // The official name for the 900913 (google) projection
+                mercator = new OpenLayers.Projection("EPSG:3857");
+
+                map = new OpenLayers.Map('map', {
+                    projection: geographic,
+                    displayProjection: mercator
+                })
+
+                wfs_options = {
+                    url: 'wfs',
+                    params: {
+                        request: "GetFeature",
+                        service: "WFS",
+                        version: "1.1.0",
+                        typeName: "DEFAULT",
+                        outputFormat:"geojson",
+                    },
+                    format: new OpenLayers.Format.GeoJSON(),
+                }
+
+                var wfs = new OpenLayers.Layer.Vector(
+                    "Demo WFS",
+                    {
+                        strategies: [new OpenLayers.Strategy.BBOX({ratio: 1.0, resFactor: 1.0})],
+                        protocol: new OpenLayers.Protocol.HTTP(wfs_options)
+                    },
+                    {
+                        isBaseLayer: false
+                    }
+                );
+
+
+                var osm = new OpenLayers.Layer.OSM();
+                var gmap = new OpenLayers.Layer.Google("Google Streets", {visibility: false});
+
+                map.addLayers([wfs, osm, gmap])
+                map.addControl(new OpenLayers.Control.LayerSwitcher());
+                map.zoomToMaxExtent();
+            }
+        </script>
+
+    </head>
+    <body style="width:100%; height:100%; margin: 0;" onload="init()">
+        <div style="width:100%; height:100%" id="map"></div>
+    </body>
+</html>

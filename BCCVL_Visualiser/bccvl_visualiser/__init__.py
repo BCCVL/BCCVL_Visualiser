@@ -18,8 +18,16 @@ def main(global_config, **settings):
 
     # Application routes
     config.add_route('home', '/')
+
+    # Raster API
     config.add_route('raster_api_v1', '/api/raster/1*traverse')
     config.add_route('raster_api', '/api/raster*traverse')
+
+    # Point API
+    config.add_route('point_api_v1', '/api/point/1*traverse')
+    config.add_route('point_api', '/api/point*traverse')
+
+    # Base API (API Collection)
     config.add_route('api', '/api*traverse')
 
     config.scan()

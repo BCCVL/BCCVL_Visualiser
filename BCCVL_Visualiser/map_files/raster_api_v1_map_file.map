@@ -16,8 +16,11 @@ MAP
     # define the default size of output image
     SIZE 256 256
 
-    # define where this mapfile will look for raster images
-    SHAPEPATH "/tmp/"
+    # Don't define where this mapfile will look for raster images.
+    # Instead, do this programmatically (in the python code).
+    #
+    # Uncomment this line to override the programmatic setting of the shapepath
+    # SHAPEPATH "/tmp/"
 
     # define the background color
     TRANSPARENT ON
