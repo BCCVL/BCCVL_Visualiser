@@ -30,6 +30,7 @@
                         version: "1.1.0",
                         typeName: "DEFAULT",
                         outputFormat:"geojson",
+//                        maxFeatures:"1000", - Let the server determine the max features
                     },
                     format: new OpenLayers.Format.GeoJSON(),
                 }

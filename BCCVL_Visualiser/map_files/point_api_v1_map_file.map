@@ -35,8 +35,8 @@ MAP
             # Enable all wms/wfs, etc. requests
             "ows_enable_request" "*"
 
-            # Prevent the user from being able to request more than 5000 features
-            "wfs_maxfeatures" "5000"
+            # Prevent the user from being able to request more than 2500 features
+            "wfs_maxfeatures" "2500"
         END
     END
 
