@@ -29,7 +29,8 @@ class PointAPIv1(BasePointAPI):
 
     DEFAULT_LAYER_NAME='DEFAULT'
     MAP_FILE_NAME = 'point_api_v1_map_file.map'
-    TEST_EMU_DATA_FILE_NAME = 'test_red_kangaroo_data.csv'
+    TEST_RED_KANGAROO_DATA_FILE_NAME = 'test_red_kangaroo_data.csv'
+    TEST_MAGPIE_DATA_FILE_NAME = 'test_magpie_data.csv'
 
     @staticmethod
     def version():
@@ -94,7 +95,7 @@ class PointAPIv1(BasePointAPI):
 
         if layer != None and layer.connection == None:
             if data_id == None:
-                connection = PointAPIv1._get_connection(request, PointAPIv1.TEST_EMU_DATA_FILE_NAME)
+                connection = PointAPIv1._get_connection(request, PointAPIv1.TEST_MAGPIE_DATA_FILE_NAME)
                 log.debug("Setting map layer connection to: %s", connection)
                 layer.connection = connection
             else:
@@ -108,9 +109,16 @@ class PointAPIv1(BasePointAPI):
     def _set_ows_default_params_if_not_set(ows_request):
         """ Set OWS Params to their default value (if not already set)"""
 
+        # Used by wfs requests
         layer = ows_request.getValueByName('LAYER')
         if layer == None:
             ows_request.addParameter('LAYER', PointAPIv1.DEFAULT_LAYER_NAME)
+
+        # Used by wms requests
+        layers = ows_request.getValueByName('LAYERS')
+        if layers == None:
+            ows_request.addParameter('LAYERS', PointAPIv1.DEFAULT_LAYER_NAME)
+
 
     @staticmethod
     def _get_connection(request, file_name, x_column_name='longitude', y_column_name='latitude'):

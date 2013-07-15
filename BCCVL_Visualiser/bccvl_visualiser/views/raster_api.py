@@ -96,16 +96,6 @@ class RasterAPIViewv1(BaseRasterAPIView):
 
         response = Response(map_image, content_type=map_image_content_type)
 
-        # log.debug("Map Content Type: %s", map_image_content_type)
-        # log.debug("Map Contents:\n%s", map_image)
-
-#        image_obj = map.draw()
-#        tf = tempfile.NamedTemporaryFile()
-#        log.debug('tempfile %s', tf)
-#        path = os.path.abspath(tf.name)
-#        image_obj.save(path)
-#        response = FileResponse(path, request=self.request, content_type='image/jpeg')
-#
         return response
 
     @view_config(name='.xmlrpc')

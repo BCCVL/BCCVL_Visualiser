@@ -1,6 +1,7 @@
 #simple version of map file
 
 MAP
+    SYMBOLSET "symbols.map"
 
     PROJECTION
         "init=epsg:3857"

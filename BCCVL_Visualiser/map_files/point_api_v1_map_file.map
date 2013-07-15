@@ -1,6 +1,8 @@
 #simple version of map file
 
 MAP
+    SYMBOLSET "symbols.map"
+
 
     PROJECTION
         "init=epsg:3857"
@@ -52,25 +54,20 @@ MAP
 
         NAME "DEFAULT"
 
-# Set the CONNECTION programmatically in python.
-#
-#
-#        CONNECTION "
-#            <OGRVRTDataSource>
-#                <OGRVRTLayer name='test_red_kangaroo_data'>
-#                    <SrcDataSource>/tmp/bccvl/map_data_files/test_red_kangaroo_data.csv</SrcDataSource>
-#                    <LayerSRS>WGS84</LayerSRS>
-#                    <GeometryField encoding='PointFromColumns' x='longitude' y='latitude'/>
-#                    <GeometryType>wkbPoint</GeometryType>
-#                </OGRVRTLayer>
-#            </OGRVRTDataSource>
-#        "
+        PROJECTION
+            "init=epsg:4326"
+        END
 
+        # Set the CONNECTION programmatically in python.
         CONNECTIONTYPE OGR
         METADATA
                 "wms_srs"   "4326"
                 "wms_title" "default"
                 "wfs_getfeature_formatlist" "geojson"
+                "wms_title"             "WMS virtual ogr my_data"
+                "wms_srs"               "epsg:4326"
+                "wms_extent"            "-180 -90 180 90"
+                "wms_enable_request"    "*"
         END
         SIZEUNITS PIXELS
         STATUS ON
@@ -80,15 +77,13 @@ MAP
         UNITS dd
         CLASS
                 STYLE
-                        COLOR 255 0 0
-                        MAXSIZE 100
-                        MINSIZE 1
-                        SIZE 6
-                        SYMBOL "star"
+                        COLOR 255 50 50
+                        MAXSIZE 50
+                        MINSIZE 2
+                        SIZE 5
+                        SYMBOL "circle"
                 END
         END
-
-        # OUTPUT_FORMAT "geojson"
 
     END
 
@@ -101,7 +96,7 @@ MAP
             "wfs_title"         "DEFAULT"
             "wfs_description"   "DEFAULT"
             "wfs_featureid"     "ID"
-            "wfs_srs"           "EPSG:27700"
+            "wfs_srs"           "epsg:27700"
             "wfs_getfeature_formatlist" "csv,ogrgml,shapezip,midmif,geojson,csvstream"
             "gml_include_items" "all"
             "gml_types"         "auto"

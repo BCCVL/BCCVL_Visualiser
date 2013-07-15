@@ -7,9 +7,12 @@
 
         <script defer="defer" type="text/javascript">
 
-            var map, mercator, geographic;
+            var map;
+            var mercator, geographic;
+            var world_bounds, australia_bounds, zoom_bounds;
 
             function init() {
+
                 // DecLat, DecLng 
                 geographic = new OpenLayers.Projection("EPSG:4326");
 
@@ -17,9 +20,20 @@
                 // The official name for the 900913 (google) projection
                 mercator = new OpenLayers.Projection("EPSG:3857");
 
+                world_bounds = new OpenLayers.Bounds(-20037508.34,-20037508.34,20037508.34,20037508.34);
+
+                australia_bounds = new OpenLayers.Bounds();
+                australia_bounds.extend(new OpenLayers.LonLat(111,-10));
+                australia_bounds.extend(new OpenLayers.LonLat(152,-44));
+                australia_bounds = australia_bounds.transform(geographic, mercator);
+
+                // Where to zoom the map to on start.
+                zoom_bounds = australia_bounds;
+
                 map = new OpenLayers.Map('map', {
-                    projection: geographic,
-                    displayProjection: mercator
+                    projection: mercator,
+                    units: "m",
+                    maxResolution: "auto"
                 })
 
                 wfs_options = {
@@ -32,7 +46,10 @@
                         outputFormat:"geojson",
 //                        maxFeatures:"1000", - Let the server determine the max features
                     },
-                    format: new OpenLayers.Format.GeoJSON(),
+                    format: new OpenLayers.Format.GeoJSON({
+                        internalProjection: mercator,
+                        externalProjection: geographic
+                    }),
                 }
 
                 var wfs = new OpenLayers.Layer.Vector(
@@ -46,13 +63,27 @@
                     }
                 );
 
+                var wms = new OpenLayers.Layer.WMS(
+                    'Demo WMS', // Layer Name
+                    './wms',    // Layer URL
+                    {
+                        transparent: "true",
+                        format: "image/png",
+                    },
+                    {
+                        isBaseLayer: false,
+//                        singleTile: true,
+                    }
+                );
+
 
                 var osm = new OpenLayers.Layer.OSM();
                 var gmap = new OpenLayers.Layer.Google("Google Streets", {visibility: false});
 
-                map.addLayers([wfs, osm, gmap])
+                map.addLayers([wfs, wms, osm, gmap])
                 map.addControl(new OpenLayers.Control.LayerSwitcher());
-                map.zoomToMaxExtent();
+                console.log(zoom_bounds);
+                map.zoomToExtent(zoom_bounds);
             }
         </script>
 

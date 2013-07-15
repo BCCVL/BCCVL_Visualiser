@@ -44,6 +44,26 @@ class MapScriptHelper(object):
 
         return return_value
 
+    @staticmethod
+    def set_data_for_map_layer_if_not_set(map, data_id, layer_name):
+        """ Given a data_id, will set the LAYER's DATA value
+
+            Will speak to the Data Manager and get a local copy of the
+            data (represented by the data_id). Once this is done,
+            it will move the data to the map's SHAPEPATH.
+
+            Once the data is in the right directory (SHAPEPATH), the
+            DATA value for the LAYER will be set accordingly.
+
+        """
+
+        layer = map.getLayerByName(layer_name)
+
+        if layer != None and layer.data == None:
+                # TODO -> This is where we should talk to the data manager and
+                # get access to the data file.
+                raise NotImplementedError("TODO - This method needs to handle a data_id")
+
 
     @staticmethod
     def get_map_and_ows_request_from_request(request, map_file_name):

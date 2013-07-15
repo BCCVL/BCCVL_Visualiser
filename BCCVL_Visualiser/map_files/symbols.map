@@ -1,0 +1,57 @@
+# Map File Symbol Set. Used by other map files.
+#
+# Many of these symbol definitions come from the map server examples:
+#   http://mapserver.org/mapfile/symbology/examples.html
+
+SYMBOLSET
+    SYMBOL
+        NAME "circle"
+        TYPE ellipse
+        FILLED true
+        POINTS
+            1 1
+        END
+    END
+
+    SYMBOL
+        NAME "cross"
+        TYPE vector
+        POINTS
+            2.0 0.0
+            2.0 4.0
+            -99 -99
+            0.0 2.0
+            4.0 2.0
+        END
+    END
+
+    SYMBOL
+        NAME "triangle"
+        TYPE vector
+        POINTS
+            0 4
+            2 0
+            4 4
+            0 4
+        END
+    END
+
+    SYMBOL
+        NAME "downwarddiagonalfill"
+        TYPE vector
+        TRANSPARENT 0
+        POINTS
+            0 1
+            1 0
+        END
+    END
+
+    SYMBOL
+        NAME "ellipse2"
+        TYPE ellipse
+        FILLED true
+        POINTS
+            1 2
+        END
+    END
+END

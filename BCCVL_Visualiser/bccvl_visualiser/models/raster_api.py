@@ -72,17 +72,13 @@ class RasterAPIv1(BaseRasterAPI):
 
         """
 
-        layer = map.getLayerByName(layer_name)
+        if data_id != None:
+            return MapScriptHelper.set_data_for_map_layer_if_not_set(map, data_id, layer_name)
+        else:
+            layer = map.getLayerByName(layer_name)
 
-        if layer != None and layer.data == None:
-            if data_id == None:
+            if layer != None and layer.data == None:
                 layer.data = RasterAPIv1.TEST_250M_DATA_FILE_NAME
-            else:
-                # TODO -> This is where we should talk to the data manager and
-                # get access to the data file.
-                #
-                # For now, just set the map layer's data to our test data
-                raise NotImplementedError("TODO - This method needs to handle a data_id")
 
     @classmethod
     def to_dict(_class):
