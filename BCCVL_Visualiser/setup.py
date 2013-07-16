@@ -11,11 +11,12 @@ requires = [
     'SQLAlchemy',
     'GeoAlchemy2',
     'psycopg2',
+    'dogpile.cache',    # cache regions, lets you cache the result of queries
 
-# mapscript is now installed during the buildout.
-# it is installed using the cmmi recipe (configure && make && make install)
-
-    # 'mapscript',        # Python Map Server implementation                        
+    # mapscript is now installed during the buildout.
+    # it is installed using the cmmi recipe (configure && make && make install)
+    #
+    # 'mapscript',      # Python Map Server implementation
 
 
     'PIL',              # Python Imaging Library

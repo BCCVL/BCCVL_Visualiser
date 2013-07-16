@@ -33,7 +33,8 @@
                 map = new OpenLayers.Map('map', {
                     projection: mercator,
                     units: "m",
-                    maxResolution: "auto"
+                    maxResolution: "auto",
+                    maxExtent: world_bounds // Helps with tile grid calculation and caching (defines where the origin of tile requests will be)
                 })
 
                 wfs_options = {
@@ -72,6 +73,7 @@
                     },
                     {
                         isBaseLayer: false,
+                        tileSize: new OpenLayers.Size(512,512) // Use a larger tile size (256,256 is the default)
 //                        singleTile: true,
                     }
                 );

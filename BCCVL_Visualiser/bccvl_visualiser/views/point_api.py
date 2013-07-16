@@ -56,7 +56,8 @@ class PointAPIViewv1(BasePointAPIView):
     def demo_map(self):
         return self._to_dict()
 
-    @view_config(name='wms')
+    # Cache this view for 1 day (86400 seconds)
+    @view_config(name='wms', http_cache=86400)
     def wms(self):
 
         log = logging.getLogger(__name__)
@@ -92,7 +93,8 @@ class PointAPIViewv1(BasePointAPIView):
 
         return response
 
-    @view_config(name='wfs')
+    # Cache this view for 1 day (86400 seconds)
+    @view_config(name='wfs', http_cache=86400)
     def wfs(self):
 
         log = logging.getLogger(__name__)
