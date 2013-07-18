@@ -8,9 +8,9 @@ CHANGES = open(os.path.join(here, 'CHANGES.txt')).read()
 
 requires = [
     'pyramid',
+    'psycopg2',
 #    'SQLAlchemy',
 #    'GeoAlchemy2',
-#    'psycopg2',
 
 
     # mapscript is now installed during the buildout.
