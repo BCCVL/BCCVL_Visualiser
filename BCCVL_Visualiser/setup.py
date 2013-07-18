@@ -28,6 +28,9 @@ requires = [
     'requests',
     'waitress',
     'pyramid_xmlrpc',
+    'numpy',
+#    'matplotlib',
+#    'scipy'
     ]
 
 setup(name='BCCVL_Visualiser',

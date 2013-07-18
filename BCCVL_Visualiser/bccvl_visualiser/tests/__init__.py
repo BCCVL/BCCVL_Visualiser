@@ -5,6 +5,7 @@ import pprint
 from pyramid import testing
 
 from bccvl_visualiser.models import *
+from bccvl_visualiser.tests import *
 
 from sqlalchemy import create_engine
 

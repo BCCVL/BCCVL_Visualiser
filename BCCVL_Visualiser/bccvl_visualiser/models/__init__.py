@@ -16,6 +16,7 @@ TextWrapper = TextWrapper()
 
 DEFAULT_PROJECTION = 4326
 
+from bccvl_visualiser.models.point_data_csv_helper import *
 from bccvl_visualiser.models.mapscript_helper import *
 from bccvl_visualiser.models.species import *
 from bccvl_visualiser.models.occurrence import *
