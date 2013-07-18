@@ -8,12 +8,6 @@ from zope.interface import Interface, Attribute, implements
 
 from sqlalchemy.exc import DBAPIError
 
-from bccvl_visualiser.models import (
-    DBSession,
-    Species,
-    Occurrence,
-    )
-
 class IView(Interface):
 
     #: The title of the view. This is displayed in breadcrumbs and page titles.
@@ -41,7 +35,6 @@ class BaseView(object):
         self.context = context
         self.request = request
         self.localizer = get_localizer(request)
-        self.dbsession = DBSession
 
     def __call__(self):
         values = {
@@ -92,28 +85,3 @@ def error_view(exc, request):
 
     response.status_int = 500
     return response
-
-@view_config(route_name='home')
-def home_view(request):
-    try:
-        DBSession.query(Species).all()
-    except DBAPIError:
-        return Response(conn_err_msg, content_type='text/plain', status_int=500)
-    return Response('BCCVL Visualiser', content_type='text/plain')
-
-conn_err_msg = """\
-Pyramid is having a problem using your SQL database.  The problem
-might be caused by one of the following things:
-
-1.  You may need to run the "initialize_WebApp_db" script
-    to initialize your database tables.  Check your virtual 
-    environment's "bin" directory for this script and try to run it.
-
-2.  Your database server may not be running.  Check that the
-    database server referred to by the "sqlalchemy.url" setting in
-    your "development.ini" file is running.
-
-After you fix the problem, please restart the Pyramid application to
-try it again.
-"""
-

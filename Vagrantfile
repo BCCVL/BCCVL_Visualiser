@@ -1,15 +1,7 @@
 # -*- mode: ruby -*-
 # vi: set ft=ruby :
 
-# The settings that will be used to create a postgresql environment for your pyramid webapp.
-# This includes a superuser, and a database that will have the postgis2 extensions.
-# When you change these, don't forget to also change them inside your app config.
-POSTGRESQL_SUPERUSER_USERNAME      = "pyramid"
-POSTGRESQL_SUPERUSER_PASSWORD      = "pyramid_password"
-POSTGRESQL_PYRAMID_DATABASE        = "pyramid_db"
-POSTGRESQL_PYRAMID_TEST_DATABASE   = "pyramid_test_db"
-
-# Remove this once bitbucket certificates are updates for the various
+# Remove this once bitbucket certificates are updated for the various
 # python download sites (pypi, etc.).
 PYTHON_WGET_FLAGS = "--no-check-certificate"
 
@@ -44,18 +36,6 @@ Vagrant::Config.run do |config|
       "python_wget_flags"       => PYTHON_WGET_FLAGS,
     }
     puppet.manifest_file  = "install_pythons.pp"
-    puppet.manifests_path = "puppet/manifests"
-  end
-
-  # Install PostGIS2
-  config.vm.provision :puppet do |puppet|
-    puppet.facter = {
-      "postgresql_superuser_username"       => POSTGRESQL_SUPERUSER_USERNAME,
-      "postgresql_superuser_password"       => POSTGRESQL_SUPERUSER_PASSWORD,
-      "postgresql_pyramid_database"         => POSTGRESQL_PYRAMID_DATABASE,
-      "postgresql_pyramid_test_database"    => POSTGRESQL_PYRAMID_TEST_DATABASE,
-    }
-    puppet.manifest_file  = "install_postgis2.pp"
     puppet.manifests_path = "puppet/manifests"
   end
 

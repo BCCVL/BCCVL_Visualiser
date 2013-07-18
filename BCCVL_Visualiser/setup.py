@@ -8,10 +8,10 @@ CHANGES = open(os.path.join(here, 'CHANGES.txt')).read()
 
 requires = [
     'pyramid',
-    'SQLAlchemy',
-    'GeoAlchemy2',
-    'psycopg2',
-    'dogpile.cache',    # cache regions, lets you cache the result of queries
+#    'SQLAlchemy',
+#    'GeoAlchemy2',
+#    'psycopg2',
+
 
     # mapscript is now installed during the buildout.
     # it is installed using the cmmi recipe (configure && make && make install)
@@ -19,6 +19,7 @@ requires = [
     # 'mapscript',      # Python Map Server implementation
 
 
+    'dogpile.cache',    # cache regions, lets you cache the result of queries
     'PIL',              # Python Imaging Library
     'shapely',          # PostGIS-ish operations in python
     'transaction',
@@ -56,7 +57,5 @@ setup(name='BCCVL_Visualiser',
       [paste.app_factory]
       main = bccvl_visualiser:main
       [console_scripts]
-      initialize_BCCVL_Visualiser_db = bccvl_visualiser.scripts.initializedb:main
-      destroy_BCCVL_Visualiser_db = bccvl_visualiser.scripts.destroydb:main
       """,
       )

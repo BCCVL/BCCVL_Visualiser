@@ -16,4 +16,4 @@ class TestPointAPIv1(unittest.TestCase):
         pass
 
     def test_test_env_working(self):
-        self.assertEqual(true, true)
+        self.assertEqual(True, True)

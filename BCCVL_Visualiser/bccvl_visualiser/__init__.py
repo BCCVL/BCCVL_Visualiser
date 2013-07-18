@@ -2,11 +2,6 @@ from pyramid.config import Configurator
 from sqlalchemy import engine_from_config
 from pyramid.settings import asbool, aslist
 
-from .models import (
-    DBSession,
-    Base,
-    )
-
 def initialise_cache(settings):
     """ Initialise the application's cache regions
     """
@@ -30,9 +25,6 @@ def main(global_config, **settings):
     """ This function returns a Pyramid WSGI application.
     """
 
-    engine = engine_from_config(settings, 'sqlalchemy.')
-    DBSession.configure(bind=engine)
-    Base.metadata.bind = engine
     config = Configurator(settings=settings)
 
     # Configure dogpile.cache regions from configuration
