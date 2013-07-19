@@ -4,6 +4,7 @@
 # Remove this once bitbucket certificates are updated for the various
 # python download sites (pypi, etc.).
 PYTHON_WGET_FLAGS = "--no-check-certificate"
+USER = 'vagrant'
 
 Vagrant::Config.run do |config|
   config.vm.box     = "centos-64-x64-vbox4210"
@@ -34,6 +35,7 @@ Vagrant::Config.run do |config|
   config.vm.provision :puppet do |puppet|
     puppet.facter = {
       "python_wget_flags"       => PYTHON_WGET_FLAGS,
+      "user"                    => USER,
     }
     puppet.manifest_file  = "install_pythons.pp"
     puppet.manifests_path = "puppet/manifests"
@@ -41,6 +43,9 @@ Vagrant::Config.run do |config|
 
   # Install Pyramid
   config.vm.provision :puppet do |puppet|
+    puppet.facter = {
+      "user"                    => USER,
+    }
     puppet.manifest_file  = "install_pyramid.pp"
     puppet.manifests_path = "puppet/manifests"
   end

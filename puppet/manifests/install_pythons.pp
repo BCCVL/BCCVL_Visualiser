@@ -29,25 +29,44 @@ class install_pythons {
   # Install virtual env, and upgrade its setuptools version
   ##
   exec { "wget https://pypi.python.org/packages/source/v/virtualenv/virtualenv-1.9.1.tar.gz $python_wget_flags":
+    user    => $user,
     cwd     => '/tmp',
     path    => '/usr/local/bin/:/usr/bin/:/bin/',
     require => Exec['install python 2.7.3'],
   }
   ~>
   exec { 'tar xvfz virtualenv-1.9.1.tar.gz':
+    user    => $user,
     cwd     => '/tmp',
     path    => '/usr/local/bin/:/usr/bin/:/bin/',
     creates => '/tmp/virtualenv-1.9.1',
   }
   ~>
   exec { 'python2.7 virtualenv.py --distribute /vagrant/env':
+    user    => $user,
     cwd     => '/tmp/virtualenv-1.9.1',
     path    => '/usr/local/bin/:/usr/bin/:/bin/',
     creates => '/vagrant/env',
   }
   ~>
   exec { 'pip install setuptools --upgrade':
-    path    => '/vagrant/env/bin/',
+    user    => $user,
+    path    => '/vagrant/env/bin/:/usr/local/bin/:/usr/bin/:/bin/',
+    cwd     => '/tmp',
+  }
+  ~>
+  ###
+  # Install numpy
+  # This needs to occur outside of the buildout process
+  # as STUPIDLY, matplotlib uses introspection to 
+  # see if numpy is already instaled. This introspection doesn't work
+  # as during the buildout process, the egg isn't available to 
+  # the environment.
+  # ANYWAY.. install numpy prior to the buildout
+  ###
+  exec { 'pip install numpy':
+    user    => $user,
+    path    => '/vagrant/env/bin/:/usr/local/bin/:/usr/bin/:/bin/',
     cwd     => '/tmp',
   }
 

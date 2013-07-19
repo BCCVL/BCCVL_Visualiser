@@ -30,8 +30,8 @@ requires = [
     'waitress',
     'pyramid_xmlrpc',
     'numpy',
-#    'matplotlib',
-#    'scipy'
+    'matplotlib',
+    'scipy'
     ]
 
 setup(name='BCCVL_Visualiser',

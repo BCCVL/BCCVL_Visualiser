@@ -13,7 +13,7 @@ class centos_dependencies{
     ensure => present,
   }
 
-  package { "libpng-devel.x86_64":
+  package { "libpng-devel":
     ensure => present,
   }
 
@@ -21,7 +21,7 @@ class centos_dependencies{
     ensure => present,
   }
 
-  package { "giflib-devel.x86_64":
+  package { "giflib-devel":
     ensure => present,
   }
 
@@ -49,7 +49,11 @@ class centos_dependencies{
     ensure => present,
   }
 
-  package { "libjpeg-turbo-devel.x86_64":
+  package { "libjpeg-turbo-devel":
+    ensure => present,
+  }
+
+  package { "lapack-devel":
     ensure => present,
   }
 

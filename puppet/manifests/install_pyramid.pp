@@ -1,6 +1,7 @@
 class install_pyramid {
 
   exec { 'python2.7 bootstrap.py':
+    user    => $user,
     cwd     => '/vagrant/BCCVL_Visualiser',
     path    => '/vagrant/env/bin/',
     timeout => 30 * 60,                        # Allow 30 mins to install
@@ -8,6 +9,7 @@ class install_pyramid {
   }
   ~>
   exec { 'buildout':
+    user    => $user,
     cwd     => '/vagrant/BCCVL_Visualiser',
     path    => '/vagrant/BCCVL_Visualiser/bin/:/usr/local/bin/:/usr/bin/:/bin/:/usr/pgsql-9.2/bin/',
     timeout => 120 * 60,                        # Allow 2 hours to install
