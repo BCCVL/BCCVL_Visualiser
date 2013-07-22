@@ -6,9 +6,10 @@ install:
   - sudo apt-get update
   - sudo apt-get upgrade
   - sudo apt-get install build-essential libcurl4-gnutls-dev libpng12-dev libgd2-xpm-dev libgif-dev libjpeg-dev libblas-dev libsuitesparse-dev libatlas-base-dev liblapack-dev swig gfortran python-mapscript libgdal-dev proj
+  - cd BCCVL_Visualiser
   - pip install setuptools --upgrade
+  - pip install -e .
   # Use the packages instead of the buildout for travis
-  # - cd BCCVL_Visualiser  
   # - python bootstrap.py -c buildout.cfg
   # - bin/buildout -N -t 3 -c buildout.cfg 2>&1 >/dev/null
 # command to run tests
