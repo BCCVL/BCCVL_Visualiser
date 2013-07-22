@@ -3,7 +3,9 @@ python:
   - "2.7"
 # command to install dependencies
 install:
-  - sudo apt-get install libpng12-dev libgd2-xpm-dev libgif-dev libjpeg-dev libblas-dev libatlas-base-dev liblapack-dev build-essential gfortran
+  - sudo apt-get update
+  - sudo apt-get upgrade
+  - sudo apt-get install build-essential libcurl4-gnutls-dev libpng12-dev libgd2-xpm-dev libgif-dev libjpeg-dev libblas-dev libatlas-base-dev liblapack-dev gfortran
   - cd BCCVL_Visualiser
   - pip install setuptools --upgrade
   - python bootstrap.py -c buildout.cfg
