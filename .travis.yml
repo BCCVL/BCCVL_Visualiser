@@ -1,0 +1,13 @@
+language: python
+python:
+  - "2.7"
+  # does not have headers provided, please ask https://launchpad.net/~pypy/+archive/ppa
+  # maintainers to fix their pypy-dev package.
+  - "pypy"
+# command to install dependencies
+install:
+  - pip install numpy
+  - python BCCVL_Visualiser/bootstrap.py -c BCCVL_Visualiser/buildout.cfg
+  - BCCVL_Visualiser/bin/buildout -N -t 3 -c BCCVL_Visualiser/buildout.cfg
+# command to run tests
+script: python BCCVL_Visualiser/setup.py test
