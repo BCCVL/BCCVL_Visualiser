@@ -6,7 +6,6 @@ python:
   - "pypy"
 # command to install dependencies
 install:
-  - pip install numpy
   - python BCCVL_Visualiser/bootstrap.py -c BCCVL_Visualiser/buildout.cfg
   - BCCVL_Visualiser/bin/buildout -N -t 3 -c BCCVL_Visualiser/buildout.cfg
 # command to run tests
