@@ -69,10 +69,10 @@ MAP
         END
 
         # SCALE the incoming data between 0 and 255
-        PROCESSING "SCALE=AUTO"
+        #PROCESSING "SCALE=AUTO"
 
         # SCALE the data into "10" buckets (or steps)
-        PROCESSING "SCALE_BUCKETS=10"
+        #PROCESSING "SCALE_BUCKETS=10"
 
         # Define the transparent of image. 100 is not transpartent.
         # 0 is totally transparent.
@@ -87,7 +87,7 @@ MAP
             EXPRESSION ([pixel]>0)
             STYLE
                 COLORRANGE  255 255 255 0 128 255
-                DATARANGE   0 255
+                DATARANGE   0 1
             END
         END
     END
