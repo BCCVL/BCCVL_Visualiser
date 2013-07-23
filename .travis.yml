@@ -7,11 +7,10 @@ python:
 env:
     - PACKAGES=true
 install:
+  - deactivate
   - sudo apt-get update
   - sudo apt-get upgrade
   - sudo apt-get install build-essential python-gdal libcurl4-gnutls-dev libpng12-dev libgd2-xpm-dev libgif-dev libjpeg-dev libblas-dev libsuitesparse-dev libatlas-base-dev liblapack-dev swig gfortran python-mapscript libgdal-dev proj
-  - "if [[ $TRAVIS_PYTHON_VERSION == '2.7' ]]; then ln -s /usr/lib/python2.7/dist-packages/mapscript.py ~/virtualenv/python2.7/lib/python2.7/site-packages/; fi"
-  - "if [[ $TRAVIS_PYTHON_VERSION == '2.7' ]]; then ln -s /usr/lib/python2.7/dist-packages/gdal.py ~/virtualenv/python2.7/lib/python2.7/site-packages/; fi"
   - cd BCCVL_Visualiser
   - pip install setuptools --upgrade
   # Use the packages instead of the buildout for travis
