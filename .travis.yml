@@ -1,7 +1,11 @@
 language: python
+virtualenv:
+  system_site_packages: true
 python:
   - "2.7"
 # command to install dependencies
+env:
+    - PACKAGES=true
 install:
   - sudo apt-get update
   - sudo apt-get upgrade

@@ -13,11 +13,13 @@ requires = [
 #    'GeoAlchemy2',
 
 
-    # mapscript is now installed during the buildout.
+    # mapscript and GDAL is now installed during the buildout.
     # it is installed using the cmmi recipe (configure && make && make install)
     #
-    # 'mapscript',      # Python Map Server implementation
-
+    # For travis, it's installed via packages
+    #
+    'GDAL',
+    'mapscript',      # Python Map Server implementation
 
     'dogpile.cache',    # cache regions, lets you cache the result of queries
     'PIL',              # Python Imaging Library
