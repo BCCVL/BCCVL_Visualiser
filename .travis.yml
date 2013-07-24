@@ -5,7 +5,7 @@ python:
   - "2.7"
 # command to install dependencies
 env:
-    - PACKAGES=true
+  - PACKAGES=true
 install:
   - sudo apt-get update
   - sudo apt-get upgrade
