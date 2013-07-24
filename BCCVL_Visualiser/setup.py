@@ -18,8 +18,8 @@ requires = [
     #
     # For travis, it's installed via packages
     #
-    'GDAL',
-    'mapscript',      # Python Map Server implementation
+    'GDAL >= 1.7.3',
+    'mapscript >= 6.0.1',      # Python Map Server implementation
 
     'dogpile.cache',    # cache regions, lets you cache the result of queries
     'PIL',              # Python Imaging Library
