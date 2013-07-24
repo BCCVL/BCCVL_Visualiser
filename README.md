@@ -1,3 +1,5 @@
+[![Build Status](https://travis-ci.org/BCCVL/BCCVL_Visualiser.png)](https://travis-ci.org/BCCVL/BCCVL_Visualiser)
+
 BCCVL_Visualiser
 ================
 
