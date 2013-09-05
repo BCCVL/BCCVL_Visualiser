@@ -80,9 +80,12 @@ class RasterAPIv1(BaseRasterAPI):
         # work out the map file path
         map_file_path = MapScriptHelper.get_path_to_map_data_file(request, hash_string)
 
+
+
         # get the data from the url, only if we don't already have it
         if not os.path.isfile(map_file_path):
             r = requests.get(data_url, verify=False)
+            r.raise_for_status()
             r.content
 
             dirname, filename = os.path.split(os.path.abspath(map_file_path))
