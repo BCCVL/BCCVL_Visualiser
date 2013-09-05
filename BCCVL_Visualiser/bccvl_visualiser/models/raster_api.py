@@ -8,6 +8,10 @@ from bccvl_visualiser.models.api import (
     BaseAPI,
     )
 
+import requests
+import hashlib
+import logging
+
 class BaseRasterAPI(BaseAPI):
 
     @staticmethod
@@ -58,6 +62,45 @@ class RasterAPIv1(BaseRasterAPI):
         RasterAPIv1._set_ows_default_params_if_not_set(ows_request)
 
         return map, ows_request
+
+    @staticmethod
+    def get_data_and_set_data_for_map_layer_if_not_set(request, map, data_url, layer_name):
+        """ Given a data_url, will set the LAYER's DATA value
+
+            Will go to the url, and get the data. Once this is done,
+            it will move the data to the map's SHAPEPATH.
+
+            Once the data is in the right directory (SHAPEPATH), the
+            DATA value for the LAYER will be set accordingly.
+
+        """
+
+        # generate a hash of the url
+        hash_string = hashlib.sha224(data_url).hexdigest()
+        # work out the map file path
+        map_file_path = MapScriptHelper.get_path_to_map_data_file(request, hash_string)
+
+        # get the data from the url, only if we don't already have it
+        if not os.path.isfile(map_file_path):
+            r = requests.get(data_url, verify=False)
+            r.content
+
+            dirname, filename = os.path.split(os.path.abspath(map_file_path))
+
+            if not os.path.isdir(dirname):
+                os.makedirs(dirname)
+
+            # write the data from the url to the map file path
+            output = open(map_file_path,'wb')
+            output.write(r.content)
+            output.close()
+
+        # look up the layer
+        layer = map.getLayerByName(layer_name)
+
+        # if the layer data isn't set, set it
+        if layer != None and layer.data == None:
+                layer.data = hash_string
 
     @staticmethod
     def set_data_for_map_layer_if_not_set(map, data_id, layer_name):
