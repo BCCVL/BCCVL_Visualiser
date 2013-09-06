@@ -17,6 +17,15 @@
                 // Spherical Meters
                 // The official name for the 900913 (google) projection
                 mercator = new OpenLayers.Projection("EPSG:3857");
+                
+                // Australia Bounds
+                australia_bounds = new OpenLayers.Bounds();
+                australia_bounds.extend(new OpenLayers.LonLat(111,-10));
+                australia_bounds.extend(new OpenLayers.LonLat(152,-44));
+                australia_bounds = australia_bounds.transform(geographic, mercator);
+
+                var zoom_bounds = australia_bounds;
+
 
                 map = new OpenLayers.Map('map', {
                     projection: mercator
@@ -40,7 +49,7 @@
 
                 map.addLayers([wms, osm, gmap])
                 map.addControl(new OpenLayers.Control.LayerSwitcher());
-                map.zoomToMaxExtent();
+                map.zoomToExtent(zoom_bounds);
             }
         </script>
 
