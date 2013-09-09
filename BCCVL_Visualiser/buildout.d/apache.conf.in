@@ -1,0 +1,21 @@
+<VirtualHost *:80>
+    # Adds conditional rewrite for visualiser
+    RewriteCond %{REQUEST_URI} (^/(_visualiser))
+    RewriteRule ^/_visualiser/(.*)$ http://${hosts:visualiser}:${ports:visualiser}/$1 [L,P]
+
+    <Location /_visualiser>
+        ProxyPassReverse http://${hosts:visualiser}:${ports:visualiser}
+    </Location>
+
+</VirtualHost>
+
+<VirtualHost *:443>
+    # Adds conditional rewrite for visualiser
+    RewriteCond %{REQUEST_URI} (^/(_visualiser))
+    RewriteRule ^/_visualiser/(.*)$ http://${hosts:visualiser}:${ports:visualiser}/$1 [L,P]
+
+    <Location /_visualiser>
+        ProxyPassReverse http://${hosts:visualiser}:${ports:visualiser}
+    </Location>
+
+</VirtualHost>
