@@ -1,7 +1,7 @@
 [program:visualiser]
 command = ${buildout:bin-directory}/pserve ${conf:file}
 process_name = visualiser
-directory = ${buildout:bin-directory}
+directory = ${buildout:directory}
 priority = 20
 redirect_stderr = true
 user = visualiser
