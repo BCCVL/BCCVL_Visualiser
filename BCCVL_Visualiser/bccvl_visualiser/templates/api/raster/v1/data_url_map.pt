@@ -3,8 +3,7 @@
     <head>
         <title>OpenLayers Example</title>
         <script src="//maps.google.com/maps/api/js?v=3&amp;sensor=false"></script>
-        <!-- fix this to use the static path resolution built into pyramid -->
-        <script src="../../../static/js/OpenLayers.js"></script>
+        <script src="${request.static_url('bccvl_visualiser:static/js/OpenLayers.js')}"></script>
 
         <script defer="defer" type="text/javascript">
 
@@ -17,7 +16,7 @@
                 // Spherical Meters
                 // The official name for the 900913 (google) projection
                 mercator = new OpenLayers.Projection("EPSG:3857");
-                
+
                 // Australia Bounds
                 australia_bounds = new OpenLayers.Bounds();
                 australia_bounds.extend(new OpenLayers.LonLat(111,-10));
