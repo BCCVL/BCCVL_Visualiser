@@ -65,5 +65,5 @@
 
     # Adds conditional rewrite for visualiser
     RewriteCond %{REQUEST_URI} (^/(_visualiser))
-    RewriteRule ^/_visualiser/(.*)$ http://${hosts:visualiser}:${ports:visualiser}/VirtualHostBase/https/%{SERVER_NAME}:80/VirtualHostRoot/_vh__visualiser/$1 [L,P]
+    RewriteRule ^/_visualiser/(.*)$ http://${hosts:visualiser}:${ports:visualiser}/VirtualHostBase/https/%{SERVER_NAME}:443/VirtualHostRoot/_vh__visualiser/$1 [L,P]
 </VirtualHost>
