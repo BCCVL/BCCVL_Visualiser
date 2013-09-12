@@ -33,7 +33,8 @@ requires = [
     'pyramid_xmlrpc',
     'numpy',
     'matplotlib',
-    'scipy'
+    'scipy',
+    'repoze.vhm',       # Use repoze middleware for Virtual Host management
     ]
 
 setup(name='BCCVL_Visualiser',
