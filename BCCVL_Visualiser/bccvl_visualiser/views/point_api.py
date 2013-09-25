@@ -56,6 +56,13 @@ class PointAPIViewv1(BasePointAPIView):
     def demo_map(self):
         return self._to_dict()
 
+    @view_config(name='data_url_map', renderer='../templates/api/point/v1/data_url_map.pt')
+    def data_url_map(self):
+        return_dict = {
+            "data_url": self.request.GET.getone('data_url'),
+        }
+        return return_dict
+
     # Cache this view for 1 day (86400 seconds)
     @view_config(name='wms', http_cache=86400)
     def wms(self):
@@ -94,6 +101,43 @@ class PointAPIViewv1(BasePointAPIView):
         return response
 
     # Cache this view for 1 day (86400 seconds)
+    @view_config(name='wms_data_url', http_cache=86400)
+    def wms_data_url(self):
+
+        log = logging.getLogger(__name__)
+        log.debug('Processing ows request')
+
+        data_url = None
+        try:
+            data_url = self.request.GET.getone('DATA_URL')
+        except:
+            log.warn('No data_url provided')
+            data_url = None
+
+        map, ows_request = PointAPIv1.\
+            get_map_and_ows_request_from_request(self.request)
+
+        # Set the data for the first layer specified (unless already set)
+        layers = ows_request.getValueByName('LAYERS')
+        layer_name = layers.split(',')[0]
+
+        PointAPIv1.set_connection_for_map_connection_if_not_set_url(self.request, map, data_url, layer_name)
+
+        map_image = None
+        map_image_content_type = None
+
+        with MapScriptHelper.MAPSCRIPT_RLOCK:
+            mapscript.msIO_installStdoutToBuffer()
+            retval = map.OWSDispatch(ows_request)
+            map_image_content_type = mapscript.msIO_stripStdoutBufferContentType()
+            map_image = mapscript.msIO_getStdoutBufferBytes()
+            mapscript.msIO_resetHandlers()
+
+        response = Response(map_image, content_type=map_image_content_type)
+
+        return response
+
+    # Cache this view for 1 day (86400 seconds)
     @view_config(name='wfs', http_cache=86400)
     def wfs(self):
 
@@ -113,6 +157,42 @@ class PointAPIViewv1(BasePointAPIView):
         # Set the data for the first layer specified (unless already set)
         layer_name = ows_request.getValueByName('LAYER')
         PointAPIv1.set_connection_for_map_connection_if_not_set(self.request, map, data_id, layer_name)
+
+        map_image = None
+        map_image_content_type = None
+
+        with MapScriptHelper.MAPSCRIPT_RLOCK:
+            mapscript.msIO_installStdoutToBuffer()
+            retval = map.OWSDispatch(ows_request)
+            map_image_content_type = mapscript.msIO_stripStdoutBufferContentType()
+            map_image = mapscript.msIO_getStdoutBufferBytes()
+            mapscript.msIO_resetHandlers()
+
+        response = Response(map_image, content_type=map_image_content_type)
+
+        return response
+
+    # Cache this view for 1 day (86400 seconds)
+    @view_config(name='wfs_data_url', http_cache=86400)
+    def wfs_data_url(self):
+
+        log = logging.getLogger(__name__)
+        log.debug('Processing ows request')
+
+        data_url = None
+        try:
+            data_url = self.request.GET.getone('DATA_URL')
+        except:
+            log.warn('No data_url provided')
+            data_url = None
+
+        map, ows_request = PointAPIv1.\
+            get_map_and_ows_request_from_request(self.request)
+
+        # Set the data for the first layer specified (unless already set)
+        layer_name = ows_request.getValueByName('LAYER')
+        layer_name = layers.split(',')[0]
+        PointAPIv1.set_connection_for_map_connection_if_not_set_url(self.request, map, data_url, layer_name)
 
         map_image = None
         map_image_content_type = None

@@ -78,12 +78,11 @@ class PointAPIv1(BasePointAPI):
         return map, ows_request
 
     @staticmethod
-    def set_connection_for_map_connection_if_not_set(request, map, data_id, layer_name):
-        """ Given a data_id, will set the LAYER's DATA value
+    def set_connection_for_map_connection_if_not_set_url(request, map, data_url, layer_name):
+        """ Given a data_url, will set the LAYER's DATA value
 
-            Will speak to the Data Manager and get a local copy of the
-            data (represented by the data_id). Once this is done,
-            it will move the data to the map's SHAPEPATH.
+            Will speak directly to the web server, and download the file.
+            Once this is done, it will move the data to the map's SHAPEPATH.
 
             Once the data is in the right directory (SHAPEPATH), the
             DATA value for the LAYER will be set accordingly.
@@ -104,6 +103,46 @@ class PointAPIv1(BasePointAPI):
                 #
                 # For now, just set the map layer's data to our test data
                 raise NotImplementedError("TODO - This method needs to handle a data_id")
+
+    @staticmethod
+    def set_connection_for_map_connection_if_not_set(request, map, data_id, layer_name):
+        """ Given a data_id, will set the LAYER's DATA value
+
+            Will speak to the Data Manager and get a local copy of the
+            data (represented by the data_id). Once this is done,
+            it will move the data to the map's SHAPEPATH.
+
+            Once the data is in the right directory (SHAPEPATH), the
+            DATA value for the LAYER will be set accordingly.
+
+        """
+        # generate a hash of the url
+        hash_string = hashlib.sha224(data_url).hexdigest()
+        # work out the map file path
+        map_file_path = MapScriptHelper.get_path_to_map_data_file(request, hash_string)
+
+        # get the data from the url, only if we don't already have it
+        if not os.path.isfile(map_file_path):
+            r = requests.get(data_url, verify=False)
+            r.raise_for_status()
+            r.content
+
+            dirname, filename = os.path.split(os.path.abspath(map_file_path))
+
+            if not os.path.isdir(dirname):
+                os.makedirs(dirname)
+
+            # write the data from the url to the map file path
+            output = open(map_file_path,'wb')
+            output.write(r.content)
+            output.close()
+
+        layer = map.getLayerByName(layer_name)
+
+        if layer != None and layer.connection == None:
+            connection = PointAPIv1._get_connection(request, hash_string)
+            log.debug("Setting map layer connection to: %s", connection)
+            layer.connection = connection
 
     @staticmethod
     def _set_ows_default_params_if_not_set(ows_request):
