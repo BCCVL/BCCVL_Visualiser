@@ -119,6 +119,8 @@ class PointAPIv1(BasePointAPI):
             DATA value for the LAYER will be set accordingly.
 
         """
+        log = logging.getLogger(__name__)
+
         # generate a hash of the url
         hash_string = hashlib.sha224(data_url).hexdigest()
         # work out the map file path
