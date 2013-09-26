@@ -172,7 +172,7 @@ class PointAPIv1(BasePointAPI):
     <OGRVRTLayer name='{0}'>
         <SrcDataSource>{1}</SrcDataSource>
         <LayerSRS>WGS84</LayerSRS>
-        <GeometryField encoding='PointFromColumns' x='{2}' y='{3}'/>
+        <GeometryField encoding='PointFromColumns' x='{1}' y='{2}'/>
         <GeometryType>wkbPoint</GeometryType>
     </OGRVRTLayer>
 </OGRVRTDataSource>""".format(os.path.splitext(file_name)[0], file_path, x_column_name, y_column_name)
