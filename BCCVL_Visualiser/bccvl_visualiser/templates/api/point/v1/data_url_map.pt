@@ -1,7 +1,7 @@
 <!DOCTYPE html>
 <html style="width:100%; height:100%">
     <head>
-        <title>Point API V1 Demo Map (WFS Example)</title>
+        <title>Point API V1 Data URL Map (WMS/WFS)</title>
         <script src="http://openlayers.org/api/OpenLayers.js"></script>
         <script src="http://maps.google.com/maps/api/js?v=3&amp;sensor=false"></script>
 
@@ -54,7 +54,7 @@
                 }
 
                 var wfs = new OpenLayers.Layer.Vector(
-                    "Demo WFS",
+                    "WFS",
                     {
                         strategies: [new OpenLayers.Strategy.BBOX({ratio: 1.0, resFactor: 1.0})],
                         protocol: new OpenLayers.Protocol.HTTP(wfs_options)
