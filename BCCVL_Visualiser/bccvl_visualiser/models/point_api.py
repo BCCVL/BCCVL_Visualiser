@@ -82,10 +82,10 @@ class PointAPIv1(BasePointAPI):
         return map, ows_request
 
     @staticmethod
-    def set_connection_for_map_connection_if_not_set_url(request, map, data_url, layer_name):
-        """ Given a data_url, will set the LAYER's DATA value
+    def set_connection_for_map_connection_if_not_set(request, map, data_id, layer_name):
+        """ Given a data_id, will lookup the data item via the Data Manager
 
-            Will speak directly to the web server, and download the file.
+            Will speak directly to the Data Mover, and download the file.
             Once this is done, it will move the data to the map's SHAPEPATH.
 
             Once the data is in the right directory (SHAPEPATH), the
