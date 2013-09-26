@@ -9,6 +9,10 @@ from bccvl_visualiser.models.api import (
     BaseAPI
     )
 
+import requests
+import hashlib
+import logging
+
 class BasePointAPI(BaseAPI):
 
     @staticmethod
@@ -78,12 +82,11 @@ class PointAPIv1(BasePointAPI):
         return map, ows_request
 
     @staticmethod
-    def set_connection_for_map_connection_if_not_set(request, map, data_id, layer_name):
-        """ Given a data_id, will set the LAYER's DATA value
+    def set_connection_for_map_connection_if_not_set_url(request, map, data_url, layer_name):
+        """ Given a data_url, will set the LAYER's DATA value
 
-            Will speak to the Data Manager and get a local copy of the
-            data (represented by the data_id). Once this is done,
-            it will move the data to the map's SHAPEPATH.
+            Will speak directly to the web server, and download the file.
+            Once this is done, it will move the data to the map's SHAPEPATH.
 
             Once the data is in the right directory (SHAPEPATH), the
             DATA value for the LAYER will be set accordingly.
