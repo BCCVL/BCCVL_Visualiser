@@ -165,7 +165,7 @@ class PointAPIv1(BasePointAPI):
 
 
     @staticmethod
-    def _get_connection(request, file_name, x_column_name='longitude', y_column_name='latitude'):
+    def _get_connection(request, file_name, x_column_name='lon', y_column_name='lat'):
         file_path = MapScriptHelper.get_path_to_map_data_file(request, file_name)
         connection = """"\
 <OGRVRTDataSource>
