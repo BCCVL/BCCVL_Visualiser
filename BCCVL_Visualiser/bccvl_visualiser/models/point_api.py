@@ -167,21 +167,19 @@ class PointAPIv1(BasePointAPI):
             # some simple value checks
             validator.add_value_check('lon', float,
                           'EX3', 'lon must be a float')
-            
+
             validator.add_value_check('lat', float,
                           'EX4', 'lat must be a float')
 
             try:
                 with open(map_file_path, 'rb') as csvfile:
                     reader = csv.reader(csvfile, PointAPIv1.OccurrencesDialect)
-                    problems = validator.validate(reader, limit=10)
+                    problems = validator.validate(reader, limit=20)
                     if len(problems) > 0:
-                        raise Exception(str(problems))
+                        raise Exception("Problem parsing Occurrence CSV file: %s" % str(problems))
             except:
-                os.remove(map_file_path) 
+                os.remove(map_file_path)
                 raise
-
-
 
 
         layer = map.getLayerByName(layer_name)
