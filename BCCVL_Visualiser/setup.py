@@ -35,6 +35,7 @@ requires = [
     'matplotlib',
     'scipy',
     'repoze.vhm',       # Use repoze middleware for Virtual Host management
+    'csvvalidator',
     ]
 
 setup(name='BCCVL_Visualiser',

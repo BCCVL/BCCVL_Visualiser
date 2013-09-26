@@ -1,6 +1,9 @@
 import mapscript
 import os
 import logging
+import csv
+from csvvalidator import *
+
 
 from bccvl_visualiser.models import TextWrapper
 from bccvl_visualiser.models.mapscript_helper import MapScriptHelper
@@ -35,6 +38,15 @@ class PointAPIv1(BasePointAPI):
     MAP_FILE_NAME = 'point_api_v1_map_file.map'
     TEST_RED_KANGAROO_DATA_FILE_NAME = 'test_red_kangaroo_data.csv'
     TEST_MAGPIE_DATA_FILE_NAME = 'test_magpie_data.csv'
+
+    class OccurrencesDialect(csv.Dialect):
+        strict = True
+        skipinitialspace = True
+        quoting = csv.QUOTE_MINIMAL
+        delimiter = ','
+        quotechar = '"'
+        lineterminator = '\n'
+
 
     @staticmethod
     def version():
@@ -131,7 +143,6 @@ class PointAPIv1(BasePointAPI):
         if not os.path.isfile(map_file_path):
             r = requests.get(data_url, verify=False)
             r.raise_for_status()
-            r.content
 
             dirname, filename = os.path.split(os.path.abspath(map_file_path))
 
@@ -142,6 +153,36 @@ class PointAPIv1(BasePointAPI):
             output = open(map_file_path,'wb')
             output.write(r.content)
             output.close()
+
+            field_names = (
+               'lon',
+               'lat',
+               )
+            validator = CSVValidator(field_names)
+
+            # basic header and record length checks
+            validator.add_header_check('EX1', 'bad header')
+            validator.add_record_length_check('EX2', 'unexpected record length')
+
+            # some simple value checks
+            validator.add_value_check('lon', float,
+                          'EX3', 'lon must be a float')
+            
+            validator.add_value_check('lat', float,
+                          'EX4', 'lat must be a float')
+
+            try:
+                with open(map_file_path, 'rb') as csvfile:
+                    reader = csv.reader(csvfile, PointAPIv1.OccurrencesDialect)
+                    problems = validator.validate(reader, limit=10)
+                    if len(problems) > 0:
+                        raise Exception(str(problems))
+            except:
+                os.remove(map_file_path) 
+                raise
+
+
+
 
         layer = map.getLayerByName(layer_name)
 
@@ -179,3 +220,4 @@ class PointAPIv1(BasePointAPI):
 </OGRVRTDataSource>""".format(os.path.splitext(file_name)[0], file_path, x_column_name, y_column_name)
 
         return connection
+
