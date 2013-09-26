@@ -123,8 +123,9 @@ class PointAPIv1(BasePointAPI):
 
         # generate a hash of the url
         hash_string = hashlib.sha224(data_url).hexdigest()
+        file_name = hash_string + '.csv'
         # work out the map file path
-        map_file_path = MapScriptHelper.get_path_to_map_data_file(request, hash_string)
+        map_file_path = MapScriptHelper.get_path_to_map_data_file(request, file_name)
 
         # get the data from the url, only if we don't already have it
         if not os.path.isfile(map_file_path):
@@ -145,7 +146,7 @@ class PointAPIv1(BasePointAPI):
         layer = map.getLayerByName(layer_name)
 
         if layer != None and layer.connection == None:
-            connection = PointAPIv1._get_connection(request, hash_string)
+            connection = PointAPIv1._get_connection(request, file_name)
             log.debug("Setting map layer connection to: %s", connection)
             layer.connection = connection
 
