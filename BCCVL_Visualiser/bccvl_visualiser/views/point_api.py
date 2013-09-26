@@ -191,7 +191,6 @@ class PointAPIViewv1(BasePointAPIView):
 
         # Set the data for the first layer specified (unless already set)
         layer_name = ows_request.getValueByName('LAYER')
-        layer_name = layers.split(',')[0]
         PointAPIv1.set_connection_for_map_connection_if_not_set_url(self.request, map, data_url, layer_name)
 
         map_image = None
