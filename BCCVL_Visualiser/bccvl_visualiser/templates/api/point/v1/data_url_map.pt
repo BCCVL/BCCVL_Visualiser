@@ -82,7 +82,8 @@
                 var osm = new OpenLayers.Layer.OSM();
                 var gmap = new OpenLayers.Layer.Google("Google Streets", {visibility: false});
 
-                map.addLayers([wfs, wms, osm, gmap])
+//                map.addLayers([wfs, wms, osm, gmap])
+                map.addLayers([wms, osm, gmap])
                 map.addControl(new OpenLayers.Control.LayerSwitcher());
                 console.log(zoom_bounds);
                 map.zoomToExtent(zoom_bounds);
