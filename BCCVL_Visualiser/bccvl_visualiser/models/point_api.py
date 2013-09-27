@@ -154,9 +154,35 @@ class PointAPIv1(BasePointAPI):
             output.write(r.content)
             output.close()
 
+        valid = False
+        lng_column = None
+        lat_column = None
+
+        if PointAPIv1._check_if_occurrences_csv_valid('LNGDEC', 'LATDEC', map_file_path):
+            lng_column = 'LNGDEC'
+            lat_column = 'LATDEC'
+        elif PointAPIv1._check_if_occurrences_csv_valid('lon', 'lat', map_file_path):
+            lng_column = 'lon'
+            lat_column = 'lat'
+        else:
+            os.remove(map_file_path)
+            raise Exception("Problem parsing Occurrence CSV file: %s" % str(problems))
+
+
+        layer = map.getLayerByName(layer_name)
+
+        if layer != None and layer.connection == None:
+            connection = PointAPIv1._get_connection(request, file_name, lng_column, lat_column)
+            log.debug("Setting map layer connection to: %s", connection)
+            layer.connection = connection
+
+
+    @staticmethod
+    def _check_if_occurrences_csv_valid(lng, lat, file_path):
+            # try validate as lon, lat
             field_names = (
-               'lon',
-               'lat',
+               lng,
+               lat,
                )
             validator = CSVValidator(field_names)
 
@@ -165,29 +191,20 @@ class PointAPIv1(BasePointAPI):
             validator.add_record_length_check('EX2', 'unexpected record length')
 
             # some simple value checks
-            validator.add_value_check('lon', float,
-                          'EX3', 'lon must be a float')
+            validator.add_value_check(lng, float,
+                          'EX3', "%s must be a float" % lng)
 
-            validator.add_value_check('lat', float,
-                          'EX4', 'lat must be a float')
+            validator.add_value_check(lat, float,
+                          'EX4', "%s must be a float" % lat)
 
-            try:
-                with open(map_file_path, 'rb') as csvfile:
-                    reader = csv.reader(csvfile, PointAPIv1.OccurrencesDialect)
-                    problems = validator.validate(reader, limit=20)
-                    if len(problems) > 0:
-                        raise Exception("Problem parsing Occurrence CSV file: %s" % str(problems))
-            except:
-                os.remove(map_file_path)
-                raise
+            with open(map_file_path, 'rb') as csvfile:
+                reader = csv.reader(csvfile, PointAPIv1.OccurrencesDialect)
+                problems = validator.validate(reader, limit=20)
 
-
-        layer = map.getLayerByName(layer_name)
-
-        if layer != None and layer.connection == None:
-            connection = PointAPIv1._get_connection(request, file_name)
-            log.debug("Setting map layer connection to: %s", connection)
-            layer.connection = connection
+                if len(problems) > 0:
+                    return False
+                else:
+                    return True
 
     @staticmethod
     def _set_ows_default_params_if_not_set(ows_request):
