@@ -192,7 +192,7 @@ class PointAPIv1(BasePointAPI):
                 validator.add_value_check(lat, float,
                               'EX4', "%s must be a float" % lat)
 
-            with open(map_file_path, 'rb') as csvfile:
+            with open(file_path, 'rb') as csvfile:
                 reader = csv.reader(csvfile, PointAPIv1.OccurrencesDialect)
                 problems = validator.validate(reader, limit=20)
 
