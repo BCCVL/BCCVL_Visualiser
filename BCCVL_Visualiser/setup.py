@@ -22,7 +22,7 @@ requires = [
     'mapscript >= 6.0.1',      # Python Map Server implementation
 
     'dogpile.cache',    # cache regions, lets you cache the result of queries
-    'PIL',              # Python Imaging Library
+    'Pillow',           # Python Imaging Library
     'shapely',          # PostGIS-ish operations in python
     'transaction',
     'pyramid_tm',
