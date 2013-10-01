@@ -7,14 +7,13 @@ python:
 env:
   - PACKAGES=true
 install:
+  - sudo apt-add-repository -y ppa:ubuntugis/ubuntugis-unstable
   - sudo apt-get update
-  - sudo apt-get upgrade
-  - sudo apt-get install build-essential python-gdal=1.7.3-6ubuntu3 libcurl4-gnutls-dev libpng12-dev libgd2-xpm-dev libgif-dev libjpeg-dev libblas-dev libsuitesparse-dev libatlas-base-dev liblapack-dev swig gfortran python-mapscript=6.0.1-2ubuntu1 libgdal-dev proj
+  - sudo apt-get install build-essential libcurl4-gnutls-dev libpng12-dev libgd2-xpm-dev libgif-dev libjpeg-dev libblas-dev libsuitesparse-dev libatlas-base-dev liblapack-dev swig gfortran libgdal-dev proj libproj-dev libgeos-dev
   - cd BCCVL_Visualiser
   - pip install setuptools --upgrade
-  # Use the packages instead of the buildout for travis
-  - python bootstrap.py -c buildout_package_managed.cfg
-  - bin/buildout -N -t 3 -c buildout_package_managed.cfg
+  - python bootstrap.py -c buildout.cfg
+  - bin/buildout -N -t 3 -c buildout.cfg
 # command to run tests
 script:
   - bin/test
