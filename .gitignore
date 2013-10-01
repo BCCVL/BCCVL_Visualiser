@@ -36,6 +36,8 @@ nosetests.xml
 
 # Virtual Env
 env
+BCCVL_Visualiser/local/
+BCCVL_Visualiser/include/
 
 # Vagrant
 .vagrant
@@ -44,3 +46,4 @@ env
 .swp
 
 etc/
+
