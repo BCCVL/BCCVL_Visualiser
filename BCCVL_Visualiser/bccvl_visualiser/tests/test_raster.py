@@ -13,7 +13,6 @@ class TestRasterAPIv1(unittest.TestCase):
 
     def test_raster_in_api_collection(self):
         self.assertTrue(BaseRasterAPI in APICollection.base_api_inheritors())
-        self.assertTrue(RasterAPIv1 in APICollection.base_api_inheritors())
 
     def test_point_in_api_collection_to_dict(self):
         api_dict = APICollection.to_dict()
