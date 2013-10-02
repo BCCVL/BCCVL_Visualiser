@@ -37,3 +37,28 @@ class TestPointAPIv1(unittest.TestCase):
 
     def test_point_api_identifier(self):
         self.assertEqual(BasePointAPI.identifier(), 'point')
+
+    def test_version(self):
+        self.assertEqual(PointAPIv1.version(), 1, msg="Version should be 1")
+
+    def test_to_dict(self):
+        name = PointAPIv1.identifier()
+        description = PointAPIv1.description()
+        version = PointAPIv1.version()
+
+        the_dict = PointAPIv1.to_dict()
+
+        self.assertEqual(the_dict['name'], name, msg="Name should match")
+        self.assertEqual(the_dict['description'], description, msg="Description should match")
+        self.assertEqual(the_dict['version'], version, msg="Version should match")
+
+    def test_to_dict(self):
+        name = PointAPIv1.identifier()
+        description = PointAPIv1.description()
+        version = PointAPIv1.version()
+
+        the_dict = PointAPIv1.to_dict()
+
+        self.assertEqual(the_dict['name'], name, msg="Name should match")
+        self.assertEqual(the_dict['description'], description, msg="Description should match")
+        self.assertEqual(the_dict['version'], version, msg="Version should match")
