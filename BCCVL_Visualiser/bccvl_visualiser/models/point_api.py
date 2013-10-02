@@ -14,7 +14,6 @@ from bccvl_visualiser.models.api import (
 
 import requests
 import hashlib
-import logging
 
 class BasePointAPI(BaseAPI):
 

@@ -3,7 +3,6 @@ import math
 
 from dogpile.cache import make_region
 
-
 short_term = make_region()
 long_term = make_region()
 until_update = make_region()

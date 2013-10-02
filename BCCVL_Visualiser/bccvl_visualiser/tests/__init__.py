@@ -10,6 +10,7 @@ pp = pprint.PrettyPrinter(indent=4)
 
 class TestMyCode(unittest.TestCase):
     def setUp(self):
+        self.config = testing.setUp()
         pass
 
     def tearDown(self):
