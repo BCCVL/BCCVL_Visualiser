@@ -38,14 +38,6 @@ class PointAPIv1(BasePointAPI):
     TEST_RED_KANGAROO_DATA_FILE_NAME = 'test_red_kangaroo_data.csv'
     TEST_MAGPIE_DATA_FILE_NAME = 'test_magpie_data.csv'
 
-    class OccurrencesDialect(csv.Dialect):
-        strict = True
-        skipinitialspace = True
-        quoting = csv.QUOTE_MINIMAL
-        delimiter = ','
-        quotechar = '"'
-        lineterminator = '\n'
-
 
     @staticmethod
     def version():
@@ -173,7 +165,6 @@ class PointAPIv1(BasePointAPI):
             log.debug("Setting map layer connection to: %s", connection)
             layer.connection = connection
 
-
     @staticmethod
     def _check_if_occurrences_csv_valid(field_names, file_path, lng=None, lat=None):
             validator = CSVValidator(field_names)
@@ -214,7 +205,6 @@ class PointAPIv1(BasePointAPI):
         if layers == None:
             ows_request.addParameter('LAYERS', PointAPIv1.DEFAULT_LAYER_NAME)
 
-
     @staticmethod
     def _get_connection(request, file_name, x_column_name='lon', y_column_name='lat'):
         file_path = MapScriptHelper.get_path_to_map_data_file(request, file_name)
@@ -229,4 +219,3 @@ class PointAPIv1(BasePointAPI):
 </OGRVRTDataSource>""".format(os.path.splitext(file_name)[0], file_path, x_column_name, y_column_name)
 
         return connection
-
