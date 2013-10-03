@@ -2,7 +2,7 @@ from pyramid.config import Configurator
 from sqlalchemy import engine_from_config
 from pyramid.settings import asbool, aslist
 import logging
-from bccvl_visualiser.models import MapScriptHelper
+from bccvl_visualiser.models import BCCVLMap
 
 def initialise_cache(settings):
     """ Initialise the application's cache regions
@@ -25,9 +25,9 @@ def initialise_cache(settings):
         else:
             log.warn('Cache {} is already configured.'.format(cache))
 
-def initialise_map_script_helper(settings):
-    """ Initialise the map script helper """
-    MapScriptHelper.configure_from_config(settings)
+def configure_bccvl_map(settings):
+    """ Configure the BCCVL Map """
+    BCCVLMap.configure_from_config(settings)
 
 def main(global_config, **settings):
     """ This function returns a Pyramid WSGI application.
@@ -37,7 +37,8 @@ def main(global_config, **settings):
 
     # Configure dogpile.cache regions from configuration
     initialise_cache(config.registry.settings)
-    initialise_map_script_helper(config.registry.settings)
+    # Configure our BCCVL Map class
+    configure_bccvl_map(config.registry.settings)
 
     config.add_static_view('static', 'static', cache_max_age=3600)
 
