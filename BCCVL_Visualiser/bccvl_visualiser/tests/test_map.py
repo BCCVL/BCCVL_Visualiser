@@ -11,8 +11,7 @@ pp = pprint.PrettyPrinter(indent=4)
 
 from paste.deploy.loadwsgi import appconfig
 
-
-class TestPointAPIv1(unittest.TestCase):
+class TestBCCVLMap(unittest.TestCase):
     def setUp(self):
         self.config = appconfig('config:development.ini', 'pyramid', relative_to='.')
         from bccvl_visualiser import main
