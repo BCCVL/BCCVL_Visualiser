@@ -43,7 +43,7 @@ BCCVL_Visualiser/include/
 .vagrant
 
 # Editor (vim) Swap Files
-.swp
+*.swp
 
 etc/
 

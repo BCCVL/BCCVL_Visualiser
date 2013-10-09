@@ -77,26 +77,10 @@ class PointAPIViewv1(BasePointAPIView):
             log.warn('No data_id provided')
             data_id = None
 
-        map, ows_request = PointAPIv1.\
-            get_map_and_ows_request_from_request(self.request)
+        my_map = PointAPIv1(data_id=data_id, query_string=request.query_string.strip())
+        map_content, map_content_type, retval = my_map.render()
 
-        # Set the data for the first layer specified (unless already set)
-        layers = ows_request.getValueByName('LAYERS')
-        layer_name = layers.split(',')[0]
-
-        PointAPIv1.set_connection_for_map_connection_if_not_set(self.request, map, data_id, layer_name)
-
-        map_image = None
-        map_image_content_type = None
-
-        with MapScriptHelper.MAPSCRIPT_RLOCK:
-            mapscript.msIO_installStdoutToBuffer()
-            retval = map.OWSDispatch(ows_request)
-            map_image_content_type = mapscript.msIO_stripStdoutBufferContentType()
-            map_image = mapscript.msIO_getStdoutBufferBytes()
-            mapscript.msIO_resetHandlers()
-
-        response = Response(map_image, content_type=map_image_content_type)
+        response = Response(map_content, content_type=map_content_type)
 
         return response
 
@@ -114,26 +98,10 @@ class PointAPIViewv1(BasePointAPIView):
             log.warn('No data_url provided')
             data_url = None
 
-        map, ows_request = PointAPIv1.\
-            get_map_and_ows_request_from_request(self.request)
+        my_map = PointAPIv1(data_url=data_url, query_string=request.query_string.strip())
+        map_content, map_content_type, retval = my_map.render()
 
-        # Set the data for the first layer specified (unless already set)
-        layers = ows_request.getValueByName('LAYERS')
-        layer_name = layers.split(',')[0]
-
-        PointAPIv1.set_connection_for_map_connection_if_not_set_url(self.request, map, data_url, layer_name)
-
-        map_image = None
-        map_image_content_type = None
-
-        with MapScriptHelper.MAPSCRIPT_RLOCK:
-            mapscript.msIO_installStdoutToBuffer()
-            retval = map.OWSDispatch(ows_request)
-            map_image_content_type = mapscript.msIO_stripStdoutBufferContentType()
-            map_image = mapscript.msIO_getStdoutBufferBytes()
-            mapscript.msIO_resetHandlers()
-
-        response = Response(map_image, content_type=map_image_content_type)
+        response = Response(map_content, content_type=map_content_type)
 
         return response
 
@@ -151,24 +119,10 @@ class PointAPIViewv1(BasePointAPIView):
             log.warn('No data_id provided')
             data_id = None
 
-        map, ows_request = PointAPIv1.\
-            get_map_and_ows_request_from_request(self.request)
+        my_map = PointAPIv1(data_id=data_id, query_string=request.query_string.strip())
+        map_content, map_content_type, retval = my_map.render()
 
-        # Set the data for the first layer specified (unless already set)
-        layer_name = ows_request.getValueByName('LAYER')
-        PointAPIv1.set_connection_for_map_connection_if_not_set(self.request, map, data_id, layer_name)
-
-        map_image = None
-        map_image_content_type = None
-
-        with MapScriptHelper.MAPSCRIPT_RLOCK:
-            mapscript.msIO_installStdoutToBuffer()
-            retval = map.OWSDispatch(ows_request)
-            map_image_content_type = mapscript.msIO_stripStdoutBufferContentType()
-            map_image = mapscript.msIO_getStdoutBufferBytes()
-            mapscript.msIO_resetHandlers()
-
-        response = Response(map_image, content_type=map_image_content_type)
+        response = Response(map_content, content_type=map_content_type)
 
         return response
 
@@ -186,24 +140,10 @@ class PointAPIViewv1(BasePointAPIView):
             log.warn('No data_url provided')
             data_url = None
 
-        map, ows_request = PointAPIv1.\
-            get_map_and_ows_request_from_request(self.request)
+        my_map = PointAPIv1(data_url=data_url, query_string=request.query_string.strip())
+        map_content, map_content_type, retval = my_map.render()
 
-        # Set the data for the first layer specified (unless already set)
-        layer_name = ows_request.getValueByName('LAYER')
-        PointAPIv1.set_connection_for_map_connection_if_not_set_url(self.request, map, data_url, layer_name)
-
-        map_image = None
-        map_image_content_type = None
-
-        with MapScriptHelper.MAPSCRIPT_RLOCK:
-            mapscript.msIO_installStdoutToBuffer()
-            retval = map.OWSDispatch(ows_request)
-            map_image_content_type = mapscript.msIO_stripStdoutBufferContentType()
-            map_image = mapscript.msIO_getStdoutBufferBytes()
-            mapscript.msIO_resetHandlers()
-
-        response = Response(map_image, content_type=map_image_content_type)
+        response = Response(map_content, content_type=map_content_type)
 
         return response
 

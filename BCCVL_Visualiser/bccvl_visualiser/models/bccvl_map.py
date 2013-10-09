@@ -28,6 +28,13 @@ class BCCVLMap(mapObj):
 
     @classmethod
     def configure_from_config(class_, settings):
+        """ configure the BCCVL Map constants """
+        log = logging.getLogger(__name__)
+
+        if (class_.MAP_FILES_ROOT_PATH is not None) or (class_.MAP_DATA_FILES_ROOT_PATH is not None):
+            log.warn("Warning, %s is already configured. Ignoring new configuration.", str(class_))
+            return
+
         class_.MAP_FILES_ROOT_PATH      = settings['bccvl.mapscript.map_files_root_path']
         class_.MAP_DATA_FILES_ROOT_PATH = settings['bccvl.mapscript.map_data_files_root_path']
 
@@ -162,18 +169,18 @@ class BCCVLMap(mapObj):
 
     def render(self):
         """ Render the map """
-        map_image = None
-        map_image_content_type = None
+        map_content = None
+        map_content_type = None
         retval = None
 
         with self.__class__.MAPSCRIPT_RLOCK:
             mapscript.msIO_installStdoutToBuffer()
             retval = self.OWSDispatch(self.ows_request)
-            map_image_content_type = mapscript.msIO_stripStdoutBufferContentType()
-            map_image = mapscript.msIO_getStdoutBufferBytes()
+            map_content_type = mapscript.msIO_stripStdoutBufferContentType()
+            map_content = mapscript.msIO_getStdoutBufferBytes()
             mapscript.msIO_resetHandlers()
 
-        return map_image, map_image_content_type, retval
+        return map_content, map_content_type, retval
 
 class GeoTiffBCCVLMap(BCCVLMap):
     EXTENSION = ".tif"
@@ -203,7 +210,6 @@ class OccurrencesBCCVLMap(BCCVLMap):
         delimiter = ','
         quotechar = '"'
         lineterminator = '\n'
-
 
     def __init__(self, **kwargs):
         super(OccurrencesBCCVLMap, self).__init__(**kwargs)
