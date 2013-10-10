@@ -55,17 +55,6 @@ class TestPointAPIv1(unittest.TestCase):
         self.assertEqual(the_dict['description'], description, msg="Description should match")
         self.assertEqual(the_dict['version'], version, msg="Version should match")
 
-    def test_to_dict(self):
-        name = PointAPIv1.identifier()
-        description = PointAPIv1.description()
-        version = PointAPIv1.version()
-
-        the_dict = PointAPIv1.to_dict()
-
-        self.assertEqual(the_dict['name'], name, msg="Name should match")
-        self.assertEqual(the_dict['description'], description, msg="Description should match")
-        self.assertEqual(the_dict['version'], version, msg="Version should match")
-
     def test_create_and_render_wms_map_via_point_api_v1(self):
         data_url     = "https://raw.github.com/BCCVL/BCCVL_Visualiser/master/BCCVL_Visualiser/bccvl_visualiser/tests/fixtures/occurrences.csv"
         query_string = "TRANSPARENT=true&FORMAT=image%2Fpng&SERVICE=WMS&VERSION=1.1.1&REQUEST=GetMap&STYLES=&SRS=EPSG%3A3857&BBOX=-20037508.34,-10018754.17,-15028131.255,-5009377.085&WIDTH=512&HEIGHT=1024&LAYERS=DEFAULT"
@@ -86,7 +75,7 @@ class TestPointAPIv1(unittest.TestCase):
 
     # TODO - Check if this is fixed in newer versions of mapscript.
     @unittest.skip("WFS GeoJSON response is missing the point with the largest lat and lng value. This is a bug in mapscript")
-    def test_create_and_render_wfs_map_via_point_api_v1(self):
+    def test_create_and_render_wfs_map_via_point_api_v1__check_content(self):
         data_url     = "https://raw.github.com/BCCVL/BCCVL_Visualiser/master/BCCVL_Visualiser/bccvl_visualiser/tests/fixtures/occurrences.csv"
         query_string = "request=GetFeature&service=WFS&version=1.1.0&typeName=DEFAULT&outputFormat=geojson"
         my_map = PointAPIv1(data_url=data_url, query_string=query_string)
