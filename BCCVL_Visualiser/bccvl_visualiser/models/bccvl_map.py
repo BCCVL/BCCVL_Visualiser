@@ -40,6 +40,7 @@ class BCCVLMap(mapObj):
 
     def __init__(self, map_file_name=None, data_id=None, data_url=None, layer_name=None, query_string=None, **kwargs):
         """ initialise the map instance from a data_url """
+
         if data_id and data_url:
             raise ValueError("A BCCVLMap can't have both a data_id and a data_url")
         elif data_id:
@@ -47,7 +48,7 @@ class BCCVLMap(mapObj):
         elif data_url:
             self._init_from_data_url(data_url)
         else:
-            raise ValueError("A BCCVLMap must have a data_id or a data_url")
+            raise ValueError("A BCCVLMap must have a data_id or a data_url.")
 
         # If the user didn't override the map file name,
         # then use this class's default map file name
@@ -87,7 +88,6 @@ class BCCVLMap(mapObj):
                 self._download_data_to_file()
 
     def set_ows_request_from_query_string(self, query_string):
-        log = logging.getLogger(__name__)
         ows_request = OWSRequest()
 
         # loadParamsFromURL causes a seg fault if passed an empty string.
@@ -184,11 +184,14 @@ class BCCVLMap(mapObj):
 
 class GeoTiffBCCVLMap(BCCVLMap):
     EXTENSION = ".tif"
-    DEFAULT_MAP_FILE_NAME = "default_geo_tiff.map"
+    DEFAULT_MAP_FILE_NAME = "default_raster.map"
 
-    def _set_map_defaults_if_not_set(self):
-        """ Default the map's attributes """
+    def __init__(self, **kwargs):
         super(GeoTiffBCCVLMap, self).__init__(**kwargs)
+
+    def _set_map_defaults_if_not_set(self, **kwargs):
+        """ Default the map's attributes """
+        super(GeoTiffBCCVLMap, self)._set_map_defaults_if_not_set(**kwargs)
 
         log = logging.getLogger(__name__)
 
