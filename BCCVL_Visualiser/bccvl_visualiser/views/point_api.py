@@ -77,7 +77,7 @@ class PointAPIViewv1(BasePointAPIView):
             log.warn('No data_id provided')
             data_id = None
 
-        my_map = PointAPIv1(data_id=data_id, query_string=request.query_string.strip())
+        my_map = PointAPIv1(data_id=data_id, query_string=self.request.query_string.strip())
         map_content, map_content_type, retval = my_map.render()
 
         response = Response(map_content, content_type=map_content_type)
@@ -98,7 +98,7 @@ class PointAPIViewv1(BasePointAPIView):
             log.warn('No data_url provided')
             data_url = None
 
-        my_map = PointAPIv1(data_url=data_url, query_string=request.query_string.strip())
+        my_map = PointAPIv1(data_url=data_url, query_string=self.request.query_string.strip())
         map_content, map_content_type, retval = my_map.render()
 
         response = Response(map_content, content_type=map_content_type)
@@ -119,7 +119,7 @@ class PointAPIViewv1(BasePointAPIView):
             log.warn('No data_id provided')
             data_id = None
 
-        my_map = PointAPIv1(data_id=data_id, query_string=request.query_string.strip())
+        my_map = PointAPIv1(data_id=data_id, query_string=self.request.query_string.strip())
         map_content, map_content_type, retval = my_map.render()
 
         response = Response(map_content, content_type=map_content_type)
@@ -140,7 +140,7 @@ class PointAPIViewv1(BasePointAPIView):
             log.warn('No data_url provided')
             data_url = None
 
-        my_map = PointAPIv1(data_url=data_url, query_string=request.query_string.strip())
+        my_map = PointAPIv1(data_url=data_url, query_string=self.request.query_string.strip())
         map_content, map_content_type, retval = my_map.render()
 
         response = Response(map_content, content_type=map_content_type)

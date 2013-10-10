@@ -1,16 +1,22 @@
 import unittest
 import transaction
 import pprint
+import json
 
 from pyramid import testing
 
 from bccvl_visualiser.models import *
+from paste.deploy.loadwsgi import appconfig
 
 pp = pprint.PrettyPrinter(indent=4)
 
 class TestPointAPIv1(unittest.TestCase):
     def setUp(self):
-        self.config = testing.setUp()
+        self.config = appconfig('config:development.ini', 'pyramid', relative_to='.')
+        from bccvl_visualiser import main
+        app = main(None, **self.config)
+        from webtest import TestApp
+        self.testapp = TestApp(app)
 
     def tearDown(self):
         pass
@@ -78,6 +84,7 @@ class TestPointAPIv1(unittest.TestCase):
         self.assertEqual(map_content_type, "application/json; subtype=geojson")
         self.assertEqual(retval, mapscript.MS_SUCCESS, "Should return success code: %s, but didn't" % mapscript.MS_SUCCESS)
 
+    # TODO - Check if this is fixed in newer versions of mapscript.
     @unittest.skip("WFS GeoJSON response is missing the point with the largest lat and lng value. This is a bug in mapscript")
     def test_create_and_render_wfs_map_via_point_api_v1(self):
         data_url     = "https://raw.github.com/BCCVL/BCCVL_Visualiser/master/BCCVL_Visualiser/bccvl_visualiser/tests/fixtures/occurrences.csv"
@@ -89,3 +96,90 @@ class TestPointAPIv1(unittest.TestCase):
         self.assertEqual(map_content, expected_content)
         self.assertEqual(map_content_type, "application/json; subtype=geojson")
         self.assertEqual(retval, mapscript.MS_SUCCESS, "Should return success code: %s, but didn't" % mapscript.MS_SUCCESS)
+
+    def test_view_point_api_v1_json(self):
+        res = self.testapp.get('/api/point/1.json', status='*')
+        self.assertEqual(res.status_int, 200)
+
+        loaded_json = json.loads(res.body)
+        self.assertEqual(loaded_json['version'], PointAPIv1.version())
+        self.assertEqual(loaded_json['name'], PointAPIv1.identifier())
+
+    def test_view_point_api_wfs(self):
+        params = {
+            'DATA_URL':     'https://raw.github.com/BCCVL/BCCVL_Visualiser/master/BCCVL_Visualiser/bccvl_visualiser/tests/fixtures/occurrences.csv',
+            'request':      'GetFeature',
+            'service':      'WFS',
+            'version':      '1.1.0',
+            'typeName':     'DEFAULT',
+            'outputFormat': 'geojson',
+        }
+        res = self.testapp.get('/api/point/1/wfs_data_url', status='*', params=params)
+        self.assertEqual(res.status_int, 200)
+        self.assertEqual(res.content_type, 'application/json')
+
+        loaded_json = json.loads(res.body)
+        self.assertEqual(type(loaded_json), dict)
+        self.assertEqual(loaded_json['type'], 'FeatureCollection')
+
+    @unittest.skip("WFS GeoJSON response is missing the point with the largest lat and lng value. This is a bug in mapscript")
+    def test_view_point_api_wfs_content(self):
+        params = {
+            'DATA_URL':     'https://raw.github.com/BCCVL/BCCVL_Visualiser/master/BCCVL_Visualiser/bccvl_visualiser/tests/fixtures/occurrences.csv',
+            'request':      'GetFeature',
+            'service':      'WFS',
+            'version':      '1.1.0',
+            'typeName':     'DEFAULT',
+            'outputFormat': 'geojson',
+        }
+        res = self.testapp.get('/api/point/1/wfs_data_url', status='*', params=params)
+        self.assertEqual(res.status_int, 200)
+
+        loaded_json = json.loads(res.body)
+        self.assertEqual(type(loaded_json), dict)
+
+        self.assertEqual(len(loaded_json['features']), 4)
+
+    # Spherical Mercator
+    def test_view_point_api_wms_srs_epsg_3857(self):
+        params = {
+            'DATA_URL':     'https://raw.github.com/BCCVL/BCCVL_Visualiser/master/BCCVL_Visualiser/bccvl_visualiser/tests/fixtures/occurrences.csv',
+            'TRANSPARENT':  'true',
+            'FORMAT':       'image/png',
+            'SERVICE':      'WMS',
+            'VERSION':      '1.1.1',
+            'REQUEST':      'GetMap',
+            'STYLES':       '',
+            'SRS':          'EPSG:3857',
+            'BBOX':         '-20037508.34,-10018754.17,-15028131.255,-5009377.085',
+            'WIDTH':        '512',
+            'HEIGHT':       '512',
+            'LAYERS':       'DEFAULT',
+        }
+
+        res = self.testapp.get('/api/point/1/wms_data_url', status='*', params=params)
+        self.assertEqual(res.status_int, 200)
+
+        self.assertEqual(res.content_type, 'image/png')
+
+    # Lat/Lng Decimal
+    def test_view_point_api_wms_srs_epsg_4326(self):
+        params = {
+            'DATA_URL':     'https://raw.github.com/BCCVL/BCCVL_Visualiser/master/BCCVL_Visualiser/bccvl_visualiser/tests/fixtures/occurrences.csv',
+            'TRANSPARENT':  'true',
+            'FORMAT':       'image/png',
+            'SERVICE':      'WMS',
+            'VERSION':      '1.1.1',
+            'REQUEST':      'GetMap',
+            'STYLES':       '',
+            'SRS':          'EPSG:4326',
+            'BBOX':         '-180,-90,180,90',
+            'WIDTH':        '100',
+            'HEIGHT':       '100',
+            'LAYERS':       'DEFAULT',
+        }
+
+        res = self.testapp.get('/api/point/1/wms_data_url', status='*', params=params)
+        self.assertEqual(res.status_int, 200)
+
+        self.assertEqual(res.content_type, 'image/png')
