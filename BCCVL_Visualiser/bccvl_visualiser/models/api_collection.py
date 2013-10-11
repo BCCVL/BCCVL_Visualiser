@@ -1,5 +1,6 @@
-from bccvl_visualiser.models.raster_api import *
-
+from bccvl_visualiser.models.api import (
+    BaseAPI
+    )
 
 # Act as a proxy, providing access to the API classes
 class APICollection(object):

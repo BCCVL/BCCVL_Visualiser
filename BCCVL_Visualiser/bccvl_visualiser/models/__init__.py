@@ -9,3 +9,4 @@ from bccvl_visualiser.models.ala_helper import *
 from bccvl_visualiser.models.raster_api import *
 from bccvl_visualiser.models.point_api import *
 from bccvl_visualiser.models.api_collection import *
+from bccvl_visualiser.models.external_api import *
