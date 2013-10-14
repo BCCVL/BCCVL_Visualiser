@@ -4,6 +4,7 @@ from pyramid.settings import asbool, aslist
 import logging
 from bccvl_visualiser.models import BCCVLMap
 from bccvl_visualiser.models.external_api import DataManager
+from bccvl_visualiser.models.external_api import DataMover
 
 def initialise_cache(settings):
     """ Initialise the application's cache regions
@@ -31,8 +32,12 @@ def configure_bccvl_map(settings):
     BCCVLMap.configure_from_config(settings)
 
 def configure_data_manager(settings):
-    """ Configure the Data Manager"""
+    """ Configure the Data Manager """
     DataManager.configure_from_config(settings)
+
+def configure_data_mover(settings):
+    """ Configure the Data Mover """
+    DataMover.configure_from_config(settings)
 
 def main(global_config, **settings):
     """ This function returns a Pyramid WSGI application.
@@ -46,6 +51,8 @@ def main(global_config, **settings):
     configure_bccvl_map(config.registry.settings)
     # Configure our DataManager class
     configure_data_manager(config.registry.settings)
+    # Configure our DataMover class
+    configure_data_mover(config.registry.settings)
 
     config.add_static_view('static', 'static', cache_max_age=3600)
 
