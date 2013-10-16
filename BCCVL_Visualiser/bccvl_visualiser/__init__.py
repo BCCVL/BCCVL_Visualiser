@@ -57,6 +57,10 @@ def main(global_config, **settings):
     config.add_route('r_api_v1', '/api/r/1*traverse')
     config.add_route('r_api',    '/api/r*traverse')
 
+    # Auto Detect API
+    config.add_route('auto_detect_api_v1', '/api/auto_detect/1*traverse')
+    config.add_route('auto_detect_api', '/api/auto_detect*traverse')
+
     # Base API (API Collection)
     config.add_route('api', '/api*traverse')
 

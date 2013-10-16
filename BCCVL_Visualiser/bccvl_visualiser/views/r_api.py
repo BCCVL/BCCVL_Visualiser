@@ -53,19 +53,13 @@ class RAPIViewv1(BaseRAPIView):
     def text(self):
         return super(RAPIViewv1, self).text()
 
-    # Cache this view for 1 day (86400 seconds)
-    @view_config(name='view_data_url', renderer='../templates/api/r/v1/view.pt', http_cache=86400)
+    @view_config(name='data_url_view', renderer='../templates/api/r/v1/view.pt')
     def view(self):
 
         log = logging.getLogger(__name__)
         log.debug('Processing view request in R API v1')
 
-        data_url = None
-        try:
-            data_url = self.request.GET.getone('DATA_URL')
-        except:
-            log.warn('No data_url provided')
-            data_url = None
+        data_url = self.request.GET.getone('data_url')
 
         r = requests.get(data_url, verify=False)
         r.raise_for_status()
