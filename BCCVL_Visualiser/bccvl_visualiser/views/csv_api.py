@@ -64,6 +64,9 @@ class CSVAPIViewv1(BaseCSVAPIView):
         r = requests.get(data_url, verify=False)
         r.raise_for_status()
 
+        # TODO: Change this to use list comprehension, or to process the csv file in
+        # the template.
+
         out_str = '<table>'
 
         first = True
