@@ -53,6 +53,10 @@ def main(global_config, **settings):
     config.add_route('point_api_v1', '/api/point/1*traverse')
     config.add_route('point_api', '/api/point*traverse')
 
+    # R API
+    config.add_route('r_api_v1', '/api/r/1*traverse')
+    config.add_route('r_api',    '/api/r*traverse')
+
     # Base API (API Collection)
     config.add_route('api', '/api*traverse')
 

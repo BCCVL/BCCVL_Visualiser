@@ -1,0 +1,18 @@
+<!DOCTYPE html>
+<html style="width:100%; height:100%">
+    <head>
+        <title>Point API V1 Demo Map (WFS Example)</title>
+        <link href="${request.static_url('bccvl_visualiser:static/js/rainbow/themes/github.css')}" rel="stylesheet" type="text/css">
+        <script src="${request.static_url('bccvl_visualiser:static/js/rainbow/rainbow.js')}"></script>
+        <script src="${request.static_url('bccvl_visualiser:static/js/rainbow/language/r.js')}"></script>
+    </head>
+
+    <body>
+        <pre id="file_content">
+            <code data-language="r">
+${file_content}
+            </code>
+        </pre>
+
+    </body>
+</html>
