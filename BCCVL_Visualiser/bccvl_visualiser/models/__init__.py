@@ -12,3 +12,4 @@ from bccvl_visualiser.models.api_collection import *
 from bccvl_visualiser.models.r_api import *
 from bccvl_visualiser.models.csv_api import *
 from bccvl_visualiser.models.auto_detect_api import *
+from bccvl_visualiser.models.png_api import *
