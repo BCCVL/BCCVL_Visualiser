@@ -19,13 +19,13 @@ class BaseRAPI(BaseAPI):
 
     @staticmethod
     def identifier():
-        return "R"
+        return "r"
 
     @staticmethod
     def description():
         desc = """\
 The R API is responsible for visualising \
-R files.
+R files.\
 """
         return desc
 

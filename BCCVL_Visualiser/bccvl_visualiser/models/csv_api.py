@@ -19,13 +19,13 @@ class BaseCSVAPI(BaseAPI):
 
     @staticmethod
     def identifier():
-        return "CSV"
+        return "csv"
 
     @staticmethod
     def description():
         desc = """\
 The CSV API is responsible for visualising \
-general CSV files.
+general CSV files.\
 """
         return desc
 

@@ -26,7 +26,7 @@ class BasePointAPI(BaseAPI):
         desc = """\
 The point API is responsible for visualising \
 point data in CSV files. The point data is expected to be in the 4326 \
-projection, i.e. decimal degrees latitude/longitude\
+projection, i.e. decimal degrees latitude/longitude.\
 """
         return desc
 

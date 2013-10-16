@@ -19,13 +19,13 @@ class BaseAutoDetectAPI(BaseAPI):
 
     @staticmethod
     def identifier():
-        return "AutoDetect"
+        return "auto_detect"
 
     @staticmethod
     def description():
         desc = """\
 The AutoDetect API is responsible for determining \
-what file has been provided, and redirecting to the appropriate API.
+what file has been provided, and redirecting to the appropriate API.\
 """
         return desc
 
