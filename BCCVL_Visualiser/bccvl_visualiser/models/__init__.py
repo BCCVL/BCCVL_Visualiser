@@ -10,4 +10,5 @@ from bccvl_visualiser.models.raster_api import *
 from bccvl_visualiser.models.point_api import *
 from bccvl_visualiser.models.api_collection import *
 from bccvl_visualiser.models.r_api import *
+from bccvl_visualiser.models.csv_api import *
 from bccvl_visualiser.models.auto_detect_api import *
