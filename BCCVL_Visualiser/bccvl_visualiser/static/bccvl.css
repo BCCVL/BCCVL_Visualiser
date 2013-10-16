@@ -1,8 +1,12 @@
+pre, table {
+    padding: 0;
+}
+
 table {
     width: 100%;
 }
 
-table, tr, td, th {
+tr, td, th {
     padding: 0.5em 1em;
 }
 
