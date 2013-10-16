@@ -1,6 +1,7 @@
 import unittest
 import transaction
 import pprint
+import types
 
 from pyramid import testing
 
@@ -26,11 +27,11 @@ class TestBCCVLMap(unittest.TestCase):
 
     def test_new_data_mover_raises_on_bad_args(self):
         with self.assertRaises(ValueError):
-            DataMover()
+            DataMover('/tmp/a.csv')
         with self.assertRaises(ValueError):
-            DataMover(data_id="111", data_url="http://example.com")
+            DataMover('/tmp/a.csv', data_id="111", data_url="http://example.com")
 
     def test_new_data_mover_from_data_id(self):
         # This isn't implemented yet
         with self.assertRaises(NotImplementedError):
-            my_map = DataMover(data_id="908h08h")
+            my_map = DataMover('tmp/a.csv', data_id="908h08h")
