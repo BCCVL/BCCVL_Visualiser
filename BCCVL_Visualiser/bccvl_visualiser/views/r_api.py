@@ -54,6 +54,7 @@ class RAPIViewv1(BaseRAPIView):
         return super(RAPIViewv1, self).text()
 
     @view_config(name='data_url_view', renderer='../templates/api/r/v1/view.pt')
+    @view_config(name='default', renderer='../templates/api/r/v1/view.pt')
     def view(self):
 
         log = logging.getLogger(__name__)

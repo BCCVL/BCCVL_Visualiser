@@ -57,6 +57,7 @@ class PointAPIViewv1(BasePointAPIView):
         return self._to_dict()
 
     @view_config(name='data_url_map', renderer='../templates/api/point/v1/data_url_map.pt')
+    @view_config(name='default', renderer='../templates/api/point/v1/data_url_map.pt')
     def data_url_map(self):
         return_dict = {
             "data_url": self.request.GET.getone('data_url'),

@@ -58,6 +58,7 @@ class RasterAPIViewv1(BaseRasterAPIView):
 
 
     @view_config(name='data_url_map', renderer='../templates/api/raster/v1/data_url_map.pt')
+    @view_config(name='default', renderer='../templates/api/raster/v1/data_url_map.pt')
     def data_url_map(self):
         return_dict = {
             "data_url": self.request.GET.getone('data_url'),
