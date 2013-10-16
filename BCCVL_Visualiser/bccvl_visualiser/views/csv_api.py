@@ -66,13 +66,23 @@ class CSVAPIViewv1(BaseCSVAPIView):
 
         out_str = '<table>'
 
+        first = True
         for row in csv.reader(r.content.decode('ascii', 'replace').splitlines()):
-            out_str = out_str + "<tr>"
-            for el in row:
-                out_str = ( out_str + "<td>" + el + "</td>" )
-            out_str = out_str + "</tr>"
+            if first:
+                out_str = out_str + "<thead>"
+                out_str = out_str + "<tr>"
+                for el in row:
+                    out_str = ( out_str + "<th>" + el + "</th>" )
+                out_str = out_str + "</tr>"
+                out_str = out_str + "</thead><tbody>"
+                first = False
+            else:
+                out_str = out_str + "<tr>"
+                for el in row:
+                    out_str = ( out_str + "<td>" + el + "</td>" )
+                out_str = out_str + "</tr>"
 
-        out_str = out_str + '</table>'
+        out_str = out_str + '</tbody></table>'
 
         return { 'file_content': out_str }
 
