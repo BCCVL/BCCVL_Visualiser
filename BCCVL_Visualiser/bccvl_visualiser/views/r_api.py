@@ -70,7 +70,7 @@ class RAPIViewv1(BaseRAPIView):
         r = requests.get(data_url, verify=False)
         r.raise_for_status()
 
-        return { 'file_content': r.content }
+        return { 'file_content': r.content.decode('utf-8') }
 
     @view_config(name='.xmlrpc')
     def xmlrpc(self):
