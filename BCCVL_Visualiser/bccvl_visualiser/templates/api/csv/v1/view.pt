@@ -3,6 +3,7 @@
 
     <head>
         <title>CSV V1 View</title>
+        <link href="${request.static_url('bccvl_visualiser:static/bccvl.css')}" rel="stylesheet" type="text/css">
     </head>
 
     <body>
