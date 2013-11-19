@@ -18,7 +18,7 @@ class BaseAutoDetectAPIView(BaseView):
 
     @view_config(renderer='../templates/api_template.pt')
     def __call__(self):
-        return self.to_dict()
+        return self._to_dict()
 
     @view_config(name='.json', renderer='json')
     def json(self):
@@ -33,7 +33,8 @@ class BaseAutoDetectAPIView(BaseView):
         return super(BaseAutoDetectAPIView, self).xmlrpc()
 
     def _to_dict(self):
-        return BaseAutoDetectAPI.get_human_readable_inheritors_version_dict()
+        return_dict = {str(k): str(v) for k, v in BaseAutoDetectAPI.get_human_readable_inheritors_version_dict().items()}
+        return return_dict
 
 @view_defaults(route_name='auto_detect_api_v1')
 class AutoDetectAPIViewv1(BaseAutoDetectAPIView):
@@ -57,6 +58,8 @@ class AutoDetectAPIViewv1(BaseAutoDetectAPIView):
 
         if data_url.endswith('.csv'):
             url = self.request.route_url('csv_api_v1', traverse='/default', _query=self.request.GET)
+        elif data_url.endswith('.html') or data_url.endswith('.htm'):
+            url = self.request.route_url('html_api_v1', traverse='/default', _query=self.request.GET)
         elif data_url.endswith('.tif'):
             url = self.request.route_url('raster_api_v1', traverse='/default', _query=self.request.GET)
         elif data_url.endswith('.png'):

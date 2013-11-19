@@ -8,16 +8,12 @@ from pyramid.view import view_config, view_defaults
 from pyramid.httpexceptions import HTTPFound, HTTPNotFound
 from pyramid_xmlrpc import *
 
-from sqlalchemy.exc import DBAPIError
-
-from bccvl_visualiser.models import RAPIv1, BaseRAPI
+from bccvl_visualiser.models import BaseHTMLAPI, HTMLAPIv1
 from bccvl_visualiser.views import BaseView
 
-
-
-@view_defaults(route_name='r_api')
-class BaseRAPIView(BaseView):
-    """The Base R API level view '/api/r'"""
+@view_defaults(route_name='html_api')
+class BaseHTMLAPIView(BaseView):
+    """The Base HTML API level view '/api/html'"""
 
     @view_config(renderer='../templates/api_template.pt')
     def __call__(self):
@@ -25,22 +21,22 @@ class BaseRAPIView(BaseView):
 
     @view_config(name='.json', renderer='json')
     def json(self):
-        return super(BaseRAPIView, self).json()
+        return super(BaseHTMLAPIView, self).json()
 
     @view_config(name='.text')
     def text(self):
-        return super(BaseRAPIView, self).text()
+        return super(BaseHTMLAPIView, self).text()
 
     @view_config(name='.xmlrpc')
     def xmlrpc(self):
-        return super(BaseRAPIView, self).xmlrpc()
+        return super(BaseHTMLAPIView, self).xmlrpc()
 
     def _to_dict(self):
-        return_dict = {str(k): str(v) for k, v in BaseRAPI.get_human_readable_inheritors_version_dict().items()}
+        return_dict = {str(k): str(v) for k, v in BaseHTMLAPI.get_human_readable_inheritors_version_dict().items()}
         return return_dict
 
-@view_defaults(route_name='r_api_v1')
-class RAPIViewv1(BaseRAPIView):
+@view_defaults(route_name='html_api_v1')
+class HTMLAPIViewv1(BaseHTMLAPIView):
 
     @view_config(renderer='../templates/api_template.pt')
     def __call__(self):
@@ -48,29 +44,32 @@ class RAPIViewv1(BaseRAPIView):
 
     @view_config(name='.json', renderer='json')
     def json(self):
-        return super(RAPIViewv1, self).json()
+        return super(HTMLAPIViewv1, self).json()
 
     @view_config(name='.text')
     def text(self):
-        return super(RAPIViewv1, self).text()
+        return super(HTMLAPIViewv1, self).text()
 
-    @view_config(name='data_url_view', renderer='../templates/api/r/v1/view.pt')
-    @view_config(name='default', renderer='../templates/api/r/v1/view.pt')
+    @view_config(name='data_url_view')
+    @view_config(name='default')
     def view(self):
 
         log = logging.getLogger(__name__)
-        log.debug('Processing view request in R API v1')
+        log.debug('Processing view request in HTML API v1')
 
         data_url = self.request.GET.getone('data_url')
 
         r = requests.get(data_url, verify=False)
         r.raise_for_status()
 
-        return { 'file_content': r.content.decode('ascii', 'replace') }
+        out_str = r.content
+
+        response = Response(out_str, content_type="text/html")
+        return response
 
     @view_config(name='.xmlrpc')
     def xmlrpc(self):
-        return super(RAPIViewv1, self).xmlrpc()
+        return super(HTMLAPIViewv1, self).xmlrpc()
 
     def _to_dict(self):
-        return RAPIv1.to_dict()
+        return HTMLAPIv1.to_dict()

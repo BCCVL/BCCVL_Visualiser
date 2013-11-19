@@ -41,6 +41,14 @@ class TestRasterAPIv1(unittest.TestCase):
     def test_raster_api_identifier(self):
         self.assertEqual(BaseRasterAPI.identifier(), 'raster')
 
+    def test_view_raster_api_html(self):
+       res = self.testapp.get('/api/raster', status='*')
+       self.assertEqual(res.status_int, 200)
+
+    def test_view_raster_api_v1_html(self):
+       res = self.testapp.get('/api/raster/1', status='*')
+       self.assertEqual(res.status_int, 200)
+
     def test_view_raster_api_v1_json(self):
        res = self.testapp.get('/api/raster/1.json', status='*')
        self.assertEqual(res.status_int, 200)

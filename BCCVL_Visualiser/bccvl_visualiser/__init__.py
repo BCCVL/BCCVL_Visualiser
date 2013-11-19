@@ -65,6 +65,10 @@ def main(global_config, **settings):
     config.add_route('png_api_v1', '/api/png/1*traverse')
     config.add_route('png_api',    '/api/png*traverse')
 
+    # HTML API
+    config.add_route('html_api_v1', '/api/html/1*traverse')
+    config.add_route('html_api',    '/api/html*traverse')
+
     # Auto Detect API
     config.add_route('auto_detect_api_v1', '/api/auto_detect/1*traverse')
     config.add_route('auto_detect_api', '/api/auto_detect*traverse')

@@ -20,7 +20,7 @@ class BasePointAPIView(BaseView):
 
     @view_config(renderer='../templates/api_template.pt')
     def __call__(self):
-        return self.to_dict()
+        return self._to_dict()
 
     @view_config(name='.json', renderer='json')
     def json(self):
@@ -35,7 +35,8 @@ class BasePointAPIView(BaseView):
         return super(BasePointAPIView, self).xmlrpc()
 
     def _to_dict(self):
-        return BasePointAPI.get_human_readable_inheritors_version_dict()
+        return_dict = {str(k): str(v) for k, v in BasePointAPI.get_human_readable_inheritors_version_dict().items()}
+        return return_dict
 
 @view_defaults(route_name='point_api_v1')
 class PointAPIViewv1(BasePointAPIView):
