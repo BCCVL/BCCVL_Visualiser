@@ -20,7 +20,7 @@ class BaseCSVAPIView(BaseView):
 
     @view_config(renderer='../templates/api_template.pt')
     def __call__(self):
-        return self.to_dict()
+        return self._to_dict()
 
     @view_config(name='.json', renderer='json')
     def json(self):
@@ -35,7 +35,8 @@ class BaseCSVAPIView(BaseView):
         return super(BaseCSVAPIView, self).xmlrpc()
 
     def _to_dict(self):
-        return BaseCSVAPI.get_human_readable_inheritors_version_dict()
+        return_dict = {str(k): str(v) for k, v in BaseCSVAPI.get_human_readable_inheritors_version_dict().items()}
+        return return_dict
 
 @view_defaults(route_name='csv_api_v1')
 class CSVAPIViewv1(BaseCSVAPIView):

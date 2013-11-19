@@ -20,7 +20,7 @@ class BaseRasterAPIView(BaseView):
 
     @view_config(renderer='../templates/api_template.pt')
     def __call__(self):
-        return self.to_dict()
+        return self._to_dict()
 
     @view_config(name='.json', renderer='json')
     def json(self):
@@ -35,7 +35,8 @@ class BaseRasterAPIView(BaseView):
         return super(BaseRasterAPIView, self).xmlrpc()
 
     def _to_dict(self):
-        return BaseRasterAPI.get_human_readable_inheritors_version_dict()
+        return_dict = {str(k): str(v) for k, v in BaseRasterAPI.get_human_readable_inheritors_version_dict().items()}
+        return return_dict
 
 @view_defaults(route_name='raster_api_v1')
 class RasterAPIViewv1(BaseRasterAPIView):
