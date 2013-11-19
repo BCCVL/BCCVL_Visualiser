@@ -15,23 +15,22 @@ from bccvl_visualiser.models.api import (
 import requests
 import hashlib
 
-class BasePointAPI(BaseAPI):
+class BaseAutoDetectAPI(BaseAPI):
 
     @staticmethod
     def identifier():
-        return "point"
+        return "auto_detect"
 
     @staticmethod
     def description():
         desc = """\
-The point API is responsible for visualising \
-point data in CSV files. The point data is expected to be in the 4326 \
-projection, i.e. decimal degrees latitude/longitude.\
+The AutoDetect API is responsible for determining \
+what file has been provided, and redirecting to the appropriate API.\
 """
         return desc
 
-class PointAPIv1(BasePointAPI, OccurrencesBCCVLMap):
-    """ v1 of the Point API"""
+class AutoDetectAPIv1(BaseAutoDetectAPI):
+    """ v1 of the AutoDetect API"""
 
     @staticmethod
     def version():
@@ -55,6 +54,6 @@ class PointAPIv1(BasePointAPI, OccurrencesBCCVLMap):
 
     def __init__(self, **kwargs):
         """ init the instance """
-        super(PointAPIv1, self).__init__(**kwargs)
+        super(AutoDetectAPIv1, self).__init__(**kwargs)
 
 

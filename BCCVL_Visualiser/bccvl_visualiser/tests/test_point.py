@@ -21,6 +21,14 @@ class TestPointAPIv1(unittest.TestCase):
     def tearDown(self):
         pass
 
+    def test_view_point_api_html(self):
+       res = self.testapp.get('/api/point', status='*')
+       self.assertEqual(res.status_int, 200)
+
+    def test_view_point_api_v1_html(self):
+       res = self.testapp.get('/api/point/1', status='*')
+       self.assertEqual(res.status_int, 200)
+
     def test_test_env_working(self):
         self.assertEqual(True, True)
 

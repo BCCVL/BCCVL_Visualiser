@@ -67,6 +67,26 @@ def main(global_config, **settings):
     config.add_route('point_api_v1', '/api/point/1*traverse')
     config.add_route('point_api', '/api/point*traverse')
 
+    # R API
+    config.add_route('r_api_v1', '/api/r/1*traverse')
+    config.add_route('r_api',    '/api/r*traverse')
+
+    # CSV API
+    config.add_route('csv_api_v1', '/api/csv/1*traverse')
+    config.add_route('csv_api',    '/api/csv*traverse')
+
+    # PNG API
+    config.add_route('png_api_v1', '/api/png/1*traverse')
+    config.add_route('png_api',    '/api/png*traverse')
+
+    # HTML API
+    config.add_route('html_api_v1', '/api/html/1*traverse')
+    config.add_route('html_api',    '/api/html*traverse')
+
+    # Auto Detect API
+    config.add_route('auto_detect_api_v1', '/api/auto_detect/1*traverse')
+    config.add_route('auto_detect_api', '/api/auto_detect*traverse')
+
     # Base API (API Collection)
     config.add_route('api', '/api*traverse')
 

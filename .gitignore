@@ -38,6 +38,7 @@ nosetests.xml
 env
 BCCVL_Visualiser/local/
 BCCVL_Visualiser/include/
+.Python
 
 # Vagrant
 .vagrant

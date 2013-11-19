@@ -1,0 +1,19 @@
+html, body {
+    margin: 0;
+    padding: 0;
+}
+
+pre, table {
+    padding: 0;
+}
+
+table {
+    width: 100%;
+}
+
+tr, td, th {
+    padding: 0.5em 1em;
+}
+
+tr:nth-child(even) { background: #F8F8F8 }
+tr:nth-child(odd)  { background: #FFFFFF }

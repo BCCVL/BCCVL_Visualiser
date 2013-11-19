@@ -1,0 +1,12 @@
+<!DOCTYPE html>
+<html style="width:100%; height:100%">
+
+    <head>
+        <title>CSV V1 View</title>
+        <link href="${request.static_url('bccvl_visualiser:static/bccvl.css')}" rel="stylesheet" type="text/css">
+    </head>
+
+    <body>
+${structure:file_content}
+    </body>
+</html>
