@@ -7,7 +7,7 @@ python:
 env:
   - PACKAGES=true
 install:
-  - sudo apt-add-repository -y ppa:ubuntugis/ubuntugis-unstable
+  - sudo apt-add-repository -y ppa:ubuntugis/ppa
   - sudo apt-get update
   - sudo apt-get install build-essential libcurl4-gnutls-dev libpng12-dev libgd2-xpm-dev libgif-dev libjpeg-dev libblas-dev libsuitesparse-dev libatlas-base-dev liblapack-dev swig gfortran libgdal-dev proj libproj-dev libgeos-dev
   - cd BCCVL_Visualiser
