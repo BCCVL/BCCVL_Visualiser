@@ -191,3 +191,67 @@ class TestPointAPIv1(unittest.TestCase):
         self.assertEqual(res.status_int, 200)
 
         self.assertEqual(res.content_type, 'image/png')
+
+    # Lat/Lng Decimal
+    def test_view_point_api_wms_srs_epsg_4326_with_absences(self):
+        params = {
+            'DATA_URL':     'https://raw.github.com/BCCVL/BCCVL_Visualiser/master/BCCVL_Visualiser/bccvl_visualiser/tests/fixtures/absences.csv',
+            'TRANSPARENT':  'true',
+            'FORMAT':       'image/png',
+            'SERVICE':      'WMS',
+            'VERSION':      '1.1.1',
+            'REQUEST':      'GetMap',
+            'STYLES':       '',
+            'SRS':          'EPSG:4326',
+            'BBOX':         '-180,-90,180,90',
+            'WIDTH':        '100',
+            'HEIGHT':       '100',
+            'LAYERS':       'DEFAULT',
+        }
+
+        res = self.testapp.get('/api/point/1/wms_data_url', status='*', params=params)
+        self.assertEqual(res.status_int, 200)
+
+        self.assertEqual(res.content_type, 'image/png')
+
+    def test_view_point_api_csv_bad_data_not_a_number(self):
+        params = {
+            'DATA_URL':     'https://raw.github.com/BCCVL/BCCVL_Visualiser/master/BCCVL_Visualiser/bccvl_visualiser/tests/fixtures/bad_occurrences_lon_values_nan.csv',
+            'TRANSPARENT':  'true',
+            'FORMAT':       'image/png',
+            'SERVICE':      'WMS',
+            'VERSION':      '1.1.1',
+            'REQUEST':      'GetMap',
+            'STYLES':       '',
+            'SRS':          'EPSG:4326',
+            'BBOX':         '-180,-90,180,90',
+            'WIDTH':        '100',
+            'HEIGHT':       '100',
+            'LAYERS':       'DEFAULT',
+        }
+
+        res = self.testapp.get('/api/point/1/wms_data_url', status='*', params=params)
+        self.assertEqual(res.status_int, 500)
+
+        self.assertEqual(res.content_type, 'text/html')
+
+    def test_view_point_api_csv_bad_header(self):
+        params = {
+            'DATA_URL':     'https://raw.github.com/BCCVL/BCCVL_Visualiser/master/BCCVL_Visualiser/bccvl_visualiser/tests/fixtures/bad_occurrences_header.csv',
+            'TRANSPARENT':  'true',
+            'FORMAT':       'image/png',
+            'SERVICE':      'WMS',
+            'VERSION':      '1.1.1',
+            'REQUEST':      'GetMap',
+            'STYLES':       '',
+            'SRS':          'EPSG:4326',
+            'BBOX':         '-180,-90,180,90',
+            'WIDTH':        '100',
+            'HEIGHT':       '100',
+            'LAYERS':       'DEFAULT',
+        }
+
+        res = self.testapp.get('/api/point/1/wms_data_url', status='*', params=params)
+        self.assertEqual(res.status_int, 500)
+
+        self.assertEqual(res.content_type, 'text/html')

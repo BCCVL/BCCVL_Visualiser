@@ -222,15 +222,22 @@ class OccurrencesBCCVLMap(BCCVLMap):
         log = logging.getLogger(__name__)
         layer = self.getLayerByName(self.layer_name)
 
-        if self.__class__._check_if_occurrences_csv_valid(('SPPCODE', 'LNGDEC', 'LATDEC'), self.data_file_path, lat='LATDEC', lng='LNGDEC'):
-            lng_column = 'LNGDEC'
-            lat_column = 'LATDEC'
-        elif self.__class__._check_if_occurrences_csv_valid(('lon', 'lat'), self.data_file_path, lat='lat', lng='lon'):
-            lng_column = 'lon'
-            lat_column = 'lat'
-        else:
+        lng_column = 'lon'
+        lat_column = 'lat'
+
+        valid_as_occurrences = False
+        valid_as_absences    = False
+        problems_as_occurrences = []
+        problems_as_absences    = []
+
+        valid_as_occurrences, problems_as_occurrences = self.__class__._check_if_occurrences_csv_valid(('species', lng_column, lat_column), self.data_file_path, lng=lng_column, lat=lat_column)
+        if not valid_as_occurrences:
+            valid_as_absences, problems_as_absences = self.__class__._check_if_occurrences_csv_valid((lng_column, lat_column), self.data_file_path, lng=lng_column, lat=lat_column)
+
+        if (not valid_as_occurrences) and (not valid_as_absences):
+            # Delete the file
             os.remove(self.data_file_path)
-            raise ValueError("Problem parsing Occurrence CSV file")
+            raise ValueError("Problem parsing Occurrence/Absences CSV file. Problems when processed as occurrences: %s; problems when processed as absences %s" % (problems_as_occurrences, problems_as_absences))
 
         if layer != None and layer.connection == None:
             connection = self._get_connection(lng_column, lat_column)
@@ -273,7 +280,7 @@ class OccurrencesBCCVLMap(BCCVLMap):
                     problems = validator.validate(reader)
 
                     if len(problems) > 0:
-                        return False
+                        return False, problems
                     else:
-                        return True
+                        return True, problems
 
