@@ -2,6 +2,7 @@ import unittest
 import transaction
 import pprint
 import mapscript
+import os
 
 from pyramid import testing
 

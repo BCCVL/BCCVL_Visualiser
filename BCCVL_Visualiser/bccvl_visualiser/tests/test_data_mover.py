@@ -1,3 +1,13 @@
+import bccvl_visualiser
+from bccvl_visualiser.models.external_api.data_mover import TestDataMover
+
+# Save the DataMover to _DataMover
+bccvl_visualiser.models.external_api.data_mover._DataMover = bccvl_visualiser.models.external_api.DataMover
+# Overwrite the DataMover with the TestDataMover
+bccvl_visualiser.models.external_api.data_mover.DataMover = TestDataMover
+
+from bccvl_visualiser.models.external_api.data_mover import DataMover, _DataMover
+
 import unittest
 import transaction
 import pprint
@@ -5,13 +15,13 @@ import types
 
 from pyramid import testing
 
-from bccvl_visualiser.models import *
 
 pp = pprint.PrettyPrinter(indent=4)
 
 from paste.deploy.loadwsgi import appconfig
 
 class TestBCCVLMap(unittest.TestCase):
+
     def setUp(self):
         self.config = appconfig('config:development.ini', 'pyramid', relative_to='.')
         from bccvl_visualiser import main

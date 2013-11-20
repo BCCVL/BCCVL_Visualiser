@@ -2,6 +2,7 @@ import unittest
 import transaction
 import pprint
 import json
+import mapscript
 
 from pyramid import testing
 
