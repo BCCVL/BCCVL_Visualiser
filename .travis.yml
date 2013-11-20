@@ -13,7 +13,7 @@ install:
   - cd BCCVL_Visualiser
   - pip install setuptools --upgrade
   - python bootstrap.py -c buildout.cfg
-  - bin/buildout -N -t 3 -c buildout.cfg
+  - bin/buildout -N -t 30 -c buildout.cfg
 # command to run tests
 script:
   - bin/test
