@@ -2,7 +2,6 @@ import logging
 import tempfile
 import mapscript
 import requests
-import re
 
 from pyramid.response import Response, FileResponse
 from pyramid.view import view_config, view_defaults

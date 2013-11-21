@@ -1,10 +1,10 @@
 import mapscript
 import os
 import logging
+import re
 
 
 from bccvl_visualiser.models import TextWrapper
-from bccvl_visualiser.models.bccvl_map import *
 
 from bccvl_visualiser.models.api import (
     BaseAPI
