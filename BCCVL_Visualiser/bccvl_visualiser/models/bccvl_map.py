@@ -225,19 +225,11 @@ class OccurrencesBCCVLMap(BCCVLMap):
         lng_column = 'lon'
         lat_column = 'lat'
 
-        valid_as_occurrences = False
-        valid_as_absences    = False
-        problems_as_occurrences = []
-        problems_as_absences    = []
-
-        valid_as_occurrences, problems_as_occurrences = self.__class__._check_if_occurrences_csv_valid(('species', lng_column, lat_column), self.data_file_path, lng=lng_column, lat=lat_column)
-        if not valid_as_occurrences:
-            valid_as_absences, problems_as_absences = self.__class__._check_if_occurrences_csv_valid((lng_column, lat_column), self.data_file_path, lng=lng_column, lat=lat_column)
-
-        if (not valid_as_occurrences) and (not valid_as_absences):
+        valid, problems = self.__class__._check_if_occurrences_csv_valid(self.data_file_path, lng=lng_column, lat=lat_column)
+        if not valid:
             # Delete the file
             os.remove(self.data_file_path)
-            raise ValueError("Problem parsing Occurrence/Absences CSV file. Problems when processed as occurrences: %s; problems when processed as absences %s" % (problems_as_occurrences, problems_as_absences))
+            raise ValueError("Problem parsing Occurrence/Absences CSV file. Problems: %s" % (problems))
 
         if layer != None and layer.connection == None:
             connection = self._get_connection(lng_column, lat_column)
@@ -258,29 +250,48 @@ class OccurrencesBCCVLMap(BCCVLMap):
         return connection
 
     @classmethod
-    def _check_if_occurrences_csv_valid(class_, field_names, file_path, lng=None, lat=None):
-            validator = CSVValidator(field_names)
+    def _check_if_occurrences_csv_valid(class_, file_path, lng='lon', lat='lat'):
+        log = logging.getLogger(__name__)
 
-            # basic header and record length checks
-            validator.add_header_check('EX1', 'bad header')
-            validator.add_record_length_check('EX2', 'unexpected record length')
+        field_names = []
 
-            if lng:
-                # some simple value checks
-                validator.add_value_check(lng, float,
-                              'EX3', "%s must be a float" % lng)
+        with open(file_path, 'rb') as csvfile:
+            reader = csv.reader(csvfile, class_.OccurrencesDialect)
+            field_names = reader.next()
 
-            if lat:
-                validator.add_value_check(lat, float,
-                              'EX4', "%s must be a float" % lat)
+        # Ensure that the expected latitude and longitude columns are in the
+        # list of expected field_names
+        # If we needed to add the lat/lng, we already know the validator will fail.
+        # Will only do it here to ensure the problems reported are consistent.
+        if not (lat in field_names):
+            log.warn("CSV (%s) doesn't contain a '%s' column", file_path, lat)
+            field_names.insert(0, lat)
+        if not (lng in field_names):
+            log.warn("CSV (%s) doesn't contain a '%s' column", file_path, lng)
+            field_names.insert(0, lng)
 
-            with class_.MAPSCRIPT_RLOCK:
-                with open(file_path, 'rb') as csvfile:
-                    reader = csv.reader(csvfile, class_.OccurrencesDialect)
-                    problems = validator.validate(reader)
+        validator = CSVValidator(field_names)
 
-                    if len(problems) > 0:
-                        return False, problems
-                    else:
-                        return True, problems
+        # basic header and record length checks
+        validator.add_header_check('EX1', 'bad header')
+        validator.add_record_length_check('EX2', 'unexpected record length')
+
+        if lng:
+            # some simple value checks
+            validator.add_value_check(lng, float,
+                          'EX3', "%s must be a float" % lng)
+
+        if lat:
+            validator.add_value_check(lat, float,
+                          'EX4', "%s must be a float" % lat)
+
+        with class_.MAPSCRIPT_RLOCK:
+            with open(file_path, 'rb') as csvfile:
+                reader = csv.reader(csvfile, class_.OccurrencesDialect)
+                problems = validator.validate(reader)
+
+                if len(problems) > 0:
+                    return False, problems
+                else:
+                    return True, problems
 
