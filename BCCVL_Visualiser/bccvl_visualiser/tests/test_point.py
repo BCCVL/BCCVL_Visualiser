@@ -255,3 +255,20 @@ class TestPointAPIv1(unittest.TestCase):
         self.assertEqual(res.status_int, 500)
 
         self.assertEqual(res.content_type, 'text/html')
+
+    def test_view_point_api_wfs_with_additional_columns(self):
+        params = {
+            'DATA_URL':     'https://raw.github.com/BCCVL/BCCVL_Visualiser/master/BCCVL_Visualiser/bccvl_visualiser/tests/fixtures/occurrences_with_additional_columns.csv',
+            'request':      'GetFeature',
+            'service':      'WFS',
+            'version':      '1.1.0',
+            'typeName':     'DEFAULT',
+            'outputFormat': 'geojson',
+        }
+        res = self.testapp.get('/api/point/1/wfs_data_url', status='*', params=params)
+        self.assertEqual(res.status_int, 200)
+        self.assertEqual(res.content_type, 'application/json')
+
+        loaded_json = json.loads(res.body)
+        self.assertEqual(type(loaded_json), dict)
+        self.assertEqual(loaded_json['type'], 'FeatureCollection')
