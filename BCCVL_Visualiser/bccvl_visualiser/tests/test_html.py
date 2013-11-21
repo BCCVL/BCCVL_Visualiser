@@ -76,8 +76,8 @@ class TestHTMLAPIv1(unittest.TestCase):
     def test_url_replacement(self):
         url = "http://compute.bccvl.org.au/experiments/bioclim-unthemed/bioclim-unthemed-result-2013-11-20t00-47-41-120241/results.html/view/++widget++form.widgets.file/@@download/results.html"
 
-        html_string = '''<html><img src="AUC.png" /><img src='ALL.png' /></html>'''
-        expected_content = '''<html><img src="http://compute.bccvl.org.au/experiments/bioclim-unthemed/bioclim-unthemed-result-2013-11-20t00-47-41-120241/AUC.png/view/++widget++form.widgets.file/@@download/AUC.png" /><img src="http://compute.bccvl.org.au/experiments/bioclim-unthemed/bioclim-unthemed-result-2013-11-20t00-47-41-120241/ALL.png/view/++widget++form.widgets.file/@@download/ALL.png" /></html>'''
+        html_string = '''<html><img src="AUC.png" other_attr='12' other_attr="12" /><img src='ALL.png' other_attr='23' other_attr="12" /></html>'''
+        expected_content = '''<html><img src="http://compute.bccvl.org.au/experiments/bioclim-unthemed/bioclim-unthemed-result-2013-11-20t00-47-41-120241/AUC.png/view/++widget++form.widgets.file/@@download/AUC.png" other_attr='12' other_attr="12" /><img src="http://compute.bccvl.org.au/experiments/bioclim-unthemed/bioclim-unthemed-result-2013-11-20t00-47-41-120241/ALL.png/view/++widget++form.widgets.file/@@download/ALL.png" other_attr='23' other_attr="12" /></html>'''
 
         out_content = HTMLAPIv1.replace_urls(html_string, url)
 

@@ -74,7 +74,7 @@ class HTMLAPIv1(BaseHTMLAPI):
             absolute_url = data_url.replace(current_data_url_file_name, relative_url)
             return 'src="%s"' % absolute_url
 
-        image_src_search_regex = r'src=([\'"])([^/][^"]+)\1'
+        image_src_search_regex = r'src=([\'"])([^/].+?)\1'
         # Call our replace_url for every match in in_str
         out_str = re.sub(image_src_search_regex, replace_img_src_url, in_str)
 
