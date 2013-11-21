@@ -53,3 +53,30 @@ class HTMLAPIv1(BaseHTMLAPI):
     def __init__(self, **kwargs):
         """ init the instance """
         super(HTMLAPIv1, self).__init__(**kwargs)
+
+    @classmethod
+    def replace_urls(_class, in_str, data_url):
+        ''' A HACK to reroute all the image references back to plone
+        '''
+
+        def replace_img_src_url(match_obj):
+            # example data_url: 
+            # http://compute.bccvl.org.au/experiments/bioclim-unthemed/bioclim-unthemed-result-2013-11-20t00-47-41-120241/results.html/view/++widget++form.widgets.file/@@download/results.html
+            current_data_url_file_name_match = re.search(r'[^/]+$', data_url)
+            # would produce results.html
+            current_data_url_file_name = current_data_url_file_name_match.group(0)
+
+            # example: 'AUC.png'
+            relative_url = match_obj.group(2)
+
+            # Replace all instances of current_data_url_file_name with relative_url
+            # results.html with AUC.png
+            absolute_url = data_url.replace(current_data_url_file_name, relative_url)
+            return 'src="%s"' % absolute_url
+
+        image_src_search_regex = r'src=([\'"])([^/][^"]+)\1'
+        # Call our replace_url for every match in in_str
+        out_str = re.sub(image_src_search_regex, replace_img_src_url, in_str)
+
+        return out_str
+
