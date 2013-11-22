@@ -21,7 +21,6 @@ class TestBCCVLMap(unittest.TestCase):
 
     def tearDown(self):
         DataMoverF.LOCAL = False
-        pass
 
     def test_new_bccvl_map_raises_on_bad_args(self):
         with self.assertRaises(ValueError):

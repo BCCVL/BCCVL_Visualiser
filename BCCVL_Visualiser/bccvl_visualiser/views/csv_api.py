@@ -3,6 +3,8 @@ import tempfile
 import mapscript
 import requests
 import csv
+import tempfile
+import os
 
 from pyramid.response import Response, FileResponse
 from pyramid.view import view_config, view_defaults
@@ -11,7 +13,7 @@ from pyramid_xmlrpc import *
 
 from sqlalchemy.exc import DBAPIError
 
-from bccvl_visualiser.models import CSVAPIv1
+from bccvl_visualiser.models import CSVAPIv1, DataMoverF, BaseCSVAPI
 from bccvl_visualiser.views import BaseView
 
 @view_defaults(route_name='csv_api')
@@ -62,32 +64,39 @@ class CSVAPIViewv1(BaseCSVAPIView):
 
         data_url = self.request.GET.getone('data_url')
 
-        r = requests.get(data_url, verify=False)
-        r.raise_for_status()
+        tf = tempfile.NamedTemporaryFile(delete=False, prefix='csv_view_v1_', suffix='.csv')
+        file_path = tf.name
 
-        # TODO: Change this to use list comprehension, or to process the csv file in
-        # the template.
+        # create a mover to get the CSV file
+        mover = DataMoverF.new_data_mover(file_path, data_url = data_url)
+        mover.move_and_wait_for_completion()
 
         out_str = '<table>'
 
-        first = True
-        for row in csv.reader(r.content.decode('ascii', 'replace').splitlines()):
-            if first:
-                out_str = out_str + "<thead>"
-                out_str = out_str + "<tr>"
-                for el in row:
-                    out_str = ( out_str + "<th>" + el + "</th>" )
-                out_str = out_str + "</tr>"
-                out_str = out_str + "</thead><tbody>"
-                first = False
-            else:
-                out_str = out_str + "<tr>"
-                for el in row:
-                    out_str = ( out_str + "<td>" + el + "</td>" )
-                out_str = out_str + "</tr>"
+        with open(file_path, 'rb') as csvfile:
 
-        out_str = out_str + '</tbody></table>'
+            # TODO: Change this to use list comprehension, or to process the csv file in
+            # the template.
+            first = True
+            for row in csv.reader(csvfile):
+                if first:
+                    out_str = out_str + "<thead>"
+                    out_str = out_str + "<tr>"
+                    for el in row:
+                        out_str = ( out_str + "<th>" + el + "</th>" )
+                    out_str = out_str + "</tr>"
+                    out_str = out_str + "</thead><tbody>"
+                    first = False
+                else:
+                    out_str = out_str + "<tr>"
+                    for el in row:
+                        out_str = ( out_str + "<td>" + el + "</td>" )
+                    out_str = out_str + "</tr>"
 
+            out_str = out_str + '</tbody></table>'
+
+        # Don't forget to clean up at the end
+        os.remove(file_path)
         return { 'file_content': out_str }
 
     @view_config(name='.xmlrpc')
