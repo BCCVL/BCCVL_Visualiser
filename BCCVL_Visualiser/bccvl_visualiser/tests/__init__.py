@@ -4,8 +4,6 @@ import pprint
 
 from pyramid import testing
 
-from bccvl_visualiser.models import *
-
 pp = pprint.PrettyPrinter(indent=4)
 
 class TestMyCode(unittest.TestCase):

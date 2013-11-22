@@ -5,10 +5,11 @@ import logging
 import os
 import threading
 
-import requests
 import hashlib
 
 from csvvalidator import *
+
+from bccvl_visualiser.models.external_api.data_mover import DataMoverF
 
 class BCCVLMap(mapObj):
     """ Our custom BCCVL mapObj.
@@ -104,22 +105,13 @@ class BCCVLMap(mapObj):
         self.ows_request = ows_request
 
     def _download_data_to_file(self):
-        r = requests.get(self.data_url, verify=False)
-        r.raise_for_status()
+        mover = DataMoverF.new_data_mover(self.data_file_path, data_url = self.data_url)
 
         # Make sure only one thread is trying to check for
         # the existance of, or trying to write the file
         # at any time.
         with self.__class__.MAPSCRIPT_RLOCK:
-            dirname, filename = os.path.split(os.path.abspath(self.data_file_path))
-
-            if not os.path.isdir(dirname):
-                os.makedirs(dirname)
-
-            # write the data from the url to the map file path
-            output = open(self.data_file_path,'wb')
-            output.write(r.content)
-            output.close()
+            mover.move_and_wait_for_completion()
 
     @classmethod
     def get_path_to_map_data_file(class_, data_file_name):

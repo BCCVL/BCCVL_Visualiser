@@ -6,7 +6,6 @@ import zope.interface
 import bccvl_visualiser.invariants
 
 class IDataMover(zope.interface.Interface):
-
     #: The base_url of the data mover
     BASE_URL = zope.interface.Attribute('The Base URL of the Data Mover (the API endpoint we will consume)')
 
@@ -47,12 +46,29 @@ class IDataMover(zope.interface.Interface):
         """ Get the status of the current move """
         pass
 
+class DataMoverF(object):
+    LOCAL = False
+
+    @classmethod
+    def new_data_mover(_class, *args, **kwargs):
+        if _class.LOCAL:
+            return LocalDataMover(*args, **kwargs)
+        else:
+            return DataMover(*args, **kwargs)
 
 class DataMover(object):
     zope.interface.implements(IDataMover)
 
     BASE_URL = None
     HOST_ID  = None
+
+    COMPLETE_STATUS = 'COMPLETE'
+    REJECTED_STATUS = 'REJECTED'
+    PENDING_STATUS  = 'PENDING'
+    FAILED_STATUS   = 'FAILED'
+
+    # The time to sleep between data mover checks
+    SLEEP_BETWEEN_DATA_MOVER_CHECKS = 2
 
     @classmethod
     def configure_from_config(class_, settings):
@@ -93,10 +109,35 @@ class DataMover(object):
         pass
 
     def move_file(self):
-        pass
+        # TODO -> Call on the xmlrpc, return the resulting hash
+        raise NotImplementedError("move_file is not yet supported")
 
     def get_status(self):
-        pass
+        raise NotImplementedError("get_status is not yet supported")
+
+    def move_and_wait_for_completion(self):
+        """ Wait for the move to complete.
+
+            Raises IOError if move fails.
+            Returns move job status (result of get_status) if job succeeds.
+        """
+
+        _class = self.__class__
+        response = self.move_file()
+        if response['status'] == _class.REJECTED_STATUS:
+            raise IOError("Move Failed: %s" % status)
+
+        while True:
+            response = self.get_status()
+            if response['status'] == _class.FAILED_STATUS:
+                # if the move failed, raise an exception
+                raise IOError("Move Failed: %s" % status)
+            elif response['status'] == _class.COMPLETE_STATUS:
+                # if the move is complete, return the status
+                return response
+            else:
+                # it's in progress, so wait
+                sleep(_class.SLEEP_BETWEEN_DATA_MOVER_CHECKS)
 
 class LocalDataMover(DataMover):
 
@@ -112,16 +153,20 @@ class LocalDataMover(DataMover):
         if ( self.job_id is None ):
             self.job_id = random.randint(1,1000000)
             self._move_the_file()
-            return { 'status': 'ACCEPTED', 'id': self.job_id }
+            return { 'status': self.__class__.PENDING_STATUS, 'id': self.job_id }
         else:
             raise AssertionError("You can only move a file once per data mover instance")
 
     def get_status(self):
         if self.job_id:
             if self.status_code == 200:
-                return { 'status': 'COMPLETE', 'id': self.job_id }
+                return { 'status': self.__class__.COMPLETE_STATUS, 'id': self.job_id }
             else:
-                return { 'status': 'FAILED', 'id': self.job_id }
+                return {
+                    'status': self.__class__.FAILED_STATUS,
+                    'reason': 'Bad HTTP status code: %s' % self.status_code,
+                    'id': self.job_id
+                }
         else:
             raise AssertionError("You can't get the status of a job that hasn't been started")
 

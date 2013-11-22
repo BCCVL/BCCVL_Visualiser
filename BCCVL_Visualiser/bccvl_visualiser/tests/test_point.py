@@ -1,3 +1,4 @@
+import bccvl_visualiser
 import unittest
 import transaction
 import pprint
@@ -6,7 +7,7 @@ import mapscript
 
 from pyramid import testing
 
-from bccvl_visualiser.models import *
+from bccvl_visualiser.models import PointAPIv1, APICollection, BasePointAPI
 from paste.deploy.loadwsgi import appconfig
 
 pp = pprint.PrettyPrinter(indent=4)
