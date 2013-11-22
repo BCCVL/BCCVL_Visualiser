@@ -1,0 +1,5 @@
+species,lat,extra_column,lon
+"Dromaius novaehollandiae",42.12,a,32.09
+"Dromaius novaehollandiae","21",b,"45"
+"Dromaius novaehollandiae",43.22,c,"56.43"
+"Dromaius novaehollandiae",-89.01,d,"179"

@@ -62,7 +62,8 @@ class HTMLAPIViewv1(BaseHTMLAPIView):
         r = requests.get(data_url, verify=False)
         r.raise_for_status()
 
-        out_str = r.content
+        content = r.content
+        out_str = HTMLAPIv1.replace_urls(content, data_url)
 
         response = Response(out_str, content_type="text/html")
         return response
