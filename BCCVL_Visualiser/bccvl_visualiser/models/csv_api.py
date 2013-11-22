@@ -12,9 +12,6 @@ from bccvl_visualiser.models.api import (
     BaseAPI
     )
 
-import requests
-import hashlib
-
 class BaseCSVAPI(BaseAPI):
 
     @staticmethod

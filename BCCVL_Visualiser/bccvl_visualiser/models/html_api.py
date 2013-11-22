@@ -3,15 +3,8 @@ import os
 import logging
 import re
 
-
 from bccvl_visualiser.models import TextWrapper
-
-from bccvl_visualiser.models.api import (
-    BaseAPI
-    )
-
-import requests
-import hashlib
+from bccvl_visualiser.models.api import BaseAPI
 
 class BaseHTMLAPI(BaseAPI):
 

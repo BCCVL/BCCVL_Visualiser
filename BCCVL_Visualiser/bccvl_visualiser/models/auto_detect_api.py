@@ -5,15 +5,7 @@ import csv
 from csvvalidator import *
 
 
-from bccvl_visualiser.models import TextWrapper
-from bccvl_visualiser.models.bccvl_map import *
-
-from bccvl_visualiser.models.api import (
-    BaseAPI
-    )
-
-import requests
-import hashlib
+from bccvl_visualiser.models.api import BaseAPI
 
 class BaseAutoDetectAPI(BaseAPI):
 

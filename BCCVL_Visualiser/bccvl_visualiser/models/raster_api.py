@@ -1,16 +1,8 @@
 import mapscript
 import os
 
-from bccvl_visualiser.models import TextWrapper
-from bccvl_visualiser.models.bccvl_map import *
-
-from bccvl_visualiser.models.api import (
-    BaseAPI,
-    )
-
-import requests
-import hashlib
-import logging
+from bccvl_visualiser.models.bccvl_map import GeoTiffBCCVLMap
+from bccvl_visualiser.models.api import BaseAPI
 
 class BaseRasterAPI(BaseAPI):
 
