@@ -7,13 +7,15 @@ import mapscript
 
 from pyramid import testing
 
-from bccvl_visualiser.models import PointAPIv1, APICollection, BasePointAPI
+from bccvl_visualiser.models import PointAPIv1, APICollection, BasePointAPI, FDataMover
 from paste.deploy.loadwsgi import appconfig
 
 pp = pprint.PrettyPrinter(indent=4)
 
 class TestPointAPIv1(unittest.TestCase):
     def setUp(self):
+        FDataMover.local = True
+
         self.config = appconfig('config:development.ini', 'pyramid', relative_to='.')
         from bccvl_visualiser import main
         app = main(None, **self.config)
@@ -21,7 +23,7 @@ class TestPointAPIv1(unittest.TestCase):
         self.testapp = TestApp(app)
 
     def tearDown(self):
-        pass
+        FDataMover.local = False
 
     def test_view_point_api_html(self):
        res = self.testapp.get('/api/point', status='*')
