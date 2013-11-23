@@ -5,13 +5,13 @@ import os
 
 from pyramid import testing
 
-from bccvl_visualiser.models import OccurrencesBCCVLMap, DataMoverF
+from bccvl_visualiser.models import OccurrencesBCCVLMap, FDataMover
 
 from paste.deploy.loadwsgi import appconfig
 
 class TestBCCVLMap(unittest.TestCase):
     def setUp(self):
-        DataMoverF.LOCAL = True
+        FDataMover.LOCAL = True
 
         self.config = appconfig('config:development.ini', 'pyramid', relative_to='.')
         from bccvl_visualiser import main
@@ -20,7 +20,7 @@ class TestBCCVLMap(unittest.TestCase):
         self.testapp = TestApp(app)
 
     def tearDown(self):
-        DataMoverF.LOCAL = False
+        FDataMover.LOCAL = False
 
     def test_new_bccvl_map_raises_on_bad_args(self):
         with self.assertRaises(ValueError):

@@ -69,9 +69,7 @@ class TestRAPIv1(unittest.TestCase):
         }
 
         res = self.testapp.get('/api/r/1/data_url_view', status='*', params=params)
-        self.assertEqual(res.status_int, 200)
 
-        self.assertEqual(res.content_type, 'text/html')
         expected_content = """
 <!DOCTYPE html>
 <html style="width:100%; height:100%">
@@ -95,4 +93,7 @@ cat('Hello, world!\\n')
     </body>
 </html>
 """
+
+        self.assertEqual(res.status_int, 200)
+        self.assertEqual(res.content_type, 'text/html')
         self.assertEqual(res.body.strip(), expected_content.strip())

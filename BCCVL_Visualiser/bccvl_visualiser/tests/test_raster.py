@@ -6,7 +6,7 @@ import json
 
 from pyramid import testing
 
-from bccvl_visualiser.models import BaseRasterAPI, RasterAPIv1, APICollection, DataMoverF
+from bccvl_visualiser.models import BaseRasterAPI, RasterAPIv1, APICollection, FDataMover
 
 from paste.deploy.loadwsgi import appconfig
 
@@ -15,7 +15,7 @@ pp = pprint.PrettyPrinter(indent=4)
 class TestRasterAPIv1(unittest.TestCase):
 
     def setUp(self):
-        DataMoverF.LOCAL = True
+        FDataMover.LOCAL = True
 
         self.config = appconfig('config:development.ini', 'pyramid', relative_to='.')
         from bccvl_visualiser import main
@@ -24,7 +24,7 @@ class TestRasterAPIv1(unittest.TestCase):
         self.testapp = TestApp(app)
 
     def tearDown(self):
-        DataMoverF.LOCAL = False
+        FDataMover.LOCAL = False
 
     def test_raster_in_api_collection(self):
         self.assertTrue(BaseRasterAPI in APICollection.base_api_inheritors())

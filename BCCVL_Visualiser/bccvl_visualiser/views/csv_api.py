@@ -13,7 +13,7 @@ from pyramid_xmlrpc import *
 
 from sqlalchemy.exc import DBAPIError
 
-from bccvl_visualiser.models import CSVAPIv1, DataMoverF, BaseCSVAPI
+from bccvl_visualiser.models import CSVAPIv1, FDataMover, BaseCSVAPI
 from bccvl_visualiser.views import BaseView
 
 @view_defaults(route_name='csv_api')
@@ -68,7 +68,7 @@ class CSVAPIViewv1(BaseCSVAPIView):
         file_path = tf.name
 
         # create a mover to get the CSV file
-        mover = DataMoverF.new_data_mover(file_path, data_url = data_url)
+        mover = FDataMover.new_data_mover(file_path, data_url = data_url)
         mover.move_and_wait_for_completion()
 
         out_str = '<table>'

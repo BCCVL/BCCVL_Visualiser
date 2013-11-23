@@ -9,7 +9,7 @@ import hashlib
 
 from csvvalidator import *
 
-from bccvl_visualiser.models.external_api.data_mover import DataMoverF
+from bccvl_visualiser.models.external_api.data_mover import FDataMover
 
 class BCCVLMap(mapObj):
     """ Our custom BCCVL mapObj.
@@ -105,7 +105,7 @@ class BCCVLMap(mapObj):
         self.ows_request = ows_request
 
     def _download_data_to_file(self):
-        mover = DataMoverF.new_data_mover(self.data_file_path, data_url = self.data_url)
+        mover = FDataMover.new_data_mover(self.data_file_path, data_url = self.data_url)
 
         # Make sure only one thread is trying to check for
         # the existance of, or trying to write the file

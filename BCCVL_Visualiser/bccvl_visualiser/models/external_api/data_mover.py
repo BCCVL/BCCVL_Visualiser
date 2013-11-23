@@ -46,7 +46,7 @@ class IDataMover(zope.interface.Interface):
         """ Get the status of the current move """
         pass
 
-class DataMoverF(object):
+class FDataMover(object):
     LOCAL = False
 
     @classmethod

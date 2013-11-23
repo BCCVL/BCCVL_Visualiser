@@ -5,14 +5,14 @@ import json
 
 from pyramid import testing
 
-from bccvl_visualiser.models import BaseCSVAPI, CSVAPIv1, APICollection, DataMoverF
+from bccvl_visualiser.models import BaseCSVAPI, CSVAPIv1, APICollection, FDataMover
 
 from paste.deploy.loadwsgi import appconfig
 
 class TestCSVAPIv1(unittest.TestCase):
 
     def setUp(self):
-        DataMoverF.LOCAL = True
+        FDataMover.LOCAL = True
 
         self.config = appconfig('config:development.ini', 'pyramid', relative_to='.')
         from bccvl_visualiser import main
@@ -21,7 +21,7 @@ class TestCSVAPIv1(unittest.TestCase):
         self.testapp = TestApp(app)
 
     def tearDown(self):
-        DataMoverF.LOCAL = False
+        FDataMover.LOCAL = False
 
     def test_view_csv_api_html(self):
        res = self.testapp.get('/api/csv', status='*')

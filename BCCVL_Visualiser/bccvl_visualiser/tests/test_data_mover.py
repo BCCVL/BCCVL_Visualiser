@@ -7,14 +7,14 @@ import types
 
 from pyramid import testing
 
-from bccvl_visualiser.models.external_api.data_mover import DataMover, DataMoverF
+from bccvl_visualiser.models.external_api.data_mover import DataMover, FDataMover
 
 from paste.deploy.loadwsgi import appconfig
 
 class TestBCCVLMap(unittest.TestCase):
 
     def setUp(self):
-        DataMoverF.LOCAL = True
+        FDataMover.LOCAL = True
 
         self.config = appconfig('config:development.ini', 'pyramid', relative_to='.')
         from bccvl_visualiser import main
@@ -23,7 +23,7 @@ class TestBCCVLMap(unittest.TestCase):
         self.testapp = TestApp(app)
 
     def tearDown(self):
-        DataMoverF.LOCAL = False
+        FDataMover.LOCAL = False
         pass
 
     def test_data_mover_base_url(self):
@@ -31,14 +31,14 @@ class TestBCCVLMap(unittest.TestCase):
 
     def test_new_data_mover_raises_on_bad_args(self):
         with self.assertRaises(ValueError):
-            DataMoverF.new_data_mover('/tmp/a.csv')
+            FDataMover.new_data_mover('/tmp/a.csv')
         with self.assertRaises(ValueError):
-            DataMoverF.new_data_mover('/tmp/a.csv', data_id="111", data_url="http://example.com")
+            FDataMover.new_data_mover('/tmp/a.csv', data_id="111", data_url="http://example.com")
 
     def test_new_data_mover_from_data_id(self):
         # This isn't implemented yet
         with self.assertRaises(NotImplementedError):
-            my_map = DataMoverF.new_data_mover('tmp/a.csv', data_id="908h08h")
+            my_map = FDataMover.new_data_mover('tmp/a.csv', data_id="908h08h")
 
     def test_move_file_successfully_status(self):
         tmp = tempfile.gettempdir()
@@ -50,7 +50,7 @@ class TestBCCVLMap(unittest.TestCase):
             os.remove(tmp_file_path)
 
         # Create a DataMover object to move the file to the dest file path
-        mover = DataMoverF.new_data_mover(tmp_file_path, data_url=url)
+        mover = FDataMover.new_data_mover(tmp_file_path, data_url=url)
         move_output = mover.move_file()
 
         move_job_id = move_output['id']
