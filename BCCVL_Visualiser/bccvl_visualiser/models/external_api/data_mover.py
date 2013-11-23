@@ -47,11 +47,11 @@ class IDataMover(zope.interface.Interface):
         pass
 
 class FDataMover(object):
-    LOCAL = False
+    local = False
 
     @classmethod
     def new_data_mover(_class, *args, **kwargs):
-        if _class.LOCAL:
+        if _class.local:
             return LocalDataMover(*args, **kwargs)
         else:
             return DataMover(*args, **kwargs)

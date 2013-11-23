@@ -15,7 +15,7 @@ pp = pprint.PrettyPrinter(indent=4)
 class TestRasterAPIv1(unittest.TestCase):
 
     def setUp(self):
-        FDataMover.LOCAL = True
+        FDataMover.local = True
 
         self.config = appconfig('config:development.ini', 'pyramid', relative_to='.')
         from bccvl_visualiser import main
@@ -24,7 +24,7 @@ class TestRasterAPIv1(unittest.TestCase):
         self.testapp = TestApp(app)
 
     def tearDown(self):
-        FDataMover.LOCAL = False
+        FDataMover.local = False
 
     def test_raster_in_api_collection(self):
         self.assertTrue(BaseRasterAPI in APICollection.base_api_inheritors())

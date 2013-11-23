@@ -14,7 +14,7 @@ from paste.deploy.loadwsgi import appconfig
 class TestBCCVLMap(unittest.TestCase):
 
     def setUp(self):
-        FDataMover.LOCAL = True
+        FDataMover.local = True
 
         self.config = appconfig('config:development.ini', 'pyramid', relative_to='.')
         from bccvl_visualiser import main
@@ -23,7 +23,7 @@ class TestBCCVLMap(unittest.TestCase):
         self.testapp = TestApp(app)
 
     def tearDown(self):
-        FDataMover.LOCAL = False
+        FDataMover.local = False
         pass
 
     def test_data_mover_base_url(self):

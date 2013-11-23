@@ -12,7 +12,7 @@ from paste.deploy.loadwsgi import appconfig
 class TestCSVAPIv1(unittest.TestCase):
 
     def setUp(self):
-        FDataMover.LOCAL = True
+        FDataMover.local = True
 
         self.config = appconfig('config:development.ini', 'pyramid', relative_to='.')
         from bccvl_visualiser import main
@@ -21,7 +21,7 @@ class TestCSVAPIv1(unittest.TestCase):
         self.testapp = TestApp(app)
 
     def tearDown(self):
-        FDataMover.LOCAL = False
+        FDataMover.local = False
 
     def test_view_csv_api_html(self):
        res = self.testapp.get('/api/csv', status='*')
