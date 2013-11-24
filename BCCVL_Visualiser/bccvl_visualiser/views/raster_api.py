@@ -6,12 +6,11 @@ import threading
 from pyramid.response import Response, FileResponse
 from pyramid.view import view_config, view_defaults
 from pyramid.httpexceptions import HTTPFound, HTTPNotFound
-from pyramid_xmlrpc import *
 
 from sqlalchemy.exc import DBAPIError
 
-from bccvl_visualiser.models import *
 from bccvl_visualiser.views import BaseView
+from bccvl_visualiser.models import BaseRasterAPI, RasterAPIv1
 
 
 @view_defaults(route_name='raster_api')

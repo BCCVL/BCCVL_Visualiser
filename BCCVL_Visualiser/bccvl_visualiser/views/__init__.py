@@ -8,6 +8,9 @@ from zope.interface import Interface, Attribute, implements
 
 from sqlalchemy.exc import DBAPIError
 
+from pyramid_xmlrpc import parse_xmlrpc_request
+from pyramid_xmlrpc import xmlrpc_response
+
 class IView(Interface):
 
     #: The title of the view. This is displayed in breadcrumbs and page titles.

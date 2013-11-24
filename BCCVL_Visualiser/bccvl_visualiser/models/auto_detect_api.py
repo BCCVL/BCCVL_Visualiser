@@ -2,8 +2,6 @@ import mapscript
 import os
 import logging
 import csv
-from csvvalidator import *
-
 
 from bccvl_visualiser.models.api import BaseAPI
 

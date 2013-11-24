@@ -1,17 +1,15 @@
 import unittest
 import transaction
-import pprint
-import json
 
 from pyramid import testing
 
-from bccvl_visualiser.models import *
+from bccvl_visualiser.models import BaseRAPI, RAPIv1, APICollection, FDataMover
 from paste.deploy.loadwsgi import appconfig
-
-pp = pprint.PrettyPrinter(indent=4)
 
 class TestRAPIv1(unittest.TestCase):
     def setUp(self):
+        FDataMover.local = True
+
         self.config = appconfig('config:development.ini', 'pyramid', relative_to='.')
         from bccvl_visualiser import main
         app = main(None, **self.config)
@@ -19,7 +17,7 @@ class TestRAPIv1(unittest.TestCase):
         self.testapp = TestApp(app)
 
     def tearDown(self):
-        pass
+        FDataMover.local = False
 
     def test_view_r_api_r(self):
        res = self.testapp.get('/api/r', status='*')
@@ -63,7 +61,7 @@ class TestRAPIv1(unittest.TestCase):
         self.assertEqual(the_dict['description'], description, msg="Description should match")
         self.assertEqual(the_dict['version'], version, msg="Version should match")
 
-    def test_view_r_api_v1_r(self):
+    def test_view_r_api_v1_data_url_view(self):
         params = {
             'data_url':     'https://raw.github.com/BCCVL/BCCVL_Visualiser/master/BCCVL_Visualiser/bccvl_visualiser/tests/fixtures/hello_world.r',
         }

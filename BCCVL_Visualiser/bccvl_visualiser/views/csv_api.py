@@ -9,7 +9,6 @@ import os
 from pyramid.response import Response, FileResponse
 from pyramid.view import view_config, view_defaults
 from pyramid.httpexceptions import HTTPFound, HTTPNotFound
-from pyramid_xmlrpc import *
 
 from sqlalchemy.exc import DBAPIError
 

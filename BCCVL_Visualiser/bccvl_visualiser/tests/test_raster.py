@@ -1,7 +1,5 @@
-
 import unittest
 import transaction
-import pprint
 import json
 
 from pyramid import testing
@@ -9,8 +7,6 @@ from pyramid import testing
 from bccvl_visualiser.models import BaseRasterAPI, RasterAPIv1, APICollection, FDataMover
 
 from paste.deploy.loadwsgi import appconfig
-
-pp = pprint.PrettyPrinter(indent=4)
 
 class TestRasterAPIv1(unittest.TestCase):
 
@@ -59,17 +55,9 @@ class TestRasterAPIv1(unittest.TestCase):
        self.assertEqual(loaded_json['version'], RasterAPIv1.version())
        self.assertEqual(loaded_json['name'], RasterAPIv1.identifier())
 
-    def test_view_raster_api_v1_json(self):
+    def test_view_raster_api_v1_json_with_bad_version(self):
        res = self.testapp.get('/api/raster/bad_version.json', status='*')
        self.assertEqual(res.status_int, 404)
-
-    def test_view_raster_api_v1_json(self):
-       res = self.testapp.get('/api/raster/1.json', status='*')
-       self.assertEqual(res.status_int, 200)
-
-       loaded_json = json.loads(res.body)
-       self.assertEqual(loaded_json['version'], RasterAPIv1.version())
-       self.assertEqual(loaded_json['name'], RasterAPIv1.identifier())
 
     # SRS -> Spherical Mercator
     def test_view_raster_api_wms_srs_epsg_3857(self):

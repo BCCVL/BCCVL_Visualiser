@@ -1,17 +1,15 @@
 import unittest
 import transaction
-import pprint
-import json
 
 from pyramid import testing
 
-from bccvl_visualiser.models import *
+from bccvl_visualiser.models import BaseHTMLAPI, HTMLAPIv1, APICollection, FDataMover
 from paste.deploy.loadwsgi import appconfig
-
-pp = pprint.PrettyPrinter(indent=4)
 
 class TestHTMLAPIv1(unittest.TestCase):
     def setUp(self):
+        FDataMover.local = True
+
         self.config = appconfig('config:development.ini', 'pyramid', relative_to='.')
         from bccvl_visualiser import main
         app = main(None, **self.config)
@@ -19,14 +17,10 @@ class TestHTMLAPIv1(unittest.TestCase):
         self.testapp = TestApp(app)
 
     def tearDown(self):
-        pass
+        FDataMover.local = False
 
     def test_view_html_api_html(self):
        res = self.testapp.get('/api/html', status='*')
-       self.assertEqual(res.status_int, 200)
-
-    def test_view_html_api_v1_html(self):
-       res = self.testapp.get('/api/html/1', status='*')
        self.assertEqual(res.status_int, 200)
 
     def test_test_env_working(self):

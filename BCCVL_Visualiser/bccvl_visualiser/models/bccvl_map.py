@@ -7,7 +7,7 @@ import threading
 
 import hashlib
 
-from csvvalidator import *
+from csvvalidator import CSVValidator
 
 from bccvl_visualiser.models.external_api.data_mover import FDataMover
 

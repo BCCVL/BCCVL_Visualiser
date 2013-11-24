@@ -6,7 +6,6 @@ import requests
 from pyramid.response import Response, FileResponse
 from pyramid.view import view_config, view_defaults
 from pyramid.httpexceptions import HTTPFound, HTTPNotFound
-from pyramid_xmlrpc import *
 
 from bccvl_visualiser.models import BaseHTMLAPI, HTMLAPIv1
 from bccvl_visualiser.views import BaseView
