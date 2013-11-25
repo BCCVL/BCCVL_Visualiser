@@ -1,11 +1,13 @@
 import logging
 import os
+import time
 import requests
 import random
 import zope.interface
 import bccvl_visualiser.invariants
 import tempfile
 from contextlib import contextmanager
+import xmlrpclib
 
 class IDataMover(zope.interface.Interface):
     #: The base_url of the data mover
@@ -75,7 +77,7 @@ class DataMover(object):
     BASE_URL = None
     HOST_ID  = None
 
-    COMPLETE_STATUS = 'COMPLETE'
+    COMPLETE_STATUS = 'COMPLETED'
     REJECTED_STATUS = 'REJECTED'
     PENDING_STATUS  = 'PENDING'
     FAILED_STATUS   = 'FAILED'
@@ -126,7 +128,9 @@ class DataMover(object):
         """ initialise the map instance from a data_url """
 
         self.dest_file_path = dest_file_path
-        self.job_id = None
+        self.job_id   = None
+        self.data_url = None
+        self.data_id  = None
 
         if data_id and data_url:
             raise ValueError("The DataMover API can't be provided a data_id and a data_url (there can be only one)")
@@ -142,14 +146,32 @@ class DataMover(object):
         raise NotImplementedError("data_id is not yet supported")
 
     def _init_from_data_url(self, data_url):
-        pass
+        self.data_url = data_url
+
+    @classmethod
+    def get_xmlrpc_url(class_):
+        return (class_.BASE_URL + "/" + "data_mover")
 
     def move_file(self):
-        # TODO -> Call on the xmlrpc, return the resulting hash
-        raise NotImplementedError("move_file is not yet supported")
+        _class = self.__class__
+        if self.data_url:
+            source_dict = { 'type':'url', 'url': self.data_url }
+            dest_dict   = { 'type':'scp', 'host':_class.HOST_ID, 'path':self.dest_file_path }
+
+            s = xmlrpclib.ServerProxy(_class.get_xmlrpc_url())
+            response = s.move(source_dict, dest_dict)
+
+            if response['status'] == _class.PENDING_STATUS:
+                self.job_id = response['id']
+            return response
+        else:
+            raise NotImplementedError("move_file for data_id is not yet supported")
 
     def get_status(self):
-        raise NotImplementedError("get_status is not yet supported")
+        _class = self.__class__
+        s = xmlrpclib.ServerProxy(_class.get_xmlrpc_url())
+        response = s.check_move_status(self.job_id)
+        return response
 
     def move_and_wait_for_completion(self):
         """ Wait for the move to complete.
@@ -158,32 +180,28 @@ class DataMover(object):
             Returns move job status (result of get_status) if job succeeds.
         """
 
+        log = logging.getLogger(__name__)
+
         _class = self.__class__
         response = self.move_file()
+        log.info("move response: %s", response)
         if response['status'] == _class.REJECTED_STATUS:
-            raise IOError("Move Failed: %s" % status)
+            raise IOError("Move Failed (rejected): %s" % response['reason'])
 
         while True:
             response = self.get_status()
+            log.info("get_status response: %s", response)
             if response['status'] == _class.FAILED_STATUS:
                 # if the move failed, raise an exception
-                raise IOError("Move Failed: %s" % status)
+                raise IOError("Move Failed (failed during move): %s" % response['reason'])
             elif response['status'] == _class.COMPLETE_STATUS:
                 # if the move is complete, return the status
                 return response
             else:
                 # it's in progress, so wait
-                sleep(_class.SLEEP_BETWEEN_DATA_MOVER_CHECKS)
+                time.sleep(_class.SLEEP_BETWEEN_DATA_MOVER_CHECKS)
 
 class LocalDataMover(DataMover):
-
-    # The dummy results will change based on what the data_url is
-    def _init_from_data_id(self, data_id):
-        self.data_id = data_id
-        raise NotImplementedError("data_id is not yet supported")
-
-    def _init_from_data_url(self, data_url):
-        self.data_url = data_url
 
     def move_file(self):
         if ( self.job_id is None ):

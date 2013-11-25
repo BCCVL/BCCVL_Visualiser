@@ -59,7 +59,7 @@ class TestBCCVLMap(unittest.TestCase):
 
         move_status = mover.get_status()
 
-        self.assertEqual(move_status['status'], 'COMPLETE')
+        self.assertEqual(move_status['status'], 'COMPLETED')
         self.assertEqual(move_status['id'], move_job_id)
 
     def test_open_yield(self):

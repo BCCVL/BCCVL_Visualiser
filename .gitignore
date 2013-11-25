@@ -48,3 +48,5 @@ BCCVL_Visualiser/include/
 
 etc/
 
+# OS X indexing files
+.DS_Store

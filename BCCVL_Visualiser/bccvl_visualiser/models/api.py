@@ -74,4 +74,3 @@ class BaseAPI(object):
         inheritors_version_dict = _class.get_direct_inheritors_version_dict()
 
         return inheritors_version_dict[version]
-
