@@ -4,6 +4,8 @@ import requests
 import random
 import zope.interface
 import bccvl_visualiser.invariants
+import tempfile
+from contextlib import contextmanager
 
 class IDataMover(zope.interface.Interface):
     #: The base_url of the data mover
@@ -51,10 +53,21 @@ class FDataMover(object):
 
     @classmethod
     def new_data_mover(_class, *args, **kwargs):
+        """ Create a data mover """
+
         if _class.local:
             return LocalDataMover(*args, **kwargs)
         else:
             return DataMover(*args, **kwargs)
+
+    @classmethod
+    def get_data_mover_class(_class, *args, **kwargs):
+        """ Get the class of data mover that the factory would instantiate for you """
+
+        if _class.local:
+            return LocalDataMover
+        else:
+            return DataMover
 
 class DataMover(object):
     zope.interface.implements(IDataMover)
@@ -69,6 +82,29 @@ class DataMover(object):
 
     # The time to sleep between data mover checks
     SLEEP_BETWEEN_DATA_MOVER_CHECKS = 2
+
+    @classmethod
+    @contextmanager
+    def open(class_, **kwargs):
+        """ Open a file using the data mover, yield it, and then delete it.
+        """
+
+        # Create a tempfile to store the R file
+        tf = tempfile.NamedTemporaryFile(delete=False, prefix='data_mover_')
+        file_path = tf.name
+
+        try:
+            # create a mover to get the file
+            mover = class_(file_path, **kwargs)
+            mover.move_and_wait_for_completion()
+
+            # open the tempfile
+            with open(file_path, 'r') as f:
+                # yield the file
+                yield f
+        finally:
+            # remove the tempfile
+            os.remove(file_path)
 
     @classmethod
     def configure_from_config(class_, settings):
