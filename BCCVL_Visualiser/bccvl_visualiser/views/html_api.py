@@ -1,13 +1,12 @@
 import logging
 import tempfile
 import mapscript
-import requests
 
 from pyramid.response import Response, FileResponse
 from pyramid.view import view_config, view_defaults
 from pyramid.httpexceptions import HTTPFound, HTTPNotFound
 
-from bccvl_visualiser.models import BaseHTMLAPI, HTMLAPIv1
+from bccvl_visualiser.models import BaseHTMLAPI, HTMLAPIv1, FDataMover
 from bccvl_visualiser.views import BaseView
 
 @view_defaults(route_name='html_api')
@@ -58,10 +57,11 @@ class HTMLAPIViewv1(BaseHTMLAPIView):
 
         data_url = self.request.GET.getone('data_url')
 
-        r = requests.get(data_url, verify=False)
-        r.raise_for_status()
+        content = None
+        MyDataMover = FDataMover.get_data_mover_class()
+        with MyDataMover.open(data_url=data_url) as f:
+            content = f.read()
 
-        content = r.content
         out_str = HTMLAPIv1.replace_urls(content, data_url)
 
         response = Response(out_str, content_type="text/html")

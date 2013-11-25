@@ -1,7 +1,6 @@
 import logging
 import tempfile
 import mapscript
-import requests
 import csv
 import tempfile
 import os
@@ -66,14 +65,10 @@ class CSVAPIViewv1(BaseCSVAPIView):
         tf = tempfile.NamedTemporaryFile(delete=False, prefix='csv_view_v1_', suffix='.csv')
         file_path = tf.name
 
-        # create a mover to get the CSV file
-        mover = FDataMover.new_data_mover(file_path, data_url = data_url)
-        mover.move_and_wait_for_completion()
-
         out_str = '<table>'
 
-        with open(file_path, 'rb') as csvfile:
-
+        MyDataMover = FDataMover.get_data_mover_class()
+        with MyDataMover.open(data_url=data_url) as csvfile:
             # TODO: Change this to use list comprehension, or to process the csv file in
             # the template.
             first = True
@@ -94,8 +89,6 @@ class CSVAPIViewv1(BaseCSVAPIView):
 
             out_str = out_str + '</tbody></table>'
 
-        # Don't forget to clean up at the end
-        os.remove(file_path)
         return { 'file_content': out_str }
 
     @view_config(name='.xmlrpc')

@@ -1,7 +1,7 @@
 import logging
 import tempfile
 import mapscript
-import requests
+import os
 
 from pyramid.response import Response, FileResponse
 from pyramid.view import view_config, view_defaults
@@ -9,7 +9,7 @@ from pyramid.httpexceptions import HTTPFound, HTTPNotFound
 
 from sqlalchemy.exc import DBAPIError
 
-from bccvl_visualiser.models import RAPIv1, BaseRAPI
+from bccvl_visualiser.models import RAPIv1, BaseRAPI, FDataMover
 from bccvl_visualiser.views import BaseView
 
 
@@ -62,10 +62,11 @@ class RAPIViewv1(BaseRAPIView):
 
         data_url = self.request.GET.getone('data_url')
 
-        r = requests.get(data_url, verify=False)
-        r.raise_for_status()
+        MyDataMover = FDataMover.get_data_mover_class()
+        with MyDataMover.open(data_url=data_url) as f:
+            content = f.read()
 
-        return { 'file_content': r.content.decode('ascii', 'replace') }
+        return { 'file_content': content }
 
     @view_config(name='.xmlrpc')
     def xmlrpc(self):
