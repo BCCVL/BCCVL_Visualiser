@@ -63,6 +63,7 @@ class RAPIViewv1(BaseRAPIView):
         data_url = self.request.GET.getone('data_url')
 
         MyDataMover = FDataMover.get_data_mover_class()
+        content = None
         with MyDataMover.open(data_url=data_url) as f:
             content = f.read()
 
