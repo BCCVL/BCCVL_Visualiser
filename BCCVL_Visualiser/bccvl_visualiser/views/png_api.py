@@ -1,7 +1,6 @@
 import logging
 import tempfile
 import mapscript
-import requests
 
 from pyramid.response import Response, FileResponse
 from pyramid.view import view_config, view_defaults
@@ -9,10 +8,8 @@ from pyramid.httpexceptions import HTTPFound, HTTPNotFound
 
 from sqlalchemy.exc import DBAPIError
 
-from bccvl_visualiser.models import PNGAPIv1
+from bccvl_visualiser.models import BasePNGAPI, PNGAPIv1, FDataMover
 from bccvl_visualiser.views import BaseView
-
-
 
 @view_defaults(route_name='png_api')
 class BasePNGAPIView(BaseView):
@@ -62,10 +59,12 @@ class PNGAPIViewv1(BasePNGAPIView):
 
         data_url = self.request.GET.getone('data_url')
 
-        r = requests.get(data_url, verify=False)
-        r.raise_for_status()
+        MyDataMover = FDataMover.get_data_mover_class()
+        content = None
+        with MyDataMover.open(data_url=data_url) as f:
+            content = f.read()
 
-        response = Response(r.content, content_type=r.headers['content-type'])
+        response = Response(content, content_type='image/png')
         return response
 
     @view_config(name='.xmlrpc')
