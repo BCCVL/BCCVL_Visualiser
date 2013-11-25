@@ -7,7 +7,7 @@ import types
 
 from pyramid import testing
 
-from bccvl_visualiser.models.external_api.data_mover import DataMover, FDataMover
+from bccvl_visualiser.models.external_api.data_mover import DataMover, FDataMover, LocalDataMover
 
 from paste.deploy.loadwsgi import appconfig
 
@@ -61,3 +61,16 @@ class TestBCCVLMap(unittest.TestCase):
 
         self.assertEqual(move_status['status'], 'COMPLETE')
         self.assertEqual(move_status['id'], move_job_id)
+
+    def test_open_yield(self):
+        data_url = 'https://raw.github.com/BCCVL/BCCVL_Visualiser/master/BCCVL_Visualiser/bccvl_visualiser/tests/fixtures/hello_world.r'
+        MyDataMover = FDataMover.get_data_mover_class()
+        self.assertEqual(MyDataMover, LocalDataMover)
+
+        expected_content = r"cat('Hello, world!\n')"
+
+        content = None
+        with MyDataMover.open(data_url=data_url) as f:
+            content = f.read()
+
+        self.assertEqual(content.strip(), expected_content.strip())
