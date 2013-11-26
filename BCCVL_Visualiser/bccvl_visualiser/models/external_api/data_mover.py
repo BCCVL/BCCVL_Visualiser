@@ -153,12 +153,18 @@ class DataMover(object):
         return (class_.BASE_URL + "/" + "data_mover")
 
     def move_file(self):
+
+        log = logging.getLogger(__name__)
+
         _class = self.__class__
         if self.data_url:
             source_dict = { 'type':'url', 'url': self.data_url }
             dest_dict   = { 'type':'scp', 'host':_class.HOST_ID, 'path':self.dest_file_path }
 
-            s = xmlrpclib.ServerProxy(_class.get_xmlrpc_url())
+            url = _class.get_xmlrpc_url()
+
+            log.info("About to send move request to: %s, with source_dict: %s, and dest_dict: %s", url, source_dict, dest_dict)
+            s = xmlrpclib.ServerProxy(url)
             response = s.move(source_dict, dest_dict)
 
             if response['status'] == _class.PENDING_STATUS:
@@ -168,8 +174,14 @@ class DataMover(object):
             raise NotImplementedError("move_file for data_id is not yet supported")
 
     def get_status(self):
+
+        log = logging.getLogger(__name__)
+
         _class = self.__class__
-        s = xmlrpclib.ServerProxy(_class.get_xmlrpc_url())
+        url = _class.get_xmlrpc_url()
+
+        s = xmlrpclib.ServerProxy(url)
+        log.info("About to send check_move_status request to: %s, with job_id: %s", url, self.job_id)
         response = s.check_move_status(self.job_id)
         return response
 
