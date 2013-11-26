@@ -168,13 +168,14 @@ class DataMover(object):
             s = xmlrpclib.ServerProxy(url)
             response = s.move(source_dict, dest_dict)
 
-            if 'id' in response
+            if 'id' in response:
                 self.job_id = response['id']
             return response
         else:
             raise NotImplementedError("move_file for data_id is not yet supported")
 
     def get_status(self):
+        assert self.job_id != None, "can't check the status of a job without an id"
 
         log = logging.getLogger(__name__)
 
