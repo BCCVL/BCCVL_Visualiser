@@ -80,6 +80,7 @@ class DataMover(object):
     COMPLETE_STATUS = 'COMPLETED'
     REJECTED_STATUS = 'REJECTED'
     PENDING_STATUS  = 'PENDING'
+    IN_PROGRESS_STATUS = 'IN_PROGRESS'
     FAILED_STATUS   = 'FAILED'
 
     # The time to sleep between data mover checks
@@ -167,7 +168,7 @@ class DataMover(object):
             s = xmlrpclib.ServerProxy(url)
             response = s.move(source_dict, dest_dict)
 
-            if response['status'] == _class.PENDING_STATUS:
+            if 'id' in response
                 self.job_id = response['id']
             return response
         else:
