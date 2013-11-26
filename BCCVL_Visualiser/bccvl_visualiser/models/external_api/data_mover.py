@@ -160,7 +160,9 @@ class DataMover(object):
         _class = self.__class__
         if self.data_url:
             dest_dir = os.path.dirname(self.dest_file_path)
-            os.makedirs(dest_dir)
+
+            if not os.path.isdir(dest_dir):
+                os.makedirs(dest_dir)
 
             source_dict = { 'type':'url', 'url': self.data_url }
             dest_dict   = { 'type':'scp', 'host':_class.HOST_ID, 'path':self.dest_file_path }
