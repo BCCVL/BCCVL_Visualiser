@@ -67,7 +67,7 @@ class RAPIViewv1(BaseRAPIView):
         with MyDataMover.open(data_url=data_url) as f:
             content = f.read()
 
-        return { 'file_content': content.decode('ascii', 'replace') }
+        return { 'file_content': content.decode('utf-8', 'replace') }
 
     @view_config(name='.xmlrpc')
     def xmlrpc(self):
