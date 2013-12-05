@@ -30,7 +30,7 @@ Folder Structure
         Where our custom invariants are defined. Invariants are
         attached to interfaces, and define expected values or states.
         If an invariant fails, it should likely throw an exception.
-        Consider invariants just like pre-conditions or assertions. 
+        Consider invariants just like pre-conditions or assertions.
         See here for more information:
         http://docs.zope.org/zope.interface/README.html#invariants
 
