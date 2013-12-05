@@ -10,7 +10,7 @@ def usage(argv):
 
 def main(argv=sys.argv):
     # Create an object to represent our server.
-    server_url = 'http://localhost:6543/api.xml';
+    server_url = 'http://localhost:10600/api.xml';
     server = xmlrpclib.Server(server_url);
 
     # Call the server and get our result.
