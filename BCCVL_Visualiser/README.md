@@ -24,16 +24,18 @@ Folder Structure
             This is just a general mapfile. This is the default map file used by the
             BCCVLMap base class. In production, it is unlikely that you will use
             this general map file.
+
         - default_occurrences.map
             This is the default map file used to render occurrence/absence files.
+
         - default_raster.map
             This is the default map file used to render raster files.
+
         - symbols.map
             This file defines the 'symbol set' for the other map files.
+
         - point_api_v1_csv_to_geo_json_transform.tmpl
             This file defines the transform to convert a csv occurrence file into GeoJSON.
-
-
 
     - bccvl_visualiser /
       Top level pyramid source code directory
