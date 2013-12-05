@@ -18,6 +18,29 @@ Folder Structure
     - bccvl_visualiser /
       Top level directory
 
+        - __init__.py
+        Where our view routes are defined. The config is read in at this point 
+        and can be passed out as static config to other classes.
+        Responsible for configuring our cache, map classes, data manager and data mover.
+
+        - exceptions /
+        Where our custom exceptions are defined.
+
+        - invariants /
+        Where our custom invariants are defined. Invariants are
+        attached to interfaces, and define expected values or states.
+        If an invariant fails, it should likely throw an exception.
+        Consider invariants just like pre-conditions or assertions. 
+        See here for more information:
+        http://docs.zope.org/zope.interface/README.html#invariants
+
+        - scripts /
+        Where we store our helper scripts.
+
+        - static /
+        Where we store static assets that pyramid will serve at /static. Static
+        assets are cached for 3600 seconds (this can be changed). See bccvl_visualiser/__init__.py
+
         - models /
         Where the class files are for non view/template code. Note: This directory
         doesn't just contain models, it also contains helper classes.
