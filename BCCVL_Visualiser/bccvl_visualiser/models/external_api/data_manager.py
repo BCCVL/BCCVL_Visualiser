@@ -16,7 +16,7 @@ class DataManager(object):
         class_.BASE_URL = settings['bccvl.data_manager.base_url']
 
     def __init__(self, data_id=None, data_url=None):
-        """ initialise the map instance from a data_url """
+        """ initialise the DataManager from a data_id or data_url """
 
         if data_id and data_url:
             raise ValueError("The DataManager API can't be provided a data_id and a data_url (there can be only one)")
@@ -32,4 +32,5 @@ class DataManager(object):
         raise NotImplementedError("data_id is not yet supported")
 
     def _init_from_data_url(self, data_url):
-        pass
+        self.data_url = data_url
+        raise NotImplementedError("data_url is not yet supported")
