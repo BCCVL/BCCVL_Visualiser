@@ -62,7 +62,6 @@ MAP
         NAME "DEFAULT"
         TYPE RASTER
         STATUS ON
-        PROCESSING "SCALE=AUTO"
 
         PROJECTION
             "init=epsg:4326"
