@@ -76,13 +76,14 @@ MAP
         TYPE POINT
         UNITS dd
         CLASS
-                STYLE
-                        COLOR 255 50 50
-                        MAXSIZE 50
-                        MINSIZE 2
-                        SIZE 5
-                        SYMBOL "circle"
-                END
+            NAME "record"
+            STYLE
+                COLOR 255 50 50
+                MAXSIZE 50
+                MINSIZE 2
+                SIZE 5
+                SYMBOL "circle"
+            END
         END
 
     END

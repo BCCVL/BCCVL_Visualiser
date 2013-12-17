@@ -265,3 +265,23 @@ class TestPointAPIv1(unittest.TestCase):
         loaded_json = json.loads(res.body)
         self.assertEqual(type(loaded_json), dict)
         self.assertEqual(loaded_json['type'], 'FeatureCollection')
+
+    # SRS -> Lat/Lng Decimal
+    # Get Legend
+    def test_view_point_api_wms_srs_epsg_4326_get_legend(self):
+        params = {
+            'DATA_URL':     'https://raw.github.com/BCCVL/BCCVL_Visualiser/master/BCCVL_Visualiser/bccvl_visualiser/tests/fixtures/occurrences.csv',
+            'FORMAT':       'image/png',
+            'SERVICE':      'WMS',
+            'VERSION':      '1.0.0',
+            'REQUEST':      'GetLegendGraphic',
+            'SRS':          'EPSG:4326',
+            'BBOX':         '-180,-90,180,90',
+            'WIDTH':        '100',
+            'HEIGHT':       '100',
+        }
+
+        res = self.testapp.get('/api/point/1/wms_data_url', status='*', params=params)
+        self.assertEqual(res.status_int, 200)
+
+        self.assertEqual(res.content_type, 'image/png')
