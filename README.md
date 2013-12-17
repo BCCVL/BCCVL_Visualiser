@@ -14,21 +14,7 @@ Getting Started
 
         sudo apt-get install git-core
 
-2. Install the latest version of VirtualBox: https://www.virtualbox.org/wiki/Downloads
-
-
-3. Install the latest version of Vagrant: http://downloads.vagrantup.com/
-
-
-4. Add the vagrant-vbguest plugin to ensure that your VM has guest additions installed
-
-        vagrant plugin install vagrant-vbguest
-
-    Note: If you don't do this, your guest additions will be removed by the first
-    yum update, and won't return without manual intervention :(
-
-
-5. Clone this repo.
+2. Clone this repo.
 
     _read only_:
 
@@ -38,28 +24,30 @@ Getting Started
 
         git clone git@github.com:BCCVL/BCCVL_Visualiser.git
 
+3. Change into the BCCVL_Visualiser sub-folder within this directory (the repo you just cloned)
 
-6. Now start your VM, this should be done from your repo folder (where the Vagrantfile is)
+    cd BCCVL_Visualiser/BCCVL_Visualiser
 
-        vagrant up
+4. Create a virtualenv here
 
-    Note: The first time you do this, it will download the _box_. The _box_ is
-    CentOS 6 (x64). It will only download it once. Once it's downloaded, it will store it
-    locally for future use. Once the machine comes up, it will be provisioned.
+    virtualenv .
 
+5. Upgrade setuptools
 
-7. Now your VM is up and running. You can ssh into your VM:
+    ./bin/pip install setuptools --upgrade
 
-        vagrant ssh
+6. Bootstrap
 
-   And you can stop your VM with:
+    ./bin/python bootstrap.py
 
-        vagrant halt
+7. Buildout
 
+    ./bin/buildout
 
-8. Once halted, you can restart it at anytime with:
+8. Run the tests
 
-        vagrant up
+    ./bin/test
 
+9. Serve (with auto-reload on file change)
 
-For more info, see the vagrant instructions.
+    ./bin/pserve development.ini --reload
