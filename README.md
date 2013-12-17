@@ -26,28 +26,28 @@ Getting Started
 
 3. Change into the BCCVL_Visualiser sub-folder within this directory (the repo you just cloned)
 
-    cd BCCVL_Visualiser/BCCVL_Visualiser
+        cd BCCVL_Visualiser/BCCVL_Visualiser
 
 4. Create a virtualenv here
 
-    virtualenv .
+        virtualenv .
 
 5. Upgrade setuptools
 
-    ./bin/pip install setuptools --upgrade
+        ./bin/pip install setuptools --upgrade
 
 6. Bootstrap
 
-    ./bin/python bootstrap.py
+        ./bin/python bootstrap.py
 
 7. Buildout
 
-    ./bin/buildout
+        ./bin/buildout
 
 8. Run the tests
 
-    ./bin/test
+        ./bin/test
 
 9. Serve (with auto-reload on file change)
 
-    ./bin/pserve development.ini --reload
+        ./bin/pserve development.ini --reload
