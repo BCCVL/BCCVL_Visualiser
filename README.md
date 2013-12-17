@@ -14,6 +14,10 @@ Getting Started
 
         sudo apt-get install git-core
 
+    _centos_ instructions:
+
+        sudo yum install git
+
 2. Install dependencies:
 
     _ubuntu_:
