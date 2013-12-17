@@ -23,6 +23,7 @@ Getting Started
         sudo apt-get install build-essential libcurl4-gnutls-dev libpng12-dev libgd2-xpm-dev libgif-dev libjpeg-dev libblas-dev libsuitesparse-dev libatlas-base-dev liblapack-dev swig gfortran libgdal-dev proj libproj-dev libgeos-dev
 
     _OSX_:
+
         brew install cloog gdbm isl libspatialite mapserver proj freetype geos jpeg libtiff mpfr python swig freexl gfortran libgeotiff libxml2 openssl wget gd giflib libmpc libyaml pcre readline xz gdal gmp libpng lzlib pkg-config
 
 3. Clone this repo.
