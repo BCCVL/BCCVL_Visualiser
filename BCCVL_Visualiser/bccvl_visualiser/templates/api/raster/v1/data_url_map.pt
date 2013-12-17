@@ -49,11 +49,18 @@
                 map.addLayers([wms, osm, gmap])
                 map.addControl(new OpenLayers.Control.LayerSwitcher());
                 map.zoomToExtent(zoom_bounds);
+
+                // Add the legend image
+                var data_url_escaped = escape("${data_url}");
+                var legend_img_src = "./wms_data_url?REQUEST=GetLegendGraphic&VERSION=1.0.0&FORMAT=image/png&WIDTH=60&HEIGHT=60&DATA_URL=" + data_url_escaped + "&BBOX=-180,-90,180,90&SRS=EPSG%3A4326";
+                // Update legend image src
+                document.getElementById("legend").src = legend_img_src;
             }
         </script>
 
     </head>
     <body style="width:100%; height:100%; margin: 0;" onload="init()">
+        <img alt="Map Legend" style="opacity: 1.0; position: absolute; bottom: 10px; left:10px; z-index: 100000;" id="legend"></img>
         <div style="width:100%; height:100%" id="map"></div>
     </body>
 </html>

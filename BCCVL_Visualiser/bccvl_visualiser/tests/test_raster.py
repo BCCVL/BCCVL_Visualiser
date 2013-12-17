@@ -102,3 +102,23 @@ class TestRasterAPIv1(unittest.TestCase):
         self.assertEqual(res.status_int, 200)
 
         self.assertEqual(res.content_type, 'image/png')
+
+    # SRS -> Lat/Lng Decimal
+    # Get Legend
+    def test_view_raster_api_wms_srs_epsg_4326_get_legend(self):
+        params = {
+            'DATA_URL':     'https://raw.github.com/BCCVL/BCCVL_Visualiser/master/BCCVL_Visualiser/bccvl_visualiser/tests/fixtures/raster.tif',
+            'FORMAT':       'image/png',
+            'SERVICE':      'WMS',
+            'VERSION':      '1.0.0',
+            'REQUEST':      'GetLegendGraphic',
+            'SRS':          'EPSG:4326',
+            'BBOX':         '-180,-90,180,90',
+            'WIDTH':        '100',
+            'HEIGHT':       '100',
+        }
+
+        res = self.testapp.get('/api/raster/1/wms_data_url', status='*', params=params)
+        self.assertEqual(res.status_int, 200)
+
+        self.assertEqual(res.content_type, 'image/png')

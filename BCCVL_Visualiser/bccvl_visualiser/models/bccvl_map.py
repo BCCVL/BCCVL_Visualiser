@@ -4,6 +4,7 @@ from mapscript import mapObj, OWSRequest
 import logging
 import os
 import threading
+import sys
 
 import hashlib
 
@@ -89,6 +90,7 @@ class BCCVLMap(mapObj):
                 self._download_data_to_file()
 
     def set_ows_request_from_query_string(self, query_string):
+        log = logging.getLogger(__name__)
         ows_request = OWSRequest()
 
         # loadParamsFromURL causes a seg fault if passed an empty string.
@@ -98,9 +100,11 @@ class BCCVLMap(mapObj):
 
         if (ows_request.getValueByName('LAYER') is None):
             ows_request.addParameter('LAYER', self.layer_name)
+            log.debug("Setting OWS paramater LAYER as not already set. Set to: %s", self.layer_name)
 
         if (ows_request.getValueByName('LAYERS') is None):
             ows_request.addParameter('LAYERS', self.layer_name)
+            log.debug("Setting OWS paramater LAYERS as not already set. Set to: %s", self.layer_name)
 
         self.ows_request = ows_request
 
@@ -160,19 +164,64 @@ class BCCVLMap(mapObj):
 
 
     def render(self):
-        """ Render the map """
-        map_content = None
-        map_content_type = None
-        retval = None
+        """ Render this map object
+
+            This will inspect the OWS request type, and render the correct image
+            for the request.
+
+            Known supported OWS REQUEST values:
+
+            * GetLegendGraphic: Will render the legend for the OWS request
+            * GetMap: Will render the map tile for the OWS request
+        """
+
+        log = logging.getLogger(__name__)
+
+        content = None          # the bytes of the rendered image
+        content_type = None     # the image mimetype
+        retval = None           # the OWS return value, useful for debugging
 
         with self.__class__.MAPSCRIPT_RLOCK:
-            mapscript.msIO_installStdoutToBuffer()
-            retval = self.OWSDispatch(self.ows_request)
-            map_content_type = mapscript.msIO_stripStdoutBufferContentType()
-            map_content = mapscript.msIO_getStdoutBufferBytes()
-            mapscript.msIO_resetHandlers()
+            try:
+                ows_request_type = self.ows_request.getValueByName('REQUEST')
 
-        return map_content, map_content_type, retval
+                if (ows_request_type == 'GetLegendGraphic'):
+                    # Draw the legend for the map
+                    retval = self.loadOWSParameters(self.ows_request)
+                    image = self.drawLegend()
+                    content = image.getBytes()
+                    content_type = image.format.mimetype
+                elif (ows_request_type == 'GetMap'):
+                    # Draw the map (tiles)
+                    retval = self.loadOWSParameters(self.ows_request)
+                    image = self.draw()
+                    content = image.getBytes()
+                    content_type = image.format.mimetype
+                else:
+                    # Unexpected OWS request. Do our best to support it by
+                    # falling back to using the OWS Dispatch
+
+                    # Tell mapscript to start capturing the stdout in a buffer
+                    mapscript.msIO_installStdoutToBuffer()
+                    # dispatch the OWS request
+                    retval = self.OWSDispatch(self.ows_request)
+                    # Get the content type of the return value
+                    content_type = mapscript.msIO_stripStdoutBufferContentType()
+                    # Get the content of the resulting image
+                    content = mapscript.msIO_getStdoutBufferBytes()
+
+                if retval != mapscript.MS_SUCCESS:
+                    # Failed to render the desired image
+                    raise RuntimeError("Failed to render map OWS request")
+
+            except:
+                log.error("Error while trying to render map: %s", sys.exc_info()[0])
+                raise
+            finally:
+                # Reset the mapscript I/O pointers back to where they should be
+                mapscript.msIO_resetHandlers()
+
+        return content, content_type, retval
 
 class GeoTiffBCCVLMap(BCCVLMap):
     EXTENSION = ".tif"
