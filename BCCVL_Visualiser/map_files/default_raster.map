@@ -94,7 +94,7 @@ MAP
 #        END
 
         CLASS
-            NAME "      0%"
+            NAME "   0%"
             EXPRESSION ([pixel]=0)
             STYLE
                 COLOR  255 255 255
@@ -102,70 +102,70 @@ MAP
         END
 
         CLASS
-            NAME "0   % - 10  %"
+            NAME "0  - 10 %"
             EXPRESSION ([pixel]>0 AND [pixel]<=0.1)
             STYLE
                 COLOR  230 242 255
             END
         END
         CLASS
-            NAME "10  % - 20  %"
+            NAME "10 - 20 %"
             EXPRESSION ([pixel]>0.1 AND [pixel]<=0.2)
             STYLE
                 COLOR  204 229 255
             END
         END
         CLASS
-            NAME "20  % - 30  %"
+            NAME "20 - 30 %"
             EXPRESSION ([pixel]>0.2 AND [pixel]<=0.3)
             STYLE
                 COLOR  179 217 255
             END
         END
         CLASS
-            NAME "30  % - 40  %"
+            NAME "30 - 40 %"
             EXPRESSION ([pixel]>0.3 AND [pixel]<=0.4)
             STYLE
                 COLOR  153 204 255
             END
         END
         CLASS
-            NAME "40  % - 50  %"
+            NAME "40 - 50 %"
             EXPRESSION ([pixel]>0.4 AND [pixel]<=0.5)
             STYLE
                 COLOR  128 191 255
             END
         END
         CLASS
-            NAME "60  % - 70  %"
+            NAME "60 - 70 %"
             EXPRESSION ([pixel]>0.6 AND [pixel]<=0.7)
             STYLE
                 COLOR  102 178 255
             END
         END
         CLASS
-            NAME "70  % - 80  %"
+            NAME "70 - 80 %"
             EXPRESSION ([pixel]>0.7 AND [pixel]<=0.8)
             STYLE
                 COLOR  77 165 255
             END
         END
         CLASS
-            NAME "80  % - 90  %"
+            NAME "80 - 90 %"
             EXPRESSION ([pixel]>0.8 AND [pixel]<=0.9)
             STYLE
                 COLOR 51 153 255
             END
         END
         CLASS
-            NAME "90  % - 100 %"
+            NAME "90 - 100%"
             EXPRESSION ([pixel]>0.9 AND [pixel]<=1.0)
             STYLE
                 COLOR 26 140 255
             END
         END
         CLASS
-            NAME "     100 %"
+            NAME "  100%"
             EXPRESSION ([pixel]=1.0)
             STYLE
                 COLOR 0 128 255
