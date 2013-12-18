@@ -8,8 +8,6 @@ import sys
 
 import hashlib
 
-from csvvalidator import CSVValidator
-
 from bccvl_visualiser.models.external_api.data_mover import FDataMover
 
 class BCCVLMap(mapObj):
@@ -291,48 +289,55 @@ class OccurrencesBCCVLMap(BCCVLMap):
         return connection
 
     @classmethod
-    def _check_if_occurrences_csv_valid(class_, file_path, lng='lon', lat='lat'):
+    def _check_if_occurrences_csv_valid(class_, file_path, lng='lon', lat='lat', limit=10):
         log = logging.getLogger(__name__)
 
         field_names = []
-
-        with open(file_path, 'rb') as csvfile:
-            reader = csv.reader(csvfile, class_.OccurrencesDialect)
-            field_names = reader.next()
-
-        # Ensure that the expected latitude and longitude columns are in the
-        # list of expected field_names
-        # If we needed to add the lat/lng, we already know the validator will fail.
-        # Will only do it here to ensure the problems reported are consistent.
-        if not (lat in field_names):
-            log.warn("CSV (%s) doesn't contain a '%s' column", file_path, lat)
-            field_names.insert(0, lat)
-        if not (lng in field_names):
-            log.warn("CSV (%s) doesn't contain a '%s' column", file_path, lng)
-            field_names.insert(0, lng)
-
-        validator = CSVValidator(field_names)
-
-        # basic header and record length checks
-        validator.add_header_check('EX1', 'bad header')
-        validator.add_record_length_check('EX2', 'unexpected record length')
-
-        if lng:
-            # some simple value checks
-            validator.add_value_check(lng, float,
-                          'EX3', "%s must be a float" % lng)
-
-        if lat:
-            validator.add_value_check(lat, float,
-                          'EX4', "%s must be a float" % lat)
+        problems = []
 
         with class_.MAPSCRIPT_RLOCK:
             with open(file_path, 'rb') as csvfile:
                 reader = csv.reader(csvfile, class_.OccurrencesDialect)
-                problems = validator.validate(reader)
+                field_names = reader.next()
 
-                if len(problems) > 0:
-                    return False, problems
-                else:
-                    return True, problems
+                # Ensure that the expected latitude and longitude columns are in the
+                # list of expected field_names
+                if not (lng in field_names):
+                    log.warn("CSV (%s) doesn't contain a '%s' column", file_path, lng)
+                    problems.append("CSV (%s) doesn't contain a '%s' column" % (file_path, lng))
+                if not (lat in field_names):
+                    problems.append("CSV (%s) doesn't contain a '%s' column" % (file_path, lat))
+                    log.warn("CSV (%s) doesn't contain a '%s' column", file_path, lat)
 
+                lng_position = field_names.index(lng)
+                lat_position = field_names.index(lat)
+
+                num_cols = len(field_names)
+
+                # Iterate over each remaining row in the csv reader (we've already processed
+                # the header)
+                for row in reader:
+                    # Check that the row has the correct number of columns
+                    if len(row) != num_cols:
+                        problems.append("CSV (%s) contains different length rows: %s" % (file_path, rows))
+
+                    # Check that the row has a valid lng
+                    lng_s = row[lng_position]
+                    try:
+                        lng_f = float(lng_s)
+                    except:
+                        problems.append("CSV (%s) contains an invalid %s: %s" % (file_path, lng, lng_s))
+
+                    # Check that the row has a valid lat
+                    lat_s = row[lat_position]
+                    try:
+                        lat_f = float(lat_s)
+                    except:
+                        problems.append("CSV (%s) contains an invalid %s: %s" % (file_path, lat, lat_s))
+
+                    # Only provide info on at most +limit+ problems
+                    if limit and ( len(problems) >= limit ):
+                        break
+
+        valid = ( len(problems) == 0 )
+        return valid, problems
