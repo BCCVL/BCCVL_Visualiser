@@ -107,6 +107,7 @@ class BCCVLMap(mapObj):
         self.ows_request = ows_request
 
     def _download_data_to_file(self):
+        log = logging.getLogger(__name__)
         mover = FDataMover.new_data_mover(self.data_file_path, data_url = self.data_url)
 
         # Make sure only one thread is trying to check for
@@ -114,6 +115,23 @@ class BCCVLMap(mapObj):
         # at any time.
         with self.__class__.MAPSCRIPT_RLOCK:
             mover.move_and_wait_for_completion()
+
+            valid, problems = self._validate_file()
+            if not valid:
+                log.info("Deleting invalid file: %s", self.data_file_path)
+                # Delete the file
+                os.remove(self.data_file_path)
+                raise ValueError("Problem validating file. Problems: %s" % (problems))
+
+
+    def _validate_file(self):
+        """ Validate the file
+
+            Return if the file is valid (True/False),
+            and return a list of problems (empty if no problems).
+        """
+
+        return True, []
 
     @classmethod
     def get_path_to_map_data_file(class_, data_file_name):
@@ -245,6 +263,10 @@ class OccurrencesBCCVLMap(BCCVLMap):
     EXTENSION = ".csv"
     DEFAULT_MAP_FILE_NAME = "default_occurrences.map"
 
+    LNG_COLUMN_NAME = 'lon'
+    LAT_COLUMN_NAME= 'lat'
+
+
     class OccurrencesDialect(csv.Dialect):
         strict = True
         skipinitialspace = True
@@ -258,17 +280,13 @@ class OccurrencesBCCVLMap(BCCVLMap):
         self.set_connection_for_map_connection_if_not_set()
 
     def set_connection_for_map_connection_if_not_set(self):
+        class_ = self.__class__
+        lng_column = class_.LNG_COLUMN_NAME
+        lat_column = class_.LAT_COLUMN_NAME
+
         log = logging.getLogger(__name__)
+
         layer = self.getLayerByName(self.layer_name)
-
-        lng_column = 'lon'
-        lat_column = 'lat'
-
-        valid, problems = self.__class__._check_if_occurrences_csv_valid(self.data_file_path, lng=lng_column, lat=lat_column)
-        if not valid:
-            # Delete the file
-            os.remove(self.data_file_path)
-            raise ValueError("Problem parsing Occurrence/Absences CSV file. Problems: %s" % (problems))
 
         if layer != None and layer.connection == None:
             connection = self._get_connection(lng_column, lat_column)
@@ -288,6 +306,21 @@ class OccurrencesBCCVLMap(BCCVLMap):
 
         return connection
 
+    def _validate_file(self):
+        class_ = self.__class__
+        lng_column = class_.LNG_COLUMN_NAME
+        lat_column = class_.LAT_COLUMN_NAME
+
+        log = logging.getLogger(__name__)
+
+        try:
+            valid, problems = class_._check_if_occurrences_csv_valid(self.data_file_path, lng=lng_column, lat=lat_column)
+        except:
+            log.error("Error validating the file: %s", sys.exc_info()[0])
+            return False, [ "Error validating the file: %s" % sys.exc_info()[0] ]
+
+        return valid, problems
+
     @classmethod
     def _check_if_occurrences_csv_valid(class_, file_path, lng='lon', lat='lat', limit=10):
         log = logging.getLogger(__name__)
@@ -305,14 +338,16 @@ class OccurrencesBCCVLMap(BCCVLMap):
                 if not (lng in field_names):
                     log.warn("CSV (%s) doesn't contain a '%s' column", file_path, lng)
                     problems.append("CSV (%s) doesn't contain a '%s' column" % (file_path, lng))
-                if not (lat in field_names):
+                    return False, problems
+                elif not (lat in field_names):
                     problems.append("CSV (%s) doesn't contain a '%s' column" % (file_path, lat))
                     log.warn("CSV (%s) doesn't contain a '%s' column", file_path, lat)
+                    return False, problems
+
+                num_cols = len(field_names)
 
                 lng_position = field_names.index(lng)
                 lat_position = field_names.index(lat)
-
-                num_cols = len(field_names)
 
                 # Iterate over each remaining row in the csv reader (we've already processed
                 # the header)
