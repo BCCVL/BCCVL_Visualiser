@@ -274,7 +274,7 @@ class TestPointAPIv1(unittest.TestCase):
         self.assertEqual(res.status_int, 200)
         self.assertEqual(res.content_type, 'image/png')
 
-        self.assertTrue(took < 3, "Time to process large file is too long. Should be less than 2 seconds, took: %f seconds" % took)
+        self.assertTrue(took < 5, "Time to process large file is too long. Should be less than 5 seconds, took: %f seconds" % took)
 
     def test_view_point_api_wfs_with_additional_columns(self):
         params = {
