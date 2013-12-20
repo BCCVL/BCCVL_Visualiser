@@ -51,7 +51,7 @@
                 map.zoomToExtent(zoom_bounds);
 
                 // Add the legend image
-                var data_url_escaped = escape("${data_url}");
+                var data_url_escaped = encodeURIComponent("${data_url}");
                 var legend_img_src = "./wms_data_url?REQUEST=GetLegendGraphic&VERSION=1.0.0&FORMAT=image/png&WIDTH=60&HEIGHT=60&DATA_URL=" + data_url_escaped + "&BBOX=-180,-90,180,90&SRS=EPSG%3A4326";
                 // Update legend image src
                 document.getElementById("legend").src = legend_img_src;
