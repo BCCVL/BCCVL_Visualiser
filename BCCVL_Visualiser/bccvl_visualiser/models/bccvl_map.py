@@ -12,6 +12,7 @@ from bccvl_visualiser.models.external_api.data_mover import FDataMover
 
 import gdal
 from gdalconst import GA_ReadOnly
+import string
 
 class BCCVLMap(mapObj):
     """ Our custom BCCVL mapObj.
@@ -254,8 +255,131 @@ class RasterBCCVLMap(BCCVLMap):
     """ The metadata key used to identify the maximum expected value in the range """
     BCCVL_EXPECTED_VALUE_RANGE_MAXIMUM_KEY = "BCCVL_EXPECTED_VALUE_RANGE_MAXIMUM"
 
+    COLOR_BANDS = 8
+    MIN_COLOR = [255, 255, 255]
+    MAX_COLOR = [255, 0,   0]
+
     def __init__(self, **kwargs):
         super(RasterBCCVLMap, self).__init__(**kwargs)
+        self._set_style_information()
+
+    def _set_style_information(self):
+        """ Programatically define the style and legend information
+
+            This function walks between the MIN_COLOR and MAX_COLOR.
+            It applies the MIN_COLOR to the minimum expected value in the raster,
+            and it applies the MAX_COLOR to the maximum expected value in the raster.
+
+            Between the minimum and the maximum, it walks COLOR_BANDS steps.
+
+            The legend will consist of COLOR_BANDS + 1 levels in total.
+            The min to max will be walked in COLOR_BANDS steps. At each
+            step, the minimum of the step is shown in the legend. After these steps
+            we add the maximum value to the legend as a 'point' value (not a range).
+
+            Example: 2 COLOR_BANDS, with min_exp = 0, and max_exp = 1
+
+                0    ( colors 0.0 - 0.5 )
+                0.5  ( colors 0.5 - 1.0 )
+                1    ( colors 1.0       )
+
+        """
+
+        # Get the expected value range
+        min_exp, max_exp = self.get_expected_value_range()
+        min_exp = float(min_exp)
+        max_exp= float(max_exp)
+
+        # Get the map layer
+        layer = self.getLayerByName(self.layer_name)
+
+        # Calc. the range of expected values
+        the_range = (max_exp - min_exp)
+
+        # Work out a value to increment across the range (We want COLOR_BANDS color bands)
+        the_inc = the_range / float(self.__class__.COLOR_BANDS)
+
+        # Grab a handle to the min/max color
+        min_color = self.__class__.MIN_COLOR
+        max_color = self.__class__.MAX_COLOR
+
+        # Calc. the range the r/g/b colors will pass
+        r_color_diff = max_color[0] - min_color[0]
+        g_color_diff = max_color[1] - min_color[1]
+        b_color_diff = max_color[2] - min_color[2]
+
+        # The next color we will draw is the first color
+        next_color_r = min_color[0]
+        next_color_g = min_color[1]
+        next_color_b = min_color[2]
+
+        val = min_exp
+        while val < max_exp:
+
+            # This color is the 'next' color (our old next)
+            this_color_r = next_color_r
+            this_color_g = next_color_g
+            this_color_b = next_color_b
+
+            this_color = ' '.join(map(str, [this_color_r, this_color_g, this_color_b]))
+
+            # Calc. the next color along
+            next_color_r = min_color[0] + ( r_color_diff * ( (val+the_inc-min_exp) / float(the_range)) )
+            next_color_g = min_color[1] + ( g_color_diff * ( (val+the_inc-min_exp) / float(the_range)) )
+            next_color_b = min_color[2] + ( b_color_diff * ( (val+the_inc-min_exp) / float(the_range)) )
+
+            next_color = ' '.join(map(str, [next_color_r, next_color_g, next_color_b]))
+
+            self.__class__._update_range_style_information(layer, val, val+the_inc, this_color, next_color, max_exp)
+            # inc the value
+            val = val + the_inc
+
+        # Add the max value to the legend
+        self.__class__._update_max_style_information(layer, max_exp)
+
+    @classmethod
+    def _update_max_style_information(_class, layer, max_exp):
+        style_template = string.Template("""\
+CLASSITEM "[pixel]"
+    CLASS
+        NAME "${max_exp}"
+        EXPRESSION ([pixel]=${max_exp})
+        STYLE
+            COLOR $max_color
+        END
+    END
+END
+""")
+        style_string = style_template.substitute(
+            max_exp=max_exp,
+            max_color=' '.join(map(str, _class.MAX_COLOR))
+        )
+
+        layer.updateFromString(style_string)
+
+    @classmethod
+    def _update_range_style_information(_class, layer, lower_bound, upper_bound, lower_bound_color, upped_bound_color, max_value):
+        style_template = string.Template("""\
+CLASSITEM "[pixel]"
+    CLASS
+        NAME "${lower_bound}"                       # name in legend is the min value of the range
+        EXPRESSION ([pixel]>${lower_bound} AND [pixel]<=${upper_bound})
+        STYLE
+            COLOR $lower_bound_color                # show the legend's color as the min value in the range.
+            COLORRANGE  ${lower_bound_color} ${upped_bound_color}
+            DATARANGE   ${lower_bound} ${upper_bound}
+        END
+    END
+END
+""")
+        style_string = style_template.substitute(
+            lower_bound=lower_bound,
+            upper_bound=upper_bound,
+            lower_bound_color=lower_bound_color,
+            upped_bound_color=upped_bound_color,
+        )
+
+        layer.updateFromString(style_string)
 
     def _set_map_defaults_if_not_set(self, **kwargs):
         """ Default the map's attributes """
