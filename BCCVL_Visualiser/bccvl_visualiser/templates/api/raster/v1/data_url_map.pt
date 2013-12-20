@@ -36,7 +36,7 @@
                     {
                         transparent: "true",
                         format: "image/png",
-                        DATA_URL: "${data_url}",   // The data_url the user specified
+                        DATA_URL: "${data_url}"   // The data_url the user specified
                     },
                     {
                         isBaseLayer: false
