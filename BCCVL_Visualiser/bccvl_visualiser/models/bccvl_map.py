@@ -545,7 +545,6 @@ class OccurrencesBCCVLMap(BCCVLMap):
     LNG_COLUMN_NAME = 'lon'
     LAT_COLUMN_NAME= 'lat'
 
-
     class OccurrencesDialect(csv.Dialect):
         strict = True
         skipinitialspace = True
@@ -602,6 +601,13 @@ class OccurrencesBCCVLMap(BCCVLMap):
 
     @classmethod
     def _check_if_occurrences_csv_valid(class_, file_path, lng='lon', lat='lat', limit=10):
+        """ Determines if the CSV is valid or not
+
+            If an invalid CSV is processed via mapscript, a seg fault is likely to
+            occur. For this reason, it is important that the file be FULLY validated
+            before it is first used.
+
+        """
         log = logging.getLogger(__name__)
 
         field_names = []
