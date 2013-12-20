@@ -40,6 +40,14 @@ class TestMyCode(unittest.TestCase):
         # The maximum value in the band
         self.assertEqual(band.GetMaximum(), 0.62908011869436)
 
+        # The min and max can also be calculated this way
+        (imin,imax) = band.ComputeRasterMinMax(1)
+        self.assertEqual(imin, 0)
+        self.assertEqual(imax, 0.62908011869436)
+
+        # The scale of the raster should be 1 (0-1 scale)
+        self.assertEqual(band.GetScale(), 1)
+
         # Get the transform object (provides access to position information)
         geotransform = dataset.GetGeoTransform()
         self.assertTrue(geotransform != None)
@@ -66,6 +74,7 @@ class TestMyCode(unittest.TestCase):
         self.assertEqual(origin_y, -9.975)
         self.assertEqual(round(pixel_size_x, 6), 0.05)
         self.assertEqual(round(pixel_size_y, 6), -0.05)
+
 
     def test_gdal_load_a_missing_dataset(self):
         log = logging.getLogger(__name__)

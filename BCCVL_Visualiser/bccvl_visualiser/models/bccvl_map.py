@@ -10,6 +10,9 @@ import hashlib
 
 from bccvl_visualiser.models.external_api.data_mover import FDataMover
 
+import gdal
+from gdalconst import GA_ReadOnly
+
 class BCCVLMap(mapObj):
     """ Our custom BCCVL mapObj.
 
@@ -239,16 +242,24 @@ class BCCVLMap(mapObj):
 
         return content, content_type, retval
 
-class GeoTiffBCCVLMap(BCCVLMap):
-    EXTENSION = ".tif"
+
+class RasterBCCVLMap(BCCVLMap):
     DEFAULT_MAP_FILE_NAME = "default_raster.map"
 
+    """ We assume the raster band of interest is band 1 """
+    BAND_NUMBER = 1
+
+    """ The metadata key used to identify the minimum expected value in the range """
+    BCCVL_EXPECTED_VALUE_RANGE_MINIMUM_KEY = "BCCVL_EXPECTED_VALUE_RANGE_MINIMUM"
+    """ The metadata key used to identify the maximum expected value in the range """
+    BCCVL_EXPECTED_VALUE_RANGE_MAXIMUM_KEY = "BCCVL_EXPECTED_VALUE_RANGE_MAXIMUM"
+
     def __init__(self, **kwargs):
-        super(GeoTiffBCCVLMap, self).__init__(**kwargs)
+        super(RasterBCCVLMap, self).__init__(**kwargs)
 
     def _set_map_defaults_if_not_set(self, **kwargs):
         """ Default the map's attributes """
-        super(GeoTiffBCCVLMap, self)._set_map_defaults_if_not_set(**kwargs)
+        super(RasterBCCVLMap, self)._set_map_defaults_if_not_set(**kwargs)
 
         log = logging.getLogger(__name__)
 
@@ -258,6 +269,150 @@ class GeoTiffBCCVLMap(BCCVLMap):
         if layer != None and layer.data == None:
             log.debug("Setting mapObj.layer.data as not already set. Set to: %s", self.file_name)
             layer.data = self.file_name
+
+    def get_gdal_dataset(self, mode=GA_ReadOnly):
+        """ For advanced users only. Returns the gdal_dataset for this file.
+
+            By default, the file is opened in a read-only mode.
+        """
+        dataset = gdal.Open(self.data_file_path, mode)
+        return dataset
+
+    def get_minimum_value(self):
+        """ Get the minimum value in the raster """
+
+        band_number = self.__class__.BAND_NUMBER
+        dataset = self.get_gdal_dataset()
+        if dataset == None:
+            raise ValueError("Failed to open data_file (%s) as a gdal dataset" % self.data_file_path)
+        else:
+            # Get the raster band
+            band = dataset.GetRasterBand(band_number)
+            the_min = band.GetMinimum()
+            if the_min == None:
+                # if the min isn't available directly, compute it
+                (the_min, the_max) = band.ComputeRasterMinMax(band_number)
+            # Return the minimum value
+            return the_min
+
+    def get_maximum_value(self):
+        """ Get the maximum value in the raster """
+
+        band_number = self.__class__.BAND_NUMBER
+        dataset = self.get_gdal_dataset()
+        if dataset == None:
+            raise ValueError("Failed to open data_file (%s) as a gdal dataset" % self.data_file_path)
+        else:
+            # Get the raster band
+            band = dataset.GetRasterBand(band_number)
+            the_max = band.GetMaximum()
+            if the_max == None:
+                # if the max isn't available directly, compute it
+                (the_min, the_max) = band.ComputeRasterMinMax(band_number)
+
+            # Return the maximum value
+            return the_max
+
+    def get_expected_value_range(self):
+        """ Determines a theoretical minimum and maximum _possible_ value for the original dataset.
+
+            Note, this is different to the minimum and maximum value in the raster. This
+            guesses, based on the maximum value found in the raster, what the possible
+            maximum value was when generating the file.
+
+            If metadata is avaialble in the file, the metadata is used. The metadata
+            is first checked at the band level. The file level is then checked as a
+            fallback.
+
+                BCCVL_EXPECTED_VALUE_RANGE_MINIMUM: The minimum value in the range.
+                BCCVL_EXPECTED_VALUE_RANGE_MAXIMUM: The maximum value in the range.
+
+            If no metadata is available, the range is 'guessed'.
+
+            If a file is found to have a maximum value < 1, the file is assumed
+            to be of the range 0 to 1.
+
+            If a file is found to have a maximum value > 1, the file is assumed
+            to be of the range 0 to 1000.
+        """
+        min_value_metadata_key = self.__class__.BCCVL_EXPECTED_VALUE_RANGE_MINIMUM_KEY
+        max_value_metadata_key = self.__class__.BCCVL_EXPECTED_VALUE_RANGE_MAXIMUM_KEY
+
+        value_range_min = None
+        value_range_max = None
+        band_metadata = self.get_band_metadata()
+        file_metadata = self.get_metadata()
+
+        # Determine the minimum expected value
+        #
+        # check the band metadata
+        if min_value_metadata_key in band_metadata:
+            value_range_min = band_metadata[min_value_metadata_key]
+        # check the file level metadata
+        elif min_value_metadata_key in file_metadata:
+            value_range_min = file_metadata[min_value_metadata_key]
+        # finally, guess
+        else:
+            # if the minimum is lower than 0, we have no idea what is going on.
+            # let the minimum be the minimum in the file
+            if self.get_minimum_value() < 0:
+                value_range_min = self.get_minimum_value()
+            else:
+                value_range_min = 0
+
+        # Determine the maximum expected value
+        #
+        # check the band metadata
+        if max_value_metadata_key in band_metadata:
+            value_range_max = band_metadata[max_value_metadata_key]
+        # check the file level metadata
+        elif max_value_metadata_key in file_metadata:
+            value_range_max = file_metadata[max_value_metadata_key]
+        # finally, guess
+        else:
+            # if the maximum is over 1000, we have no idea what is going on.
+            # let the maximum be the maximum in the file
+            if self.get_maximum_value() > 1000:
+                value_range_max = self.get_maximum_value()
+            # if value is > 1, assume max value is 1000 (as is the case for biomod2)
+            elif self.get_maximum_value() > 1:
+                value_range_max = 1000
+            # if value is < 1, assume max value is 1 (as is the case for dismo)
+            else:
+                value_range_max = 1
+
+        return value_range_min, value_range_max
+
+    def get_metadata(self):
+        """ Returns the metadata available at the file level """
+        dataset = self.get_gdal_dataset()
+        return dataset.GetMetadata()
+
+    def get_band_metadata(self):
+        """ Returns the metadata available at the band level """
+        band_number = self.__class__.BAND_NUMBER
+        dataset = self.get_gdal_dataset()
+        band = dataset.GetRasterBand(band_number)
+        return band.GetMetadata()
+
+    def get_scale(self):
+        """ Get the scale of the raster """
+
+        band_number = self.__class__.BAND_NUMBER
+        dataset = self.get_gdal_dataset()
+        if dataset == None:
+            raise ValueError("Failed to open data_file (%s) as a gdal dataset" % self.data_file_path)
+        else:
+            # Get the raster band
+            band = dataset.GetRasterBand(band_number)
+            # Return the scale
+            return band.GetScale()
+
+class GeoTiffBCCVLMap(RasterBCCVLMap):
+    EXTENSION = ".tif"
+
+class AsciiGridBCCVLMap(RasterBCCVLMap):
+    EXTENSION = ".asc"
 
 class OccurrencesBCCVLMap(BCCVLMap):
     EXTENSION = ".csv"

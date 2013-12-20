@@ -4,7 +4,7 @@ TextWrapper = TextWrapper()
 
 DEFAULT_PROJECTION = 4326
 
-from bccvl_visualiser.models.bccvl_map import BCCVLMap, GeoTiffBCCVLMap, OccurrencesBCCVLMap
+from bccvl_visualiser.models.bccvl_map import BCCVLMap, RasterBCCVLMap, AsciiGridBCCVLMap, GeoTiffBCCVLMap, OccurrencesBCCVLMap
 from bccvl_visualiser.models.ala_helper import ALAHelper
 from bccvl_visualiser.models.raster_api import BaseRasterAPI, RasterAPIv1
 from bccvl_visualiser.models.point_api import BasePointAPI, PointAPIv1

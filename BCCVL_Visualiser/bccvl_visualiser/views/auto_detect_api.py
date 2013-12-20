@@ -58,7 +58,7 @@ class AutoDetectAPIViewv1(BaseAutoDetectAPIView):
             url = self.request.route_url('csv_api_v1', traverse='/default', _query=self.request.GET)
         elif data_url.endswith('.html') or data_url.endswith('.htm'):
             url = self.request.route_url('html_api_v1', traverse='/default', _query=self.request.GET)
-        elif data_url.endswith('.tif'):
+        elif data_url.endswith('.tif') or data_url.endswith('.asc'):
             url = self.request.route_url('raster_api_v1', traverse='/default', _query=self.request.GET)
         elif data_url.endswith('.png'):
             url = self.request.route_url('png_api_v1', traverse='/default', _query=self.request.GET)

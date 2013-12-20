@@ -5,7 +5,7 @@ import os
 
 from pyramid import testing
 
-from bccvl_visualiser.models import OccurrencesBCCVLMap, FDataMover
+from bccvl_visualiser.models import OccurrencesBCCVLMap, AsciiGridBCCVLMap, GeoTiffBCCVLMap, FDataMover
 
 from paste.deploy.loadwsgi import appconfig
 
@@ -89,3 +89,34 @@ class TestBCCVLMap(unittest.TestCase):
         # This isn't implemented yet
         with self.assertRaises(NotImplementedError):
             my_map = OccurrencesBCCVLMap(data_id="908h08h")
+
+    def test_ascii_grid_get_scale(self):
+        my_map = AsciiGridBCCVLMap(data_url="https://raw.github.com/BCCVL/BCCVL_Visualiser/master/BCCVL_Visualiser/bccvl_visualiser/tests/fixtures/biomod_2_pkg_0_to_1000.asc", query_string="HEIGHT=1024&LAYERS=DEFAULT&WIDTH=512")
+        self.assertEqual(my_map.get_scale(), 1)
+        self.assertEqual(my_map.get_maximum_value(), 985)
+
+    def test_geotiff_gdal_dataset_querying(self):
+        my_map = GeoTiffBCCVLMap(data_url="https://raw.github.com/BCCVL/BCCVL_Visualiser/master/BCCVL_Visualiser/bccvl_visualiser/tests/fixtures/raster.tif", query_string="HEIGHT=1024&LAYERS=DEFAULT&WIDTH=512")
+        self.assertEqual(my_map.get_scale(), 1)
+        self.assertEqual(my_map.get_maximum_value(), 0.62908011869436)
+
+    def test_geotiff_gdal_dataset_metadata_access(self):
+        my_map = GeoTiffBCCVLMap(data_url="https://raw.github.com/BCCVL/BCCVL_Visualiser/master/BCCVL_Visualiser/bccvl_visualiser/tests/fixtures/raster.tif", query_string="HEIGHT=1024&LAYERS=DEFAULT&WIDTH=512")
+
+        self.assertEqual(my_map.get_metadata(), {})
+
+        expected_band_metadata = {
+            'STATISTICS_MAXIMUM': '0.62908011869436',
+            'STATISTICS_MEAN': '0.00037273920856963',
+            'STATISTICS_MINIMUM': '0',
+            'STATISTICS_STDDEV': '0.0089147334375146'
+        }
+        self.assertEqual(my_map.get_band_metadata(), expected_band_metadata)
+
+    def test_raster_get_expected_value_range(self):
+        my_map = GeoTiffBCCVLMap(data_url="https://raw.github.com/BCCVL/BCCVL_Visualiser/master/BCCVL_Visualiser/bccvl_visualiser/tests/fixtures/biomod_2_pkg_0_to_1000.asc", query_string="HEIGHT=1024&LAYERS=DEFAULT&WIDTH=512")
+        self.assertEqual(my_map.get_expected_value_range(), (0, 1000))
+
+        my_map_2 = GeoTiffBCCVLMap(data_url="https://raw.github.com/BCCVL/BCCVL_Visualiser/master/BCCVL_Visualiser/bccvl_visualiser/tests/fixtures/raster.tif", query_string="HEIGHT=1024&LAYERS=DEFAULT&WIDTH=512")
+        self.assertEqual(my_map_2.get_expected_value_range(), (0, 1))
+
