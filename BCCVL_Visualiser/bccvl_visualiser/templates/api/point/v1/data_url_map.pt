@@ -31,6 +31,7 @@
                 zoom_bounds = australia_bounds;
 
                 map = new OpenLayers.Map('map', {
+                    // Increase the tile size from 256px to 1024px
                     projection: mercator,
                     units: "m",
                     maxResolution: "auto",
@@ -74,7 +75,7 @@
                     },
                     {
                         isBaseLayer: false,
-                        tileSize: new OpenLayers.Size(512,512) // Use a larger tile size (256,256 is the default)
+                        tileSize: new OpenLayers.Size(1024,1024) // Use a larger tile size (256,256 is the default)
                     }
                 );
 
