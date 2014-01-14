@@ -51,3 +51,6 @@ etc/
 
 # OS X indexing files
 .DS_Store
+
+# PyCharm Configuration
+BCCVL_Visualiser/.idea
