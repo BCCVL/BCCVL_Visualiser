@@ -51,19 +51,23 @@ Getting Started
 6. Upgrade setuptools
 
         ./bin/pip install setuptools --upgrade
+        
+7. Install (or upgrade) the numpy egg.
 
-7. Bootstrap
+        ./bin/pip install numpy --upgrade
+
+8. Bootstrap
 
         ./bin/python bootstrap.py
 
-8. Buildout
+9. Buildout
 
         ./bin/buildout
 
-9. Run the tests
+10. Run the tests
 
         ./bin/test
 
-10. Serve (with auto-reload on file change)
+11. Serve (with auto-reload on file change)
 
         ./bin/pserve development.ini --reload
