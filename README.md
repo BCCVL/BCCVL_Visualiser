@@ -51,7 +51,7 @@ Getting Started
 6. Upgrade setuptools
 
         ./bin/pip install setuptools --upgrade
-        
+
 7. Install (or upgrade) the numpy egg.
 
         ./bin/pip install numpy --upgrade
