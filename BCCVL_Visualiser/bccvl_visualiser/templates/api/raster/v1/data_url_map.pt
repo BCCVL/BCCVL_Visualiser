@@ -4,10 +4,12 @@
         <title>OpenLayers Example</title>
         <script src="//maps.google.com/maps/api/js?v=3&amp;sensor=false"></script>
         <script src="${request.static_url('bccvl_visualiser:static/js/OpenLayers.js')}"></script>
+        <script src="${request.static_url('bccvl_visualiser:static/js/LoadingPanel.js')}"></script>
 
         <script defer="defer" type="text/javascript">
 
             var map, mercator, geographic;
+            var loading_pannel;
 
             function init() {
                 // DecLat, DecLng 
@@ -29,6 +31,9 @@
                 map = new OpenLayers.Map('map', {
                     projection: mercator
                 })
+
+                loading_pannel = new OpenLayers.Control.LoadingPanel();
+                map.addControl(loading_pannel);
 
                 var wms = new OpenLayers.Layer.WMS(
                     'Demo WMS', // Layer Name
