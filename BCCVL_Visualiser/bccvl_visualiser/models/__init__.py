@@ -16,3 +16,4 @@ from bccvl_visualiser.models.csv_api import BaseCSVAPI, CSVAPIv1
 from bccvl_visualiser.models.auto_detect_api import BaseAutoDetectAPI, AutoDetectAPIv1
 from bccvl_visualiser.models.png_api import BasePNGAPI, PNGAPIv1
 from bccvl_visualiser.models.html_api import BaseHTMLAPI, HTMLAPIv1
+from bccvl_visualiser.models.zip_api import BaseZIPAPI, ZIPAPIv1

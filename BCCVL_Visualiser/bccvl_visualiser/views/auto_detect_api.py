@@ -62,6 +62,8 @@ class AutoDetectAPIViewv1(BaseAutoDetectAPIView):
             url = self.request.route_url('raster_api_v1', traverse='/default', _query=self.request.GET)
         elif data_url.endswith('.png'):
             url = self.request.route_url('png_api_v1', traverse='/default', _query=self.request.GET)
+        elif data_url.endswith('.zip'):
+            url = self.request.route_url('zip_api_v1', traverse='/default', _query=self.request.GET)
         else:
             url = self.request.route_url('r_api_v1', traverse='/default', _query=self.request.GET)
 

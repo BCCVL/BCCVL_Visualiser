@@ -55,6 +55,7 @@ def main(global_config, **settings):
     configure_data_mover(config.registry.settings)
 
     config.add_static_view('static', 'static', cache_max_age=3600)
+    config.add_static_view(name='public_data', path=DataMover.PUBLIC_DIR)
 
     # Application routes
     config.add_route('home', '/')
@@ -82,6 +83,10 @@ def main(global_config, **settings):
     # HTML API
     config.add_route('html_api_v1', '/api/html/1*traverse')
     config.add_route('html_api',    '/api/html*traverse')
+
+    # ZIP API
+    config.add_route('zip_api_v1', '/api/zip/1*traverse')
+    config.add_route('zip_api', '/api/zip*traverse')
 
     # Auto Detect API
     config.add_route('auto_detect_api_v1', '/api/auto_detect/1*traverse')
