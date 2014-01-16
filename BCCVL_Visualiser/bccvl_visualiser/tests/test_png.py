@@ -3,13 +3,11 @@ import transaction
 
 from pyramid import testing
 
-from bccvl_visualiser.models import BasePNGAPI, PNGAPIv1, APICollection, FDataMover
+from bccvl_visualiser.models import BasePNGAPI, PNGAPIv1, APICollection
 from paste.deploy.loadwsgi import appconfig
 
 class TestPNGAPIv1(unittest.TestCase):
     def setUp(self):
-        FDataMover.local = True
-
         self.config = appconfig('config:development.ini', 'pyramid', relative_to='.')
         from bccvl_visualiser import main
         app = main(None, **self.config)
@@ -17,7 +15,7 @@ class TestPNGAPIv1(unittest.TestCase):
         self.testapp = TestApp(app)
 
     def tearDown(self):
-        FDataMover.local = False
+        pass
 
     def test_view_png_api_r(self):
        res = self.testapp.get('/api/png', status='*')

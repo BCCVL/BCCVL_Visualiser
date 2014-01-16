@@ -4,7 +4,7 @@ from pyramid.settings import asbool, aslist
 import logging
 from bccvl_visualiser.models import BCCVLMap
 from bccvl_visualiser.models.external_api import DataManager
-from bccvl_visualiser.models.external_api import DataMover
+from bccvl_visualiser.models.external_api import FDataMover
 
 def initialise_cache(settings):
     """ Initialise the application's cache regions
@@ -37,7 +37,7 @@ def configure_data_manager(settings):
 
 def configure_data_mover(settings):
     """ Configure the Data Mover """
-    DataMover.configure_from_config(settings)
+    FDataMover.configure_from_config(settings)
 
 def main(global_config, **settings):
     """ This function returns a Pyramid WSGI application.

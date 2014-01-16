@@ -8,6 +8,7 @@ import bccvl_visualiser.invariants
 import tempfile
 from contextlib import contextmanager
 import xmlrpclib
+from pyramid.settings import asbool
 
 class IDataMover(zope.interface.Interface):
     #: The base_url of the data mover
@@ -52,6 +53,15 @@ class IDataMover(zope.interface.Interface):
 
 class FDataMover(object):
     local = False
+
+    @classmethod
+    def configure_from_config(_class, settings):
+        """ configure the FDataMover (and DataMover) constants """
+        log = logging.getLogger(__name__)
+
+        log.info("Setting data_mover use_local_implementation to: %s" % settings['bccvl.data_mover.use_local_implementation'])
+        _class.local = asbool(settings['bccvl.data_mover.use_local_implementation'])
+        DataMover.configure_from_config(settings)
 
     @classmethod
     def new_data_mover(_class, *args, **kwargs):

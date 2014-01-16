@@ -3,13 +3,11 @@ import transaction
 
 from pyramid import testing
 
-from bccvl_visualiser.models import BaseHTMLAPI, HTMLAPIv1, APICollection, FDataMover
+from bccvl_visualiser.models import BaseHTMLAPI, HTMLAPIv1, APICollection
 from paste.deploy.loadwsgi import appconfig
 
 class TestHTMLAPIv1(unittest.TestCase):
     def setUp(self):
-        FDataMover.local = True
-
         self.config = appconfig('config:development.ini', 'pyramid', relative_to='.')
         from bccvl_visualiser import main
         app = main(None, **self.config)
@@ -17,7 +15,7 @@ class TestHTMLAPIv1(unittest.TestCase):
         self.testapp = TestApp(app)
 
     def tearDown(self):
-        FDataMover.local = False
+        pass
 
     def test_view_html_api_html(self):
        res = self.testapp.get('/api/html', status='*')
