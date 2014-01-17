@@ -9,6 +9,7 @@ import tempfile
 from contextlib import contextmanager
 import xmlrpclib
 from pyramid.settings import asbool
+import zipfile
 
 class IDataMover(zope.interface.Interface):
     #: The base_url of the data mover
@@ -16,6 +17,8 @@ class IDataMover(zope.interface.Interface):
 
     #: The Host ID we identify ourselves as to the Data Mover
     HOST_ID  = zope.interface.Attribute('The host we provide the Data Mover to identify us')
+
+    PUBLIC_DIR = zope.interface.Attribute('Where files are served to the public.')
 
     #: The data_url of the file we're moving
     data_url = zope.interface.Attribute("The data_url that defines what we're moving")
@@ -86,6 +89,7 @@ class DataMover(object):
 
     BASE_URL = None
     HOST_ID  = None
+    PUBLIC_DIR = None
 
     COMPLETE_STATUS = 'COMPLETED'
     REJECTED_STATUS = 'REJECTED'
@@ -102,7 +106,7 @@ class DataMover(object):
         """ Open a file using the data mover, yield it, and then delete it.
         """
 
-        # Create a tempfile to store the R file
+        # Create a tempfile to store the file
         tf = tempfile.NamedTemporaryFile(delete=False, prefix='data_mover_')
         file_path = tf.name
 
@@ -120,6 +124,24 @@ class DataMover(object):
             os.remove(file_path)
 
     @classmethod
+    def download(class_, suffix='.zip', **kwargs):
+        """Download a file using the data mover and store it for further use.
+        """
+        log = logging.getLogger(__name__)
+        # Create a tempfile to store the file
+        tf = tempfile.NamedTemporaryFile(delete=False, prefix='data_mover_', suffix=suffix)
+        file_path = tf.name
+
+        log.debug("Downloading file to: %s", file_path)
+
+        mover = class_(file_path, **kwargs)
+        mover.move_and_wait_for_completion()
+
+        log.debug(file_path)
+
+        return file_path
+
+    @classmethod
     def configure_from_config(class_, settings):
         """ configure the DataMover constants """
         log = logging.getLogger(__name__)
@@ -132,8 +154,17 @@ class DataMover(object):
             log.warn("Warning, %s is already configured. Ignoring new configuration.", str(class_))
             return
 
+        if (class_.PUBLIC_DIR is not None):
+            log.warn("Warning, %s is already configured. Ignoring new configuration.", str(class_))
+            return
+
         class_.BASE_URL = settings['bccvl.data_mover.base_url']
         class_.HOST_ID  = settings['bccvl.data_mover.host_id']
+        class_.PUBLIC_DIR = settings['bccvl.data_mover.public_dir']
+
+        # Create the public directory is it doesn't already exist
+        if not os.path.exists(class_.PUBLIC_DIR):
+            os.mkdir(class_.PUBLIC_DIR)
 
     def __init__(self, dest_file_path, data_id=None, data_url=None):
         """ initialise the map instance from a data_url """
