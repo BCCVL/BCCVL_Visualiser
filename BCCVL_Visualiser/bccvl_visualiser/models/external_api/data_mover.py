@@ -124,7 +124,7 @@ class DataMover(object):
             os.remove(file_path)
 
     @classmethod
-    def download(class_, suffix='.zip', **kwargs):
+    def download(class_, suffix='.tmp', **kwargs):
         """Download a file using the data mover and store it for further use.
         """
         log = logging.getLogger(__name__)

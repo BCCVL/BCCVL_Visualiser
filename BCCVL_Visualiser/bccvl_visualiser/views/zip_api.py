@@ -70,7 +70,7 @@ class ZIPAPIViewv1(BaseZIPAPIView):
         MyDataMover = FDataMover.get_data_mover_class()
         content = None
 
-        zip_file_path = MyDataMover.download(data_url=data_url)
+        zip_file_path = MyDataMover.download(data_url=data_url, suffix='.zip')
         log.debug('File path: %s', zip_file_path)
         log.debug('public dir: %s', MyDataMover.PUBLIC_DIR)
 
