@@ -55,31 +55,36 @@ class IDataMover(zope.interface.Interface):
         pass
 
 class FDataMover(object):
-    local = False
+    LOCAL = None
 
     @classmethod
-    def configure_from_config(_class, settings):
+    def configure_from_config(cls, settings):
         """ configure the FDataMover (and DataMover) constants """
         log = logging.getLogger(__name__)
 
-        log.info("Setting data_mover use_local_implementation to: %s" % settings['bccvl.data_mover.use_local_implementation'])
-        _class.local = asbool(settings['bccvl.data_mover.use_local_implementation'])
+        if cls.LOCAL is not None:
+            log.warn("Warning, %s is already configured. Ignoring new configuration.", str(cls))
+        else:
+            log.info("Setting FDataMover.LOCAL (use_local_implementation) to: %s" % settings['bccvl.data_mover.use_local_implementation'])
+            cls.LOCAL = asbool(settings['bccvl.data_mover.use_local_implementation'])
+
+        # The Factory should also pass the config onto the DataMover
         DataMover.configure_from_config(settings)
 
     @classmethod
-    def new_data_mover(_class, *args, **kwargs):
+    def new_data_mover(cls, *args, **kwargs):
         """ Create a data mover """
 
-        if _class.local:
+        if cls.LOCAL:
             return LocalDataMover(*args, **kwargs)
         else:
             return DataMover(*args, **kwargs)
 
     @classmethod
-    def get_data_mover_class(_class, *args, **kwargs):
+    def get_data_mover_class(cls, *args, **kwargs):
         """ Get the class of data mover that the factory would instantiate for you """
 
-        if _class.local:
+        if cls.LOCAL:
             return LocalDataMover
         else:
             return DataMover
@@ -102,7 +107,7 @@ class DataMover(object):
 
     @classmethod
     @contextmanager
-    def open(class_, **kwargs):
+    def open(cls, **kwargs):
         """ Open a file using the data mover, yield it, and then delete it.
         """
 
@@ -112,7 +117,7 @@ class DataMover(object):
 
         try:
             # create a mover to get the file
-            mover = class_(file_path, **kwargs)
+            mover = cls(file_path, **kwargs)
             mover.move_and_wait_for_completion()
 
             # open the tempfile
@@ -124,7 +129,7 @@ class DataMover(object):
             os.remove(file_path)
 
     @classmethod
-    def download(class_, suffix='.tmp', **kwargs):
+    def download(cls, suffix='.tmp', **kwargs):
         """Download a file using the data mover and store it for further use.
         """
         log = logging.getLogger(__name__)
@@ -134,7 +139,7 @@ class DataMover(object):
 
         log.debug("Downloading file to: %s", file_path)
 
-        mover = class_(file_path, **kwargs)
+        mover = cls(file_path, **kwargs)
         mover.move_and_wait_for_completion()
 
         log.debug(file_path)
@@ -142,29 +147,23 @@ class DataMover(object):
         return file_path
 
     @classmethod
-    def configure_from_config(class_, settings):
+    def configure_from_config(cls, settings):
         """ configure the DataMover constants """
         log = logging.getLogger(__name__)
 
-        if (class_.BASE_URL is not None):
-            log.warn("Warning, %s is already configured. Ignoring new configuration.", str(class_))
-            return
+        if (cls.BASE_URL is not None or
+            cls.HOST_ID is not None or
+            cls.PUBLIC_DIR is not None):
 
-        if (class_.HOST_ID is not None):
-            log.warn("Warning, %s is already configured. Ignoring new configuration.", str(class_))
-            return
+            log.warn("Warning, %s is already configured. Ignoring new configuration.", str(cls))
+        else:
+            cls.BASE_URL = settings['bccvl.data_mover.base_url']
+            cls.HOST_ID  = settings['bccvl.data_mover.host_id']
+            cls.PUBLIC_DIR = settings['bccvl.data_mover.public_dir']
 
-        if (class_.PUBLIC_DIR is not None):
-            log.warn("Warning, %s is already configured. Ignoring new configuration.", str(class_))
-            return
-
-        class_.BASE_URL = settings['bccvl.data_mover.base_url']
-        class_.HOST_ID  = settings['bccvl.data_mover.host_id']
-        class_.PUBLIC_DIR = settings['bccvl.data_mover.public_dir']
-
-        # Create the public directory is it doesn't already exist
-        if not os.path.exists(class_.PUBLIC_DIR):
-            os.mkdir(class_.PUBLIC_DIR)
+            # Create the public directory is it doesn't already exist
+            if not os.path.exists(cls.PUBLIC_DIR):
+                os.mkdir(cls.PUBLIC_DIR)
 
     def __init__(self, dest_file_path, data_id=None, data_url=None):
         """ initialise the map instance from a data_url """
@@ -191,14 +190,14 @@ class DataMover(object):
         self.data_url = data_url
 
     @classmethod
-    def get_xmlrpc_url(class_):
-        return (class_.BASE_URL + "/" + "data_mover")
+    def get_xmlrpc_url(cls):
+        return (cls.BASE_URL + "/" + "data_mover")
 
     def move_file(self):
 
         log = logging.getLogger(__name__)
 
-        _class = self.__class__
+        cls = self.__class__
         if self.data_url:
             dest_dir = os.path.dirname(self.dest_file_path)
 
@@ -206,9 +205,9 @@ class DataMover(object):
                 os.makedirs(dest_dir)
 
             source_dict = { 'type':'url', 'url': self.data_url }
-            dest_dict   = { 'type':'scp', 'host':_class.HOST_ID, 'path':self.dest_file_path }
+            dest_dict   = { 'type':'scp', 'host':cls.HOST_ID, 'path':self.dest_file_path }
 
-            url = _class.get_xmlrpc_url()
+            url = cls.get_xmlrpc_url()
 
             log.info("About to send move request to: %s, with source_dict: %s, and dest_dict: %s", url, source_dict, dest_dict)
             s = xmlrpclib.ServerProxy(url)
@@ -225,8 +224,8 @@ class DataMover(object):
 
         log = logging.getLogger(__name__)
 
-        _class = self.__class__
-        url = _class.get_xmlrpc_url()
+        cls = self.__class__
+        url = cls.get_xmlrpc_url()
 
         s = xmlrpclib.ServerProxy(url)
         log.info("About to send check_move_status request to: %s, with job_id: %s", url, self.job_id)
@@ -242,24 +241,24 @@ class DataMover(object):
 
         log = logging.getLogger(__name__)
 
-        _class = self.__class__
+        cls = self.__class__
         response = self.move_file()
         log.info("move response: %s", response)
-        if response['status'] == _class.REJECTED_STATUS:
+        if response['status'] == cls.REJECTED_STATUS:
             raise IOError("Move Failed (rejected): %s" % response['reason'])
 
         while True:
             response = self.get_status()
             log.info("get_status response: %s", response)
-            if response['status'] == _class.FAILED_STATUS:
+            if response['status'] == cls.FAILED_STATUS:
                 # if the move failed, raise an exception
                 raise IOError("Move Failed (failed during move): %s" % response['reason'])
-            elif response['status'] == _class.COMPLETE_STATUS:
+            elif response['status'] == cls.COMPLETE_STATUS:
                 # if the move is complete, return the status
                 return response
             else:
                 # it's in progress, so wait
-                time.sleep(_class.SLEEP_BETWEEN_DATA_MOVER_CHECKS)
+                time.sleep(cls.SLEEP_BETWEEN_DATA_MOVER_CHECKS)
 
 class LocalDataMover(DataMover):
 
