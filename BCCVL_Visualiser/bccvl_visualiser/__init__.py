@@ -4,7 +4,7 @@ from pyramid.settings import asbool, aslist
 import logging
 from bccvl_visualiser.models import BCCVLMap
 from bccvl_visualiser.models.external_api import DataManager
-from bccvl_visualiser.models.external_api import FDataMover
+from bccvl_visualiser.models.external_api import FDataMover, DataMover
 
 def initialise_cache(settings):
     """ Initialise the application's cache regions
