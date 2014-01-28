@@ -9,7 +9,7 @@
         <script defer="defer" type="text/javascript">
 
             var map, mercator, geographic;
-            var loading_pannel;
+            var loading_panel;
 
             function init() {
                 // DecLat, DecLng 
@@ -32,8 +32,8 @@
                     projection: mercator
                 })
 
-                loading_pannel = new OpenLayers.Control.LoadingPanel();
-                map.addControl(loading_pannel);
+                loading_panel = new OpenLayers.Control.LoadingPanel();
+                // map.addControl(loading_panel);
 
                 var wms = new OpenLayers.Layer.WMS(
                     'Demo WMS', // Layer Name
