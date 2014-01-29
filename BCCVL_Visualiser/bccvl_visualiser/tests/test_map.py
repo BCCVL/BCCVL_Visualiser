@@ -113,7 +113,7 @@ class TestBCCVLMap(unittest.TestCase):
 
     def test_raster_get_expected_value_range(self):
         my_map = GeoTiffBCCVLMap(data_url="https://raw.github.com/BCCVL/BCCVL_Visualiser/master/BCCVL_Visualiser/bccvl_visualiser/tests/fixtures/biomod_2_pkg_0_to_1000.asc", query_string="HEIGHT=1024&LAYERS=DEFAULT&WIDTH=512")
-        self.assertEqual(my_map.get_expected_value_range(), (0, 1000))
+        self.assertEqual(my_map.get_expected_value_range(), (0, 985))
 
         my_map_2 = GeoTiffBCCVLMap(data_url="https://raw.github.com/BCCVL/BCCVL_Visualiser/master/BCCVL_Visualiser/bccvl_visualiser/tests/fixtures/raster.tif", query_string="HEIGHT=1024&LAYERS=DEFAULT&WIDTH=512")
         self.assertEqual(my_map_2.get_expected_value_range(), (0, 1))
@@ -127,10 +127,10 @@ class TestBCCVLMap(unittest.TestCase):
         # We should have 1 class per color band, plus 1 final color band for the "max_value"
         self.assertEqual(layer.numclasses, GeoTiffBCCVLMap.COLOR_BANDS + 1)
         last_class = layer.getClass(GeoTiffBCCVLMap.COLOR_BANDS)
-        self.assertEqual(last_class.name, "1000.0")
+        self.assertEqual(last_class.name, "985.0")
 
         second_last_class = layer.getClass(GeoTiffBCCVLMap.COLOR_BANDS - 1)
-        step = 1000.0 / GeoTiffBCCVLMap.COLOR_BANDS
-        second_last_value = 1000.0 - step
+        step = 985.0 / GeoTiffBCCVLMap.COLOR_BANDS
+        second_last_value = 985.0 - step
         self.assertEqual(second_last_class.name, str(second_last_value))
 
