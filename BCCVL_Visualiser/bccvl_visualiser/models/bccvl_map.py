@@ -456,8 +456,7 @@ END
             If a file is found to have a maximum value < 1, the file is assumed
             to be of the range 0 to 1.
 
-            If a file is found to have a maximum value > 1, the file is assumed
-            to be of the range 0 to 1000.
+            If a file is found to have a maximum value > 1, the max value in the file is assumed.
         """
         min_value_metadata_key = self.__class__.BCCVL_EXPECTED_VALUE_RANGE_MINIMUM_KEY
         max_value_metadata_key = self.__class__.BCCVL_EXPECTED_VALUE_RANGE_MAXIMUM_KEY
@@ -494,13 +493,10 @@ END
             value_range_max = file_metadata[max_value_metadata_key]
         # finally, guess
         else:
-            # if the maximum is over 1000, we have no idea what is going on.
+            # if the maximum is over 1, we have no idea what is going on.
             # let the maximum be the maximum in the file
-            if self.get_maximum_value() > 1000:
+            if self.get_maximum_value() > 1:
                 value_range_max = self.get_maximum_value()
-            # if value is > 1, assume max value is 1000 (as is the case for biomod2)
-            elif self.get_maximum_value() > 1:
-                value_range_max = 1000
             # if value is < 1, assume max value is 1 (as is the case for dismo)
             else:
                 value_range_max = 1
