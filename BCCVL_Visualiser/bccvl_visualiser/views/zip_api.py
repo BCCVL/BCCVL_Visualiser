@@ -53,22 +53,36 @@ class ZIPAPIViewv1(BaseZIPAPIView):
     def text(self):
         return super(ZIPAPIViewv1, self).text()
 
-    @view_config(name='data_url_view')
     @view_config(name='default')
-    def view(self):
+    def auto_detect(self):
         log = logging.getLogger(__name__)
         log.debug('Processing view request in ZIP API v1')
 
-        data_url = self.request.GET.getone('data_url')
-        file_name = self.request.GET.getone('file_name')
+        # Check if there's a data_url
+        try:
+            data_url = self.request.GET.getone('data_url')
+        except:
+            list = self.request.GET.getall('data_url_list')
+
+        # Check if file_name was given, if none then assume multiple files
+        try:
+            file_name = self.request.GET.getone('file_name')
+            return self.visualise_single_file(data_url, file_name)
+        except:
+            return self.visualise_multiple_layers(data_url)
+
+    def visualise_single_file(self, data_url, file_name):
+        log = logging.getLogger(__name__)
+
+
         log.debug('file_name: %s', file_name)
 
         new_data_url = None
         new_query = None
         new_filename = None
+        return_url = None
 
         MyDataMover = FDataMover.get_data_mover_class()
-        content = None
 
         zip_file_path = MyDataMover.download(data_url=data_url, suffix='.zip')
         log.debug('File path: %s', zip_file_path)
@@ -80,7 +94,6 @@ class ZIPAPIViewv1(BaseZIPAPIView):
             if name == file_name:
                 # epoch timestamp for unique filename
                 time_epoch = int(time.time() * 1000)
-
 
                 (dirname, filename) = os.path.split(name)
 
@@ -100,14 +113,77 @@ class ZIPAPIViewv1(BaseZIPAPIView):
                 # Prepare url and query to return it to auto detect                
                 new_data_url = self.request.application_url + '/public_data/' + extract_file_path
                 new_query = {'data_url':new_data_url}
-                url = self.request.route_url('auto_detect_api_v1', traverse='/default', _query=new_query)
-                return HTTPFound(location=url)
+                log.debug("new_data_url: %s", new_data_url)
+                return_url = self.request.route_url('auto_detect_api_v1', traverse='/default', _query=new_query)
                 # extract it
         fh.close()
         # delete the zip file
+        log.debug("deleting the zip file")
+        os.remove(zip_file_path)
+        if return_url is not None:
+            return HTTPFound(location=return_url)
+        else:    
+            return Response('Could not find the specified file in the zip.') 
+
+    def visualise_multiple_layers(self, data_url):
+        url_list = []
+
+        log = logging.getLogger(__name__)
+
+        MyDataMover = FDataMover.get_data_mover_class()
+
+        # Download the zip file
+        zip_file_path = MyDataMover.download(data_url=data_url, suffix='.zip')
+        log.debug('File path: %s', zip_file_path)
+        log.debug('public dir: %s', MyDataMover.PUBLIC_DIR)
+
+        # Unzip the file
+        fh = open(zip_file_path, 'rb')
+        z = zipfile.ZipFile(fh)
+
+        # Validate the files - make sure they end in .tif
+        for name in z.namelist():
+            if name.endswith('.tif') is False:
+                return Response('This zip either does not have a flat file directory or have inconsistent file types.')
+
+        # Extract
+        for name in z.namelist():
+            time_epoch = int(time.time() * 1000)
+
+            (dirname, filename) = os.path.split(name)
+
+            new_dirname =  str(time_epoch) + '_' + dirname
+            os.mkdir(MyDataMover.PUBLIC_DIR + '/' + new_dirname)
+            log.debug("directory to extract: %s", new_dirname)
+
+            extract_file_path = new_dirname + '/' + filename
+
+            # write the file
+            fd = open(MyDataMover.PUBLIC_DIR + '/' + extract_file_path,"w")
+            fd.write(z.read(name))
+            fd.close()
+
+            file_url = self.request.application_url + '/public_data/' + extract_file_path
+
+            url_list.append(file_url)
+
+        log.debug("deleting the zip file")
         os.remove(zip_file_path)
 
-        return Response('Could not find the specified file in the zip.')
+        # Create a file that contains the url list
+        time_epoch = int(time.time() * 1000)
+        list_name = 'raster_zip_' + str(time_epoch) + '.txt'
+        list_url = self.request.application_url + '/public_data/' + list_name
+
+        fd = open(MyDataMover.PUBLIC_DIR + '/' + list_name, "w")
+        for item in url_list:
+            fd.write("%s," % item)
+        fd.close()
+
+        # Send it off to the raster api
+        new_query = {'raster_list_url':list_url}
+        url = self.request.route_url('raster_api_v1', traverse='/default', _query=new_query)
+        return HTTPFound(location=url)
 
     @view_config(name='.xmlrpc')
     def xmlrpc(self):

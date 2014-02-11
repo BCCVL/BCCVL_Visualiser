@@ -59,12 +59,23 @@ class TestZIPAPIv1(unittest.TestCase):
         self.assertEqual(the_dict['description'], description, msg="Description should match")
         self.assertEqual(the_dict['version'], version, msg="Version should match")
 
-    def test_view_zip_api_v1_data_url_view(self):
+    def test_view_zip_api_v1_with_file_name(self):
         params = {
             'data_url':     'https://raw.github.com/BCCVL/BCCVL_Visualiser/master/BCCVL_Visualiser/bccvl_visualiser/tests/fixtures/env_layers.zip',
             'file_name':    'bioclim_15.tif'
         }
 
-        res = self.testapp.get('/api/zip/1/data_url_view', status='*', params=params)
+        res = self.testapp.get('/api/zip/1/default', status='*', params=params)
 
         self.assertEqual(res.status_int, 302)
+
+    def test_view_zip_api_v1_with_multiple(self):
+        params = {
+            'data_url':     'https://raw.github.com/BCCVL/BCCVL_Visualiser/master/BCCVL_Visualiser/bccvl_visualiser/tests/fixtures/env_layers.zip',
+        }
+
+        res = self.testapp.get('/api/zip/1/default', status='*', params=params)
+
+        self.assertEqual(res.status_int, 200)
+
+

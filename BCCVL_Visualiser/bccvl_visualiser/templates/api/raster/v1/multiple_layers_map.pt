@@ -1,0 +1,91 @@
+<!DOCTYPE html>
+<html style="width:100%; height:100%">
+    <head>
+        <title>Multiple Raster Layers</title>
+        <script src="//maps.google.com/maps/api/js?v=3&amp;sensor=false"></script>
+        <script src="${request.static_url('bccvl_visualiser:static/js/OpenLayers.js')}"></script>
+        <script src="${request.static_url('bccvl_visualiser:static/js/LoadingPanel.js')}"></script>
+
+        <script defer="defer" type="text/javascript">
+
+            var map, mercator, geographic;
+            var loading_pannel;
+
+            function init() {
+                // DecLat, DecLng 
+                geographic = new OpenLayers.Projection("EPSG:4326");
+
+                // Spherical Meters
+                // The official name for the 900913 (google) projection
+                mercator = new OpenLayers.Projection("EPSG:3857");
+
+                // Australia Bounds
+                australia_bounds = new OpenLayers.Bounds();
+                australia_bounds.extend(new OpenLayers.LonLat(111,-10));
+                australia_bounds.extend(new OpenLayers.LonLat(152,-44));
+                australia_bounds = australia_bounds.transform(geographic, mercator);
+
+                var zoom_bounds = australia_bounds;
+
+                map = new OpenLayers.Map('map', {
+                    projection: mercator
+                })
+
+                loading_pannel = new OpenLayers.Control.LoadingPanel();
+                map.addControl(loading_pannel);
+
+                // get the list of raster urls
+                var data = "${raster_list}";
+                var rasterList = data.split(',')
+                var myLayers = [];
+
+                // WMS Layers from the list
+                rasterList.forEach(function(raster){
+                    if (raster != '') {
+                        // get the filename
+                        var url_terms = raster.split('/');
+                        var filename = url_terms[url_terms.length -1]
+                        var wms = new OpenLayers.Layer.WMS(
+                            filename,
+                            './wms_data_url',
+                            {  
+                                transparent: "true",
+                                format: "image/png",
+                                DATA_URL: raster
+                            },
+                            {
+                                isBaseLayer: false,
+                                visibility: false
+                            }
+                        );
+                        myLayers.push(wms)
+                    }
+                })
+
+                var osm = new OpenLayers.Layer.OSM();
+                var gmap = new OpenLayers.Layer.Google("Google Streets", {visibility: false});
+                myLayers.push(osm, gmap)
+
+                var ls = new OpenLayers.Control.LayerSwitcher();
+                map.addLayers(myLayers)
+                map.addControl(ls);
+                map.zoomToExtent(zoom_bounds);
+
+                // Make the layer switcher open by default
+                ls.maximizeControl();
+
+                //TODO: Figure out what to do with the legend
+                // Add the legend image
+                // var data_url_escaped = encodeURIComponent("${raster_list[16]}");
+                // var legend_img_src = "./wms_data_url?REQUEST=GetLegendGraphic&VERSION=1.0.0&FORMAT=image/png&WIDTH=60&HEIGHT=60&DATA_URL=" + data_url_escaped + "&BBOX=-180,-90,180,90&SRS=EPSG%3A4326";
+                // // Update legend image src
+                // document.getElementById("legend").src = legend_img_src;
+            }
+        </script>
+
+    </head>
+    <body style="width:100%; height:100%; margin: 0;" onload="init()">
+        <!-- <img alt="Map Legend" style="opacity: 1.0; position: absolute; bottom: 10px; left:10px; z-index: 100000;" id="legend"></img> -->
+        <div style="width:100%; height:100%" id="map"></div>
+    </body>
+</html>
