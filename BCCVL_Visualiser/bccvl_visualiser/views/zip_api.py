@@ -4,6 +4,7 @@ import mapscript
 import zipfile
 import os
 import time
+import hashlib
 
 from pyramid.response import Response, FileResponse
 from pyramid.view import view_config, view_defaults
@@ -154,34 +155,26 @@ class ZIPAPIViewv1(BaseZIPAPIView):
 
             new_dirname =  str(time_epoch) + '_' + dirname
             os.mkdir(MyDataMover.PUBLIC_DIR + '/' + new_dirname)
-            log.debug("directory to extract: %s", new_dirname)
 
             extract_file_path = new_dirname + '/' + filename
 
+            hash_string = hashlib.sha224(extract_file_path).hexdigest()
+            new_filename = hash_string + ".tif"
+
+            path = os.path.join(MyDataMover.MAP_FILES_DIR, new_filename)
+
             # write the file
-            fd = open(MyDataMover.PUBLIC_DIR + '/' + extract_file_path,"w")
+            fd = open(path,"w")
             fd.write(z.read(name))
             fd.close()
 
-            file_url = self.request.application_url + '/public_data/' + extract_file_path
-
-            url_list.append(file_url)
+            url_list.append(extract_file_path)
 
         log.debug("deleting the zip file")
         os.remove(zip_file_path)
 
-        # Create a file that contains the url list
-        time_epoch = int(time.time() * 1000)
-        list_name = 'raster_zip_' + str(time_epoch) + '.txt'
-        list_url = self.request.application_url + '/public_data/' + list_name
-
-        fd = open(MyDataMover.PUBLIC_DIR + '/' + list_name, "w")
-        for item in url_list:
-            fd.write("%s," % item)
-        fd.close()
-
         # Send it off to the raster api
-        new_query = {'raster_list_url':list_url}
+        new_query = {'raster_list_url':url_list}
         url = self.request.route_url('raster_api_v1', traverse='/default', _query=new_query)
         return HTTPFound(location=url)
 

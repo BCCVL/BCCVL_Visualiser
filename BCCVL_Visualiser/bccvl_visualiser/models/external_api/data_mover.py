@@ -95,6 +95,7 @@ class DataMover(object):
     BASE_URL = None
     HOST_ID  = None
     PUBLIC_DIR = None
+    MAP_FILES_DIR = None
 
     COMPLETE_STATUS = 'COMPLETED'
     REJECTED_STATUS = 'REJECTED'
@@ -153,13 +154,15 @@ class DataMover(object):
 
         if (cls.BASE_URL is not None or
             cls.HOST_ID is not None or
-            cls.PUBLIC_DIR is not None):
+            cls.PUBLIC_DIR is not None or
+            cls.MAP_FILES_DIR is not None):
 
             log.warn("Warning, %s is already configured. Ignoring new configuration.", str(cls))
         else:
             cls.BASE_URL = settings['bccvl.data_mover.base_url']
             cls.HOST_ID  = settings['bccvl.data_mover.host_id']
             cls.PUBLIC_DIR = settings['bccvl.data_mover.public_dir']
+            cls.MAP_FILES_DIR = settings['bccvl.mapscript.map_data_files_root_path']
 
             # Create the public directory is it doesn't already exist
             if not os.path.exists(cls.PUBLIC_DIR):

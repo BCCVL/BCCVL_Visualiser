@@ -69,15 +69,15 @@ class RasterAPIViewv1(BaseRasterAPIView):
     @view_config(name='multiple_layers_map', renderer='../templates/api/raster/v1/multiple_layers_map.pt')
     def multiple_layers_map(self):
         log = logging.getLogger(__name__)
-        raster_list_url = self.request.GET.getone('raster_list_url')
-        log.debug(raster_list_url)
-        raster_list = urllib2.urlopen(raster_list_url).read()
-        log.debug('TEST TEST TEST')
-        log.debug(raster_list)
+        raster_list_url = self.request.GET.getall('raster_list_url')
+        raster_list = ''
+
+        for file in raster_list_url:
+            raster_list = raster_list + ',' + file
+
         return_dict = {
             "raster_list": raster_list,
         }
-        log.debug(return_dict)
         return return_dict
 
     @view_config(name='default')
@@ -91,7 +91,7 @@ class RasterAPIViewv1(BaseRasterAPIView):
             log.debug('No data_url found')
 
         try:
-            raster_list_url = self.request.GET.getone('raster_list_url')
+            raster_list_url = self.request.GET.getall('raster_list_url')
             url = self.request.route_url('raster_api_v1', traverse='/multiple_layers_map', _query=self.request.GET)
             return HTTPFound(location=url)
         except:
