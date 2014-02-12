@@ -154,7 +154,6 @@ class ZIPAPIViewv1(BaseZIPAPIView):
             (dirname, filename) = os.path.split(name)
 
             new_dirname =  str(time_epoch) + '_' + dirname
-            os.mkdir(MyDataMover.PUBLIC_DIR + '/' + new_dirname)
 
             extract_file_path = new_dirname + '/' + filename
 
