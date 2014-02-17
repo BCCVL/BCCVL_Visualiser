@@ -7,7 +7,7 @@ README = open(os.path.join(here, 'README.md')).read()
 CHANGES = open(os.path.join(here, 'CHANGES.txt')).read()
 
 requires = [
-    'pyramid',
+    'pyramid >= 1.4.4',
 #    'psycopg2',
 #    'SQLAlchemy',
 #    'GeoAlchemy2',
@@ -20,6 +20,7 @@ requires = [
     #
     'GDAL >= 1.7.3',
     'mapscript >= 6.0.1',      # Python Map Server implementation
+    'zope.interface >= 4.1.0',
 
     'dogpile.cache',    # cache regions, lets you cache the result of queries
     'Pillow',           # Python Imaging Library
