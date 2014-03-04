@@ -70,7 +70,10 @@ class ZIPAPIViewv1(BaseZIPAPIView):
             file_name = self.request.GET.getone('file_name')
             return self.visualise_single_file(data_url, file_name)
         except:
-            return self.visualise_multiple_layers(data_url)
+            if data_url.endswith('.html.zip'):
+                return self.visualise_html_zip(data_url)
+            else:
+                return self.visualise_multiple_layers(data_url)
 
     def visualise_single_file(self, data_url, file_name):
         log = logging.getLogger(__name__)
@@ -86,8 +89,6 @@ class ZIPAPIViewv1(BaseZIPAPIView):
         MyDataMover = FDataMover.get_data_mover_class()
 
         zip_file_path = MyDataMover.download(data_url=data_url, suffix='.zip')
-        log.debug('File path: %s', zip_file_path)
-        log.debug('public dir: %s', MyDataMover.PUBLIC_DIR)
 
         fh = open(zip_file_path, 'rb')
         z = zipfile.ZipFile(fh)
@@ -135,8 +136,6 @@ class ZIPAPIViewv1(BaseZIPAPIView):
 
         # Download the zip file
         zip_file_path = MyDataMover.download(data_url=data_url, suffix='.zip')
-        log.debug('File path: %s', zip_file_path)
-        log.debug('public dir: %s', MyDataMover.PUBLIC_DIR)
 
         # Unzip the file
         fh = open(zip_file_path, 'rb')
@@ -175,6 +174,36 @@ class ZIPAPIViewv1(BaseZIPAPIView):
         # Send it off to the raster api
         new_query = {'raster_list_url':url_list}
         url = self.request.route_url('raster_api_v1', traverse='/default', _query=new_query)
+        return HTTPFound(location=url)
+
+    def visualise_html_zip(self, data_url):
+        MyDataMover = FDataMover.get_data_mover_class()
+
+        # Download the zip file
+        zip_file_path = MyDataMover.download(data_url=data_url, suffix='.zip')
+
+        time_epoch = int(time.time() * 1000)
+        dir_path = '/html_zip_' + str(time_epoch)
+        os.mkdir(MyDataMover.PUBLIC_DIR + dir_path)
+
+        fh = open(zip_file_path, 'rb')
+        z = zipfile.ZipFile(fh)
+        for name in z.namelist():
+            dir_file_path = dir_path + '/' + name
+            # write the file
+            fd = open(MyDataMover.PUBLIC_DIR + dir_file_path, "w")
+            fd.write(z.read(name))
+            fd.close()
+
+            if name.endswith('html'):
+                index = dir_file_path
+
+        os.remove(zip_file_path)
+
+        new_data_url = self.request.application_url + '/public_data/' + index
+        new_query = {'data_url': new_data_url}
+        url = self.request.route_url('html_api_v1', traverse='/default', _query=new_query)
+
         return HTTPFound(location=url)
 
     @view_config(name='.xmlrpc')
