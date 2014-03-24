@@ -1,8 +1,8 @@
 #!/bin/sh
 
 if [ -z "$WORKSPACE" ]; then
-    echo "Guessing WORKSPACE is .."
-    WORKSPACE='..'
+	WORKSPACE=`pwd`
+    echo "Guessing WORKSPACE is $WORKSPACE"
 fi
 
 VISUALISER_DIR="$WORKSPACE/BCCVL_Visualiser"
