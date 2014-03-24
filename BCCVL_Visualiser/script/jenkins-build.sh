@@ -1,4 +1,4 @@
-#!/bin/sh
+#!/bin/bash
 
 if [ -z "$WORKSPACE" ]; then
 	WORKSPACE=`pwd`
@@ -21,11 +21,17 @@ tar -xvzf virtualenv-1.9.tar.gz
 cd virtualenv-1.9
 python virtualenv.py -p /usr/bin/python2.7 "$VISUALISER_DIR"
 cd "$VISUALISER_DIR"
-pwd
 source bin/activate
 
 echo "Python version:"
 "$PYTHON" --version
 
+echo "Installing Dependencies"
+"$PIP" install setuptools --upgrade
+"$PIP" install numpy --upgrade 
+
 echo "Building Visualiser"
+"$PYTHON" bootstrap.py
+"$BUILDOUT"
+
 
