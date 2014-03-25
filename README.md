@@ -1,4 +1,4 @@
-[![Build Status](https://travis-ci.org/BCCVL/BCCVL_Visualiser.png?branch=master)](https://travis-ci.org/BCCVL/BCCVL_Visualiser)
+[![Build Status](http://118.138.242.168/job/bccvl_visualiser/badge/icon)](http://118.138.242.168/job/bccvl_visualiser/)
 
 BCCVL_Visualiser
 ================
