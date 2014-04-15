@@ -525,3 +525,10 @@ img.olTileImage {
     background-repeat:no-repeat;
     display: none;
 }
+
+.dataLayersDiv input[type="checkbox"] {
+    -webkit-appearance: radio;
+    -moz-appearance: radio;
+    -ms-appearance: radio;     /* not currently supported */
+    -o-appearance: radio;      /* not currently supported */
+}

@@ -25,10 +25,13 @@
                 australia_bounds.extend(new OpenLayers.LonLat(152,-44));
                 australia_bounds = australia_bounds.transform(geographic, mercator);
 
-                var zoom_bounds = australia_bounds;
+                var zoom_bounds = australia_bounds;               
 
                 map = new OpenLayers.Map('map', {
-                    projection: mercator
+                    projection: mercator,
+                    eventListeners: {
+                        "changelayer": mapLayerChanged
+                    }
                 })
 
                 loading_pannel = new OpenLayers.Control.LoadingPanel();
@@ -73,7 +76,21 @@
 
                 // Make the layer switcher open by default
                 ls.maximizeControl();
-
+                
+                // eventListener which only allows one overlay to displayed at a time
+                function mapLayerChanged(event) {
+                    ls.dataLayers.forEach(function(dataLayer) {
+                        if (dataLayer.layer.name == event.layer.name && event.layer.visibility) {
+                            dataLayer.layer.visibility = true;
+                            dataLayer.layer.display(true);
+                        }     
+                        else {
+                            dataLayer.layer.visibility = false;
+                            dataLayer.layer.display(false);
+                        }
+                    })
+                }
+  
                 //TODO: Figure out what to do with the legend
                 // Add the legend image
                 // var data_url_escaped = encodeURIComponent("${raster_list[16]}");
