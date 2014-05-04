@@ -112,7 +112,7 @@ class ZIPAPIViewv1(BaseZIPAPIView):
 
                 log.debug("finished writing file")
 
-                # Prepare url and query to return it to auto detect                
+                # Prepare url and query to return it to auto detect
                 new_data_url = self.request.application_url + '/public_data/' + extract_file_path
                 new_query = {'data_url':new_data_url}
                 log.debug("new_data_url: %s", new_data_url)
@@ -124,8 +124,8 @@ class ZIPAPIViewv1(BaseZIPAPIView):
         os.remove(zip_file_path)
         if return_url is not None:
             return HTTPFound(location=return_url)
-        else:    
-            return Response('Could not find the specified file in the zip.') 
+        else:
+            return Response('Could not find the specified file in the zip.')
 
     def visualise_multiple_layers(self, data_url):
         url_list = []
@@ -143,11 +143,17 @@ class ZIPAPIViewv1(BaseZIPAPIView):
 
         # Validate the files - make sure they end in .tif
         for name in z.namelist():
+            if name.endswith('./'):
+                # ignore folders within zip
+                continue
             if name.endswith('.tif') is False:
                 return Response('This zip either does not have a flat file directory or have inconsistent file types.')
 
         # Extract
         for name in z.namelist():
+            if name.endswith('/'):
+                # ignore folders within zip
+                continue
             time_epoch = int(time.time() * 1000)
 
             (dirname, filename) = os.path.split(name)
