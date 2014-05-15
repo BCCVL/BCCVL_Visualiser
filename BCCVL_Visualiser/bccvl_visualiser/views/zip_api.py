@@ -143,7 +143,7 @@ class ZIPAPIViewv1(BaseZIPAPIView):
 
         # Validate the files - make sure they end in .tif
         for name in z.namelist():
-            if name.endswith('./'):
+            if name.endswith('/'):
                 # ignore folders within zip
                 continue
             if name.endswith('.tif') is False:
