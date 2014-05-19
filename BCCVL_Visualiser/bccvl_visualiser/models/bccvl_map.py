@@ -330,12 +330,12 @@ class RasterBCCVLMap(BCCVLMap):
 
             next_color = ' '.join(map(str, [next_color_r, next_color_g, next_color_b]))
 
-            self.__class__._update_range_style_information(layer, val, val+the_inc, this_color, next_color, max_exp)
+            # self.__class__._update_range_style_information(layer, val, val+the_inc, this_color, next_color, max_exp)
             # inc the value
             val = val + the_inc
 
         # Add the max value to the legend
-        self.__class__._update_max_style_information(layer, max_exp)
+        # self.__class__._update_max_style_information(layer, max_exp)
 
     @classmethod
     def _update_max_style_information(_class, layer, max_exp):
