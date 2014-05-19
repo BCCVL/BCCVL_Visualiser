@@ -45,7 +45,7 @@
 
                 /* FUNCTIONS FOR CREATING COLOR SPECTRUMS AND CONSTRUCTING XML SLD DOCUMENTS TO PASS TO MAP TILE REQUESTS */
 
-                function generateSLD() {
+                function generateSLD(minVal, maxVal, steps, startpoint, midpoint, endpoint) {
                     /*  Goal here is to determine minimum and maximum raster values in the map layer, 
                         dividing it by an arbitrary number of levels.  This is then used to make an array
                         of thresholds for color values to be associated with.  
@@ -60,9 +60,9 @@
 
 
                     // dummy max and min values, eventually replaced with relative-to-layer values
-                    var minVal = 0;
-                    var maxVal = 100;
-                    var steps = 20; // must be even number for 3 color phase to work
+                    if (minVal==undefined) minVal = 0;
+                    if (maxVal==undefined) maxVal = 100;
+                    if (steps==undefined) steps = 20; // must be even number for 3 color phase to work
                     
                     var rangeInt = (maxVal - minVal)/steps;
                     var rangeArr = [];
@@ -81,53 +81,89 @@
                         return '#' + byte2Hex(r) + byte2Hex(g) + byte2Hex(b);
                     }
 
-                    // White to blue spectrum
-                    // 30, 77, 155 endpoint, 0 159 227 midpoint
-                    var startpoint = {};
-                        startpoint.r = 255;
-                        startpoint.g = 255;
-                        startpoint.b = 255;
-                    var midpoint = {}
-                        midpoint.r = 0;
-                        midpoint.g = 159;
-                        midpoint.b = 227;
-                    var endpoint = {};
-                        endpoint.r = 30;
-                        endpoint.g = 77;
-                        endpoint.b = 155;
-
                     var colorArr = [];
-                    // first half
-                    for (var i = 0; i < ((steps/2)+1); i++) {
-                        // red
-                        var redInt = (startpoint.r - midpoint.r)/(steps/2);
-                        var redVal = startpoint.r - (redInt*i);
-                        // green
-                        var greenInt = (startpoint.g - midpoint.g)/(steps/2);
-                        var greenVal = startpoint.g - (greenInt*i);
-                        // blue
-                        var blueInt = (startpoint.b - midpoint.b)/(steps/2);
-                        var blueVal = startpoint.b - (blueInt*i);
 
-                        colorArr.push(RGB2Color(redVal,greenVal,blueVal));
+                    if (midpoint != null){
+                        // White to blue spectrum
+                        if (startpoint==undefined) {
+                            var startpoint = {};
+                                startpoint.r = 255;
+                                startpoint.g = 255;
+                                startpoint.b = 255;
+                        }
+                        if (midpoint==undefined) {
+                            var midpoint = {};
+                                midpoint.r = 0;
+                                midpoint.g = 159;
+                                midpoint.b = 227;
+                        }
+                        if (endpoint==undefined) {
+                            var endpoint = {};
+                                endpoint.r = 30;
+                                endpoint.g = 77;
+                                endpoint.b = 155;
+                        }
+                        
+                        // first half
+                        for (var i = 0; i < ((steps/2)+1); i++) {
+                            // red
+                            var redInt = (startpoint.r - midpoint.r)/(steps/2);
+                            var redVal = startpoint.r - (redInt*i);
+                            // green
+                            var greenInt = (startpoint.g - midpoint.g)/(steps/2);
+                            var greenVal = startpoint.g - (greenInt*i);
+                            // blue
+                            var blueInt = (startpoint.b - midpoint.b)/(steps/2);
+                            var blueVal = startpoint.b - (blueInt*i);
+
+                            colorArr.push(RGB2Color(redVal,greenVal,blueVal));
+                        }
+
+                        // second half
+                        for (var i = 0; i < ((steps/2)+1); i++) {
+                            // red
+                            var redInt = (midpoint.r - endpoint.r)/(steps/2);
+                            var redVal = midpoint.r - (redInt*i);
+                            // green
+                            var greenInt = (midpoint.g - endpoint.g)/(steps/2);
+                            var greenVal = midpoint.g - (greenInt*i);
+                            // blue
+                            var blueInt = (midpoint.b - endpoint.b)/(steps/2);
+                            var blueVal = midpoint.b - (blueInt*i);
+
+                            colorArr.push(RGB2Color(redVal,greenVal,blueVal));
+                        }  
+                    } else {
+                        // White to blue spectrum
+                        if (startpoint==undefined) {
+                            var startpoint = {};
+                                startpoint.r = 255;
+                                startpoint.g = 255;
+                                startpoint.b = 255;
+                        }
+                        if (endpoint==undefined) {
+                            var endpoint = {};
+                                endpoint.r = 30;
+                                endpoint.g = 77;
+                                endpoint.b = 155;
+                        }
+                        
+                        for (var i = 0; i < (steps+2); i++) {
+                            // red
+                            var redInt = (startpoint.r - endpoint.r)/steps;
+                            var redVal = startpoint.r - (redInt*i);
+                            // green
+                            var greenInt = (startpoint.g - endpoint.g)/steps;
+                            var greenVal = startpoint.g - (greenInt*i);
+                            // blue
+                            var blueInt = (startpoint.b - endpoint.b)/steps;
+                            var blueVal = startpoint.b - (blueInt*i);
+
+                            colorArr.push(RGB2Color(redVal,greenVal,blueVal));
+                        }  
                     }
 
-                    // second half
-                    for (var i = 0; i < ((steps/2)+1); i++) {
-                        // red
-                        var redInt = (midpoint.r - endpoint.r)/(steps/2);
-                        var redVal = midpoint.r - (redInt*i);
-                        // green
-                        var greenInt = (midpoint.g - endpoint.g)/(steps/2);
-                        var greenVal = midpoint.g - (greenInt*i);
-                        // blue
-                        var blueInt = (midpoint.b - endpoint.b)/(steps/2);
-                        var blueVal = midpoint.b - (blueInt*i);
-
-                        colorArr.push(RGB2Color(redVal,greenVal,blueVal));
-                    }
-
-                    console.log(colorArr);
+                    
 
                     var xmlStylesheet = '<StyledLayerDescriptor version="1.1.0" xsi:schemaLocation="http://www.opengis.net/sld http://schemas.opengis.net/sld/1.1.0/StyledLayerDescriptor.xsd" xmlns="http://www.opengis.net/sld" xmlns:ogc="http://www.opengis.net/ogc" xmlns:se="http://www.opengis.net/se" xmlns:xlink="http://www.w3.org/1999/xlink" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"><NamedLayer><se:Name>DEFAULT</se:Name><UserStyle><se:Name>xxx</se:Name><se:FeatureTypeStyle><se:Rule><se:RasterSymbolizer><se:Opacity>0.7</se:Opacity><se:ColorMap><se:Categorize fallbackValue="#78c818"><se:LookupValue>Rasterdata</se:LookupValue>';
 
@@ -158,7 +194,7 @@
                                 transparent: "true",
                                 format: "image/png",
                                 DATA_URL: raster,
-                                SLD_BODY: generateSLD()
+                                SLD_BODY: generateSLD(0,100,20,{r:255,g:255,b:255},{r:0,g:159,b:227},{r:30,g:77,b:155})
                             },
                             {
                                 isBaseLayer: false,
