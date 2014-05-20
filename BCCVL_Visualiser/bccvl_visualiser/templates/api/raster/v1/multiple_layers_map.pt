@@ -45,20 +45,22 @@
 
                 /* FUNCTIONS FOR CREATING COLOR SPECTRUMS AND CONSTRUCTING XML SLD DOCUMENTS TO PASS TO MAP TILE REQUESTS */
 
-                function generateSLD(minVal, maxVal, steps, startpoint, midpoint, endpoint) {
-                    /*  Goal here is to determine minimum and maximum raster values in the map layer, 
-                        dividing it by an arbitrary number of levels.  This is then used to make an array
-                        of thresholds for color values to be associated with.  
-                    */
+                var styleObj = {"minVal":0,"maxVal":100,"steps":20,"startpoint":{r:255,g:255,b:255},"midpoint":{r:0,g:159,b:227},"endpoint":{r:30,g:77,b:155}} 
 
-                    /*  Important to note here that due to the structure of an SLD doc, the number of
-                        threshold values must always be one more than the number of desired color levels.
-                        The number of color values must then be one greater than the thresholds.
-                        SLD requests are packed like: Color-Threshold-*colorlevel*-Color...., so the end 
-                        result will always have +1 threshold and +2 color values on top of your desired number of colour values.
-                    */
+                /*  Goal here is to determine minimum and maximum raster values in the map layer, 
+                    dividing it by an arbitrary number of levels.  This is then used to make an array
+                    of thresholds for color values to be associated with.  
+                */
 
+                /*  Important to note here that due to the structure of an SLD doc, the number of
+                    threshold values must always be one more than the number of desired color levels.
+                    The number of color values must then be one greater than the thresholds.
+                    SLD requests are packed like: Color-Threshold-*colorlevel*-Color...., so the end 
+                    result will always have +1 threshold and +2 color values on top of your desired number of colour values.
+                */
 
+                function generateRangeArr(minVal, maxVal, steps){
+                    
                     // dummy max and min values, eventually replaced with relative-to-layer values
                     if (minVal==undefined) minVal = 0;
                     if (maxVal==undefined) maxVal = 100;
@@ -70,6 +72,10 @@
                         rangeArr.push((rangeInt*i).toFixed(2));
                     }
 
+                    return rangeArr;
+                }
+
+                function generateColorArr(steps, startpoint, midpoint, endpoint){
                     /*  Generate array of hexidecimal colour values, note the extra value on top of threshold range. */
 
                     // utility functions to convert RGB values into hex values for SLD styling.
@@ -163,7 +169,14 @@
                         }  
                     }
 
-                    
+                    return colorArr;
+                }
+
+
+                function generateSLD(minVal, maxVal, steps, startpoint, midpoint, endpoint) {
+
+                    var rangeArr = generateRangeArr(minVal, maxVal, steps);
+                    var colorArr = generateColorArr(steps, startpoint, midpoint, endpoint);
 
                     var xmlStylesheet = '<StyledLayerDescriptor version="1.1.0" xsi:schemaLocation="http://www.opengis.net/sld http://schemas.opengis.net/sld/1.1.0/StyledLayerDescriptor.xsd" xmlns="http://www.opengis.net/sld" xmlns:ogc="http://www.opengis.net/ogc" xmlns:se="http://www.opengis.net/se" xmlns:xlink="http://www.w3.org/1999/xlink" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"><NamedLayer><se:Name>DEFAULT</se:Name><UserStyle><se:Name>xxx</se:Name><se:FeatureTypeStyle><se:Rule><se:RasterSymbolizer><se:Opacity>0.7</se:Opacity><se:ColorMap><se:Categorize fallbackValue="#78c818"><se:LookupValue>Rasterdata</se:LookupValue>';
 
@@ -180,6 +193,27 @@
             
                 /* END SLD GENERATION */
 
+                /* FUNCTIONS FOR CREATING LEGEND */
+
+                function createLegend(layer, minVal, maxVal, steps, startpoint, midpoint, endpoint) {
+                    // Get hex color range and map values
+                    var rangeArr = generateRangeArr(minVal, maxVal, steps);
+                    var colorArr = generateColorArr(steps, startpoint, midpoint, endpoint);
+                    // Build legend obj
+                    var legend = document.createElement('div');
+                    legend.className = 'olLegend';
+                    legend.innerHTML = '<h5>Units ('+layer.units+')</h5>'
+                    for (var i = 0; i < (steps+1); i = i+5) {
+                        if (i == (steps)){
+                            legend.innerHTML += '<label><i style="background:'+colorArr[i]+'"></i>&nbsp;'+Math.round(rangeArr[i])+'&nbsp;+</label>';
+                        } else {
+                            legend.innerHTML += '<label><i style="background:'+colorArr[i]+'"></i>&nbsp;'+Math.round(rangeArr[i])+'&nbsp;-&nbsp;'+Math.round(rangeArr[i+5])+'</label>';
+                        }
+                    }
+                    layer.div.appendChild(legend);
+                }
+
+                /* END LEGEND FUNCTION */
 
                 // WMS Layers from the list
                 rasterList.forEach(function(raster){
@@ -194,7 +228,7 @@
                                 transparent: "true",
                                 format: "image/png",
                                 DATA_URL: raster,
-                                SLD_BODY: generateSLD(0,100,20,{r:255,g:255,b:255},{r:0,g:159,b:227},{r:30,g:77,b:155})
+                                SLD_BODY: generateSLD(styleObj.minVal, styleObj.maxVal, styleObj.steps, styleObj.startpoint, styleObj.midpoint, styleObj.endpoint)
                             },
                             {
                                 isBaseLayer: false,
@@ -210,8 +244,11 @@
                 myLayers.push(osm, gmap)
 
                 var ls = new OpenLayers.Control.LayerSwitcher();
+                var scale = new OpenLayers.Control.ScaleLine();
+
                 map.addLayers(myLayers)
                 map.addControl(ls);
+                map.addControl(scale);
                 map.zoomToExtent(zoom_bounds);
 
                 // Make the layer switcher open by default
@@ -223,6 +260,10 @@
                         if (dataLayer.layer.name == event.layer.name && event.layer.visibility) {
                             dataLayer.layer.visibility = true;
                             dataLayer.layer.display(true);
+                            // create a new legend if one hasn't already been generated.
+                            if (dataLayer.layer.div.getElementsByClassName('olLegend').length == 0){
+                                createLegend(dataLayer.layer,styleObj.minVal, styleObj.maxVal, styleObj.steps, styleObj.startpoint, styleObj.midpoint, styleObj.endpoint);
+                            }
                         }     
                         else {
                             dataLayer.layer.visibility = false;
