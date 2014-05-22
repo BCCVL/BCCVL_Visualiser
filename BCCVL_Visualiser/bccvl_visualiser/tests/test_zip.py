@@ -76,6 +76,6 @@ class TestZIPAPIv1(unittest.TestCase):
 
         res = self.testapp.get('/api/zip/1/default', status='*', params=params)
 
-        self.assertEqual(res.status_int, 200)
+        self.assertEqual(res.status_int, 302)
 
 
