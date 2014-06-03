@@ -15,8 +15,11 @@ class IDataMover(zope.interface.Interface):
     #: The base_url of the data mover
     BASE_URL = zope.interface.Attribute('The Base URL of the Data Mover (the API endpoint we will consume)')
 
-    #: The Host ID we identify ourselves as to the Data Mover
-    HOST_ID  = zope.interface.Attribute('The host we provide the Data Mover to identify us')
+    #: The destination host that files from the data mover should end up on (localhost)
+    DEST_HOST  = zope.interface.Attribute('The host we provide the Data Mover as a destination')
+
+    #: The user that data_mover should be moving files around with
+    DEST_USER = zope.interface.Attribute('The user that the Data Mover should be moving files around with')
 
     PUBLIC_DIR = zope.interface.Attribute('Where files are served to the public.')
 
@@ -93,7 +96,8 @@ class DataMover(object):
     zope.interface.implements(IDataMover)
 
     BASE_URL = None
-    HOST_ID  = None
+    DEST_HOST  = None
+    DEST_USER = None
     PUBLIC_DIR = None
     MAP_FILES_DIR = None
 
@@ -153,14 +157,16 @@ class DataMover(object):
         log = logging.getLogger(__name__)
 
         if (cls.BASE_URL is not None or
-            cls.HOST_ID is not None or
+            cls.DEST_HOST is not None or
+            cls.DEST_USER is not None or
             cls.PUBLIC_DIR is not None or
             cls.MAP_FILES_DIR is not None):
 
             log.warn("Warning, %s is already configured. Ignoring new configuration.", str(cls))
         else:
             cls.BASE_URL = settings['bccvl.data_mover.base_url']
-            cls.HOST_ID  = settings['bccvl.data_mover.host_id']
+            cls.DEST_HOST = settings['bccvl.data_mover.dest_host']
+            cls.DEST_USER = settings['bccvl.data_mover.dest_user']
             cls.PUBLIC_DIR = settings['bccvl.data_mover.public_dir']
             cls.MAP_FILES_DIR = settings['bccvl.mapscript.map_data_files_root_path']
 
@@ -207,14 +213,14 @@ class DataMover(object):
             if not os.path.isdir(dest_dir):
                 os.makedirs(dest_dir)
 
-            source_dict = { 'type':'url', 'url': self.data_url }
-            dest_dict   = { 'type':'scp', 'host':cls.HOST_ID, 'path':self.dest_file_path }
+            source = self.data_url
+            dest   = 'scp://' + cls.DEST_USER + '@' + cls.DEST_HOST + self.dest_file_path
 
             url = cls.get_xmlrpc_url()
 
-            log.info("About to send move request to: %s, with source_dict: %s, and dest_dict: %s", url, source_dict, dest_dict)
+            log.info("About to send move request to: %s, with source: %s, and dest: %s", url, source, dest)
             s = xmlrpclib.ServerProxy(url)
-            response = s.move(source_dict, dest_dict)
+            response = s.move(source, dest)
 
             if 'id' in response:
                 self.job_id = response['id']
