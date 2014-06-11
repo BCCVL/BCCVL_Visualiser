@@ -52,12 +52,7 @@ MAP
     WEB
         METADATA
             # Enable all wms/wfs, etc. requests
-            wms_enable_request "*"
-            # Enable OWS Requests
-            ows_enable_request "*"
-            # Enable WFS Requests
-            wfs_enable_request "*"
-
+            "ows_enable_request" "*"
         END
     END
 
@@ -67,7 +62,6 @@ MAP
         NAME "DEFAULT"
         TYPE RASTER
         STATUS ON
-        PROCESSING "SCALE=AUTO"
 
         PROJECTION
             "init=epsg:4326"
@@ -86,7 +80,7 @@ MAP
         # Define the color table. Colors are defined as an RGB color from 0 to 255.
         # EXPRESSION is used to define the range of data the style should apply to
         # COLORRANGE and DATARANGE are paired to generate gradient color
-        # CLASSITEM "[pixel]"
+        CLASSITEM "[pixel]"
 
 # A single gradient is convenient, but the legend information
 # for a single gradient is poor. Convert this single gradient into 10 steps.
