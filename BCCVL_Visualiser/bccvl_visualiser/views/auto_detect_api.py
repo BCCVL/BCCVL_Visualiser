@@ -9,6 +9,7 @@ from pyramid.httpexceptions import HTTPFound, HTTPNotFound
 from sqlalchemy.exc import DBAPIError
 
 from bccvl_visualiser.views import BaseView
+from bccvl_visualiser.models import AutoDetectAPIv1
 
 @view_defaults(route_name='auto_detect_api')
 class BaseAutoDetectAPIView(BaseView):
