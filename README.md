@@ -44,6 +44,8 @@ Getting Started
         sudo apt-get install build-essential libcurl4-gnutls-dev libpng12-dev libgd2-xpm-dev libgif-dev libjpeg-dev libblas-dev libsuitesparse-dev libatlas-base-dev liblapack-dev swig gfortran libgdal-dev lib-proj libproj-dev libgeos-dev python-pip python-dev
         sudo pip install pip --upgrade
         sudo pip install virtualenv
+        
+    At the time of last edit (15th June, 2014), the ubuntugis ppa didn't have a stable stream for Ubuntu 14.04. If the stable stream is available for 14.04 at the time of your install, you should use it instead.
 
     _OSX_:
 
