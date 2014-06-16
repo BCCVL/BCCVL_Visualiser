@@ -36,6 +36,16 @@ Getting Started
         sudo pip install virtualenv
 
 
+    _ubuntu_14.04_:
+
+        sudo apt-add-repository -y ppa:ubuntugis/ubuntugis-unstable
+        sudo apt-get update
+        sudo apt-get install build-essential libcurl4-gnutls-dev libpng12-dev libgd2-xpm-dev libgif-dev libjpeg-dev libblas-dev libsuitesparse-dev libatlas-base-dev liblapack-dev swig gfortran libgdal-dev lib-proj libproj-dev libgeos-dev python-pip python-dev
+        sudo pip install pip --upgrade
+        sudo ln -s /usr/local/bin/pip /usr/bin/pip
+        sudo pip install virtualenv
+
+
     _OSX_:
 
         brew install cloog gdbm isl libspatialite mapserver proj freetype geos jpeg libtiff mpfr python swig freexl gfortran libgeotiff libxml2 openssl wget gd giflib libmpc libyaml pcre readline xz gdal gmp libpng lzlib pkg-config
