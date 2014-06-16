@@ -49,11 +49,11 @@ Getting Started
 
     _read only_:
 
-        git clone git://github.com/BCCVL/BCCVL_Visualiser.git
+        git clone git://github.com/jcu-eresearch/BCCVL_Visualiser.git
 
     _read and write_:
 
-        git clone git@github.com:BCCVL/BCCVL_Visualiser.git
+        git clone git@github.com:jcu-eresearch/BCCVL_Visualiser.git
 
 4. Change into the BCCVL_Visualiser sub-folder within this directory (the repo you just cloned)
 
