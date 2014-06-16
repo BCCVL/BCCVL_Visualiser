@@ -70,6 +70,8 @@ Getting Started
 7. Install (or upgrade) the numpy egg.
 
         ./bin/pip install numpy --upgrade
+    
+    You may get a lot of warnings on this step - ignore them. As long as you get "Successfully installed numpy" at the end, it should be fine.
 
 8. Bootstrap
 
