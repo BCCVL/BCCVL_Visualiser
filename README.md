@@ -88,3 +88,17 @@ Getting Started
 11. Serve (with auto-reload on file change)
 
         ./bin/pserve development.ini --reload
+
+12. Testing your server:
+
+    The following are some quick tests you can run against your server to see the visualiser in action. These tests use the project's test fixtures.
+    
+    1. Go to http://localhost:10600/api/auto_detect/1/default?data_url=https%3A%2F%2Fraw.github.com%2FBCCVL%2FBCCVL_Visualiser%2Fmaster%2FBCCVL_Visualiser%2Fbccvl_visualiser%2Ftests%2Ffixtures%2Fraster.tif
+    
+       This should present an OpenLayers map with some visible raster data in QLD, Australia.
+    
+    2. Go to http://localhost:10600/api/point/1/default?data_url=https%3A%2F%2Fraw.github.com%2FBCCVL%2FBCCVL_Visualiser%2Fmaster%2FBCCVL_Visualiser%2Fbccvl_visualiser%2Ftests%2Ffixtures%2Fmagpies.csv
+    
+       This should present an OpenLayers map with some visible point data. Note: This input contains ~ 500 thousand points, and so additionaly acts a stress test.
+    
+    
