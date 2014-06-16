@@ -101,4 +101,8 @@ Getting Started
     
        This should present an OpenLayers map with some visible point data. Note: This input contains ~ 500 thousand points, and so additionaly acts a stress test.
     
+    3. Got to http://localhost:10600/api/csv/1/default?data_url=https%3A%2F%2Fraw.github.com%2FBCCVL%2FBCCVL_Visualiser%2Fmaster%2FBCCVL_Visualiser%2Fbccvl_visualiser%2Ftests%2Ffixtures%2Foccurrences.csv
     
+        This should present a CSV view (a HTML table) of some point data. If you change the api from csv to point: http://localhost:10600/api/csv/1/default?data_url=https%3A%2F%2Fraw.github.com%2FBCCVL%2FBCCVL_Visualiser%2Fmaster%2FBCCVL_Visualiser%2Fbccvl_visualiser%2Ftests%2Ffixtures%2Foccurrences.csv , the same data will then be visible in a map (you may need to zoom out to see it).
+        
+        
