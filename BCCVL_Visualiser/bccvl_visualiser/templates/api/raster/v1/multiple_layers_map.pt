@@ -172,12 +172,20 @@
                     return colorArr;
                 }
 
-
                 function generateSLD(minVal, maxVal, steps, startpoint, midpoint, endpoint) {
-
-                    var rangeArr = generateRangeArr(minVal, maxVal, steps);
-                    var colorArr = generateColorArr(steps, startpoint, midpoint, endpoint);
-
+                    
+                    // BOM STANDARDS
+                    if (rainfall == true) {
+                        var rangeArr = [0,200,300,400,500,600,800,1000,1200,1600,2000,2400,3200];
+                        var colorArr = ['#FFFFFF','#fffee8','#fefdd1','#f6f8ab','#daeca2','#c1e3a3','#a8dba4','#8cd1a4','#6fc9a5','#45c1a4','#00b4a5','#00999a','#017b7d','#005b5c'];
+                    } else if (temp == true) {
+                        var rangeArr = [-3,0,3,6,9,12,15,18,21,24,27,30,33,36,39];
+                        var colorArr = ['#13a7ce','#0eb9d2','#54c5d2','#87d2d1','#b1e0d3','#c6e6d3','#d8eed4','#ecf6d5','#fefed7','#fef5bd','#fdea9b','#fcd78b','#fdc775','#f8a95b','#f58e41','#f3713e']
+                    } else {
+                        var rangeArr = generateRangeArr(minVal, maxVal, steps);
+                        var colorArr = generateColorArr(steps, startpoint, midpoint, endpoint);
+                    }
+                
                     var xmlStylesheet = '<StyledLayerDescriptor version="1.1.0" xsi:schemaLocation="http://www.opengis.net/sld http://schemas.opengis.net/sld/1.1.0/StyledLayerDescriptor.xsd" xmlns="http://www.opengis.net/sld" xmlns:ogc="http://www.opengis.net/ogc" xmlns:se="http://www.opengis.net/se" xmlns:xlink="http://www.w3.org/1999/xlink" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"><NamedLayer><se:Name>DEFAULT</se:Name><UserStyle><se:Name>xxx</se:Name><se:FeatureTypeStyle><se:Rule><se:RasterSymbolizer><se:Opacity>0.7</se:Opacity><se:ColorMap><se:Categorize fallbackValue="#78c818"><se:LookupValue>Rasterdata</se:LookupValue>';
 
                     for (var i = 0; i < (steps+1); i++) {
