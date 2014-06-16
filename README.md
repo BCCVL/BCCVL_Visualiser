@@ -20,7 +20,7 @@ Getting Started
 
 2. Install dependencies:
 
-    _ubuntu_12.04_:
+    _ubuntu 12.04_:
 
         sudo apt-add-repository -y ppa:ubuntugis/ppa
         sudo apt-get update
@@ -35,8 +35,9 @@ Getting Started
         sudo ln -s /usr/local/bin/pip /usr/bin/pip
         sudo pip install virtualenv
 
+    (pip seemed cantankerous when last tested on Ubuntu 12.04, the symlinking got around it, but this should be investigated further)
 
-    _ubuntu_14.04_:
+    _ubuntu 14.04_:
 
         sudo apt-add-repository -y ppa:ubuntugis/ubuntugis-unstable
         sudo apt-get update
@@ -44,7 +45,6 @@ Getting Started
         sudo pip install pip --upgrade
         sudo ln -s /usr/local/bin/pip /usr/bin/pip
         sudo pip install virtualenv
-
 
     _OSX_:
 
