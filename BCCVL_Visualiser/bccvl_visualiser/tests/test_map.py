@@ -126,7 +126,7 @@ class TestBCCVLMap(unittest.TestCase):
         layer = my_map.getLayerByName(layer_name)
 
         # We should have 1 class per color band, plus 1 final color band for the "max_value"
-        self.assertEqual(layer.numclasses, 0)
+        self.assertEqual(layer.numclasses, GeoTiffBCCVLMap.COLOR_BANDS + 1)
         last_class = layer.getClass(GeoTiffBCCVLMap.COLOR_BANDS)
         self.assertEqual(last_class.name, "985.0")
 
