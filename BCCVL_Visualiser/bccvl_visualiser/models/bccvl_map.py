@@ -31,16 +31,16 @@ class BCCVLMap(mapObj):
     DEAFULT_MAP_FILE_NAME = 'default.map'
 
     @classmethod
-    def configure_from_config(class_, settings):
+    def configure_from_config(cls, settings):
         """ configure the BCCVL Map constants """
         log = logging.getLogger(__name__)
 
-        if (class_.MAP_FILES_ROOT_PATH is not None) or (class_.MAP_DATA_FILES_ROOT_PATH is not None):
-            log.warn("Warning, %s is already configured. Ignoring new configuration.", str(class_))
+        if (cls.MAP_FILES_ROOT_PATH is not None) or (cls.MAP_DATA_FILES_ROOT_PATH is not None):
+            log.warn("Warning, %s is already configured. Ignoring new configuration.", str(cls))
             return
 
-        class_.MAP_FILES_ROOT_PATH      = settings['bccvl.mapscript.map_files_root_path']
-        class_.MAP_DATA_FILES_ROOT_PATH = settings['bccvl.mapscript.map_data_files_root_path']
+        cls.MAP_FILES_ROOT_PATH      = settings['bccvl.mapscript.map_files_root_path']
+        cls.MAP_DATA_FILES_ROOT_PATH = settings['bccvl.mapscript.map_data_files_root_path']
 
     def __init__(self, map_file_name=None, data_id=None, data_url=None, layer_name=None, query_string=None, **kwargs):
         """ initialise the map instance from a data_url """
