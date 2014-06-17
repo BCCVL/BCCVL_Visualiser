@@ -3,8 +3,8 @@ import csv
 from mapscript import mapObj, OWSRequest
 import logging
 import os
-import threading
 import sys
+import fcntl
 
 import hashlib
 
@@ -14,6 +14,46 @@ import gdal
 from gdalconst import GA_ReadOnly
 import string
 
+
+class LockFile(object):
+
+    def __init__(self, path):
+        self.path = path
+        self.fd = None
+
+    def acquire(self, timeout=None):
+        while True:
+            self.fd = open(self.path, os.O_CREAT)
+            fcntl.flock(self.fd, fcntl.LOCK_EX)
+
+            # check if the file we hold the lock on is the same as the one
+            # the path refers to. (another process might have recreated it)
+            st0 = os.fstat(self.fd)
+            st1 = os.stat(self.path)
+            if st0.st_ino == st1.st_ino:
+                # both the same we locked the correct file
+                break
+            # Try it again.
+            os.close(self.fd)
+            self.fd = None
+        # We have a lock
+
+    def release(self):
+        # TODO: Do we have the lock?
+        if self.fd is not None:
+            os.unlink(self.path)
+            fcntl.flock(self.fd, fcntl.LOCK_UN)
+            os.close(self.fd)
+            self.fd = None
+
+    def __enter__(self):
+        self.acquire()
+        return self
+
+    def __exit__(self, type, value, tb):
+        self.release()
+
+
 class BCCVLMap(mapObj):
     """ Our custom BCCVL mapObj.
 
@@ -21,7 +61,6 @@ class BCCVLMap(mapObj):
         mapscript's mapObj class
     """
 
-    MAPSCRIPT_RLOCK = threading.RLock()
     MAP_FILES_ROOT_PATH      = None
     MAP_DATA_FILES_ROOT_PATH = None
 
@@ -87,7 +126,8 @@ class BCCVLMap(mapObj):
         self.file_name = hash_string + self.EXTENSION
         self.data_file_path = self.get_path_to_map_data_file(self.file_name)
 
-        with self.__class__.MAPSCRIPT_RLOCK:
+        lock = LockFile(self.data_file_path + '.lock')
+        with lock:
             if not os.path.isfile(self.data_file_path):
                 self._download_data_to_file()
 
@@ -110,6 +150,7 @@ class BCCVLMap(mapObj):
 
         self.ows_request = ows_request
 
+    # TODO: call only within critical section
     def _download_data_to_file(self):
         log = logging.getLogger(__name__)
         mover = FDataMover.new_data_mover(self.data_file_path, data_url = self.data_url)
@@ -117,15 +158,14 @@ class BCCVLMap(mapObj):
         # Make sure only one thread is trying to check for
         # the existance of, or trying to write the file
         # at any time.
-        with self.__class__.MAPSCRIPT_RLOCK:
-            mover.move_and_wait_for_completion()
+        mover.move_and_wait_for_completion()
 
-            valid, problems = self._validate_file()
-            if not valid:
-                log.info("Deleting invalid file: %s", self.data_file_path)
-                # Delete the file
-                os.remove(self.data_file_path)
-                raise ValueError("Problem validating file. Problems: %s" % (problems))
+        valid, problems = self._validate_file()
+        if not valid:
+            log.info("Deleting invalid file: %s", self.data_file_path)
+            # Delete the file
+            os.remove(self.data_file_path)
+            raise ValueError("Problem validating file. Problems: %s" % (problems))
 
 
     def _validate_file(self):
@@ -605,9 +645,12 @@ class OccurrencesBCCVLMap(BCCVLMap):
         field_names = []
         problems = []
 
-        with class_.MAPSCRIPT_RLOCK:
+        # TODO: Isn't this already locked?
+        #with LockFile(self.data_file_path + '.lock'):
+        # Already locked ... method is called during download which is a critical section
+        if True:
             with open(file_path, 'rb') as csvfile:
-                reader = csv.reader(csvfile, class_.OccurrencesDialect)
+                reader = csv.reader(csvfile, self.OccurrencesDialect)
                 field_names = reader.next()
 
                 # Ensure that the expected latitude and longitude columns are in the
