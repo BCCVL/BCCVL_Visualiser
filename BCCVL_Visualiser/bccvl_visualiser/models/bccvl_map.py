@@ -23,7 +23,7 @@ class LockFile(object):
 
     def acquire(self, timeout=None):
         while True:
-            self.fd = open(self.path, os.O_CREAT)
+            self.fd = os.open(self.path, os.O_CREAT)
             fcntl.flock(self.fd, fcntl.LOCK_EX)
 
             # check if the file we hold the lock on is the same as the one
