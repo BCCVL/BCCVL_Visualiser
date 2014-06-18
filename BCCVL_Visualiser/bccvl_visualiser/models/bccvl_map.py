@@ -29,10 +29,15 @@ class LockFile(object):
             # check if the file we hold the lock on is the same as the one
             # the path refers to. (another process might have recreated it)
             st0 = os.fstat(self.fd)
-            st1 = os.stat(self.path)
-            if st0.st_ino == st1.st_ino:
-                # both the same we locked the correct file
-                break
+            try:
+                st1 = os.stat(self.path)
+                if st0.st_ino == st1.st_ino:
+                    # both the same we locked the correct file
+                    break
+            except:
+                # somethig went wrong. (e.g. some other process deleted the lock file?)
+                # just try again
+                pass
             # Try it again.
             os.close(self.fd)
             self.fd = None
