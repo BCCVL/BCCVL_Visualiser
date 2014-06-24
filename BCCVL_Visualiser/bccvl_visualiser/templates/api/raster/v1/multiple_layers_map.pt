@@ -270,7 +270,6 @@
                 // WMS Layers from the list
                 rasterList.forEach(function(raster){
                     if (raster != '') {
-                        console.log(raster);
                         // get the filename
                         var url_terms = raster.split('/');
                         var filename = url_terms[url_terms.length -1]
