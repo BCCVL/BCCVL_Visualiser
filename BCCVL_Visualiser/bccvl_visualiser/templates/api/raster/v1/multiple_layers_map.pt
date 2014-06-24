@@ -337,6 +337,5 @@
     <body style="width:100%; height:100%; margin: 0;" onload="init()">
         <!-- <img alt="Map Legend" style="opacity: 1.0; position: absolute; bottom: 10px; left:10px; z-index: 100000;" id="legend"></img> -->
         <div style="width:100%; height:100%" id="map"></div>
-        <div class="overlay" id="loading-overlay"></div>
     </body>
 </html>

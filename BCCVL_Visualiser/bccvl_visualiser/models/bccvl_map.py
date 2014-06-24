@@ -3,8 +3,8 @@ import csv
 from mapscript import mapObj, OWSRequest
 import logging
 import os
-import threading
 import sys
+import fcntl
 
 import hashlib
 
@@ -14,6 +14,51 @@ import gdal
 from gdalconst import GA_ReadOnly
 import string
 
+
+class LockFile(object):
+
+    def __init__(self, path):
+        self.path = path
+        self.fd = None
+
+    def acquire(self, timeout=None):
+        while True:
+            self.fd = os.open(self.path, os.O_CREAT)
+            fcntl.flock(self.fd, fcntl.LOCK_EX)
+
+            # check if the file we hold the lock on is the same as the one
+            # the path refers to. (another process might have recreated it)
+            st0 = os.fstat(self.fd)
+            try:
+                st1 = os.stat(self.path)
+                if st0.st_ino == st1.st_ino:
+                    # both the same we locked the correct file
+                    break
+            except:
+                # somethig went wrong. (e.g. some other process deleted the lock file?)
+                # just try again
+                pass
+            # Try it again.
+            os.close(self.fd)
+            self.fd = None
+        # We have a lock
+
+    def release(self):
+        # TODO: Do we have the lock?
+        if self.fd is not None:
+            os.unlink(self.path)
+            fcntl.flock(self.fd, fcntl.LOCK_UN)
+            os.close(self.fd)
+            self.fd = None
+
+    def __enter__(self):
+        self.acquire()
+        return self
+
+    def __exit__(self, type, value, tb):
+        self.release()
+
+
 class BCCVLMap(mapObj):
     """ Our custom BCCVL mapObj.
 
@@ -21,7 +66,6 @@ class BCCVLMap(mapObj):
         mapscript's mapObj class
     """
 
-    MAPSCRIPT_RLOCK = threading.RLock()
     MAP_FILES_ROOT_PATH      = None
     MAP_DATA_FILES_ROOT_PATH = None
 
@@ -31,16 +75,16 @@ class BCCVLMap(mapObj):
     DEAFULT_MAP_FILE_NAME = 'default.map'
 
     @classmethod
-    def configure_from_config(class_, settings):
+    def configure_from_config(cls, settings):
         """ configure the BCCVL Map constants """
         log = logging.getLogger(__name__)
 
-        if (class_.MAP_FILES_ROOT_PATH is not None) or (class_.MAP_DATA_FILES_ROOT_PATH is not None):
-            log.warn("Warning, %s is already configured. Ignoring new configuration.", str(class_))
+        if (cls.MAP_FILES_ROOT_PATH is not None) or (cls.MAP_DATA_FILES_ROOT_PATH is not None):
+            log.warn("Warning, %s is already configured. Ignoring new configuration.", str(cls))
             return
 
-        class_.MAP_FILES_ROOT_PATH      = settings['bccvl.mapscript.map_files_root_path']
-        class_.MAP_DATA_FILES_ROOT_PATH = settings['bccvl.mapscript.map_data_files_root_path']
+        cls.MAP_FILES_ROOT_PATH      = settings['bccvl.mapscript.map_files_root_path']
+        cls.MAP_DATA_FILES_ROOT_PATH = settings['bccvl.mapscript.map_data_files_root_path']
 
     def __init__(self, map_file_name=None, data_id=None, data_url=None, layer_name=None, query_string=None, **kwargs):
         """ initialise the map instance from a data_url """
@@ -57,16 +101,16 @@ class BCCVLMap(mapObj):
         # If the user didn't override the map file name,
         # then use this class's default map file name
         if map_file_name is None:
-            map_file_name = self.__class__.DEFAULT_MAP_FILE_NAME
+            map_file_name = self.DEFAULT_MAP_FILE_NAME
         self.map_file_name = map_file_name
 
         # If the user didn't override the layer name,
         # then use this class's default layer name
         if layer_name is None:
-            layer_name = self.__class__.DEFAULT_LAYER_NAME
+            layer_name = self.DEFAULT_LAYER_NAME
         self.layer_name = layer_name
 
-        self.map_file_path = self.__class__.get_map_file_path(map_file_name)
+        self.map_file_path = self.get_map_file_path(map_file_name)
 
         super(BCCVLMap, self).__init__(self.map_file_path, **kwargs)
 
@@ -84,10 +128,11 @@ class BCCVLMap(mapObj):
         # generate a hash of the url
         hash_string = hashlib.sha224(self.data_url).hexdigest()
 
-        self.file_name = hash_string + self.__class__.EXTENSION
-        self.data_file_path = self.__class__.get_path_to_map_data_file(self.file_name)
+        self.file_name = hash_string + self.EXTENSION
+        self.data_file_path = self.get_path_to_map_data_file(self.file_name)
 
-        with self.__class__.MAPSCRIPT_RLOCK:
+        lock = LockFile(self.data_file_path + '.lock')
+        with lock:
             if not os.path.isfile(self.data_file_path):
                 self._download_data_to_file()
 
@@ -110,6 +155,7 @@ class BCCVLMap(mapObj):
 
         self.ows_request = ows_request
 
+    # TODO: call only within critical section
     def _download_data_to_file(self):
         log = logging.getLogger(__name__)
         mover = FDataMover.new_data_mover(self.data_file_path, data_url = self.data_url)
@@ -117,15 +163,14 @@ class BCCVLMap(mapObj):
         # Make sure only one thread is trying to check for
         # the existance of, or trying to write the file
         # at any time.
-        with self.__class__.MAPSCRIPT_RLOCK:
-            mover.move_and_wait_for_completion()
+        mover.move_and_wait_for_completion()
 
-            valid, problems = self._validate_file()
-            if not valid:
-                log.info("Deleting invalid file: %s", self.data_file_path)
-                # Delete the file
-                os.remove(self.data_file_path)
-                raise ValueError("Problem validating file. Problems: %s" % (problems))
+        valid, problems = self._validate_file()
+        if not valid:
+            log.info("Deleting invalid file: %s", self.data_file_path)
+            # Delete the file
+            os.remove(self.data_file_path)
+            raise ValueError("Problem validating file. Problems: %s" % (problems))
 
 
     def _validate_file(self):
@@ -137,11 +182,10 @@ class BCCVLMap(mapObj):
 
         return True, []
 
-    @classmethod
-    def get_path_to_map_data_file(class_, data_file_name):
+    def get_path_to_map_data_file(self, data_file_name):
         log = logging.getLogger(__name__)
 
-        map_data_files_root_path = class_.MAP_DATA_FILES_ROOT_PATH
+        map_data_files_root_path = self.MAP_DATA_FILES_ROOT_PATH
 
         return_value = os.path.join(map_data_files_root_path, data_file_name)
 
@@ -150,8 +194,7 @@ class BCCVLMap(mapObj):
 
         return return_value
 
-    @classmethod
-    def get_map_file_path(class_, map_file_name):
+    def get_map_file_path(self, map_file_name):
         """ Returns the full os system path to the mapfile
 
             Uses the application config
@@ -162,7 +205,7 @@ class BCCVLMap(mapObj):
 
         log = logging.getLogger(__name__)
 
-        map_files_root_path = class_.MAP_FILES_ROOT_PATH
+        map_files_root_path = self.MAP_FILES_ROOT_PATH
 
         return_value = os.path.join(map_files_root_path, map_file_name)
 
@@ -178,7 +221,7 @@ class BCCVLMap(mapObj):
         # Default the map attributes:
         #   * shapepath: the path to data files
         if self.shapepath == None:
-            map_data_files_root_path = self.__class__.MAP_DATA_FILES_ROOT_PATH
+            map_data_files_root_path = self.MAP_DATA_FILES_ROOT_PATH
             log.debug("Setting mapObj.shapepath as not already set. Set to: %s", map_data_files_root_path)
             self.shapepath = map_data_files_root_path
 
@@ -201,7 +244,9 @@ class BCCVLMap(mapObj):
         content_type = None     # the image mimetype
         retval = None           # the OWS return value, useful for debugging
 
-        with self.__class__.MAPSCRIPT_RLOCK:
+        # TODO: do I need alock here?
+        #with LockFile(self.data_file_path + '.lock'):
+        if True:
             try:
                 ows_request_type = self.ows_request.getValueByName('REQUEST')
 
@@ -297,11 +342,11 @@ class RasterBCCVLMap(BCCVLMap):
         the_range = (max_exp - min_exp)
 
         # Work out a value to increment across the range (We want COLOR_BANDS color bands)
-        the_inc = the_range / float(self.__class__.COLOR_BANDS)
+        the_inc = the_range / float(self.COLOR_BANDS)
 
         # Grab a handle to the min/max color
-        min_color = self.__class__.MIN_COLOR
-        max_color = self.__class__.MAX_COLOR
+        min_color = self.MIN_COLOR
+        max_color = self.MAX_COLOR
 
         # Calc. the range the r/g/b colors will pass
         r_color_diff = max_color[0] - min_color[0]
@@ -330,15 +375,14 @@ class RasterBCCVLMap(BCCVLMap):
 
             next_color = ' '.join(map(str, [next_color_r, next_color_g, next_color_b]))
 
-            # self.__class__._update_range_style_information(layer, val, val+the_inc, this_color, next_color, max_exp)
+            self._update_range_style_information(layer, val, val+the_inc, this_color, next_color, max_exp)
             # inc the value
             val = val + the_inc
 
         # Add the max value to the legend
-        # self.__class__._update_max_style_information(layer, max_exp)
+        self._update_max_style_information(layer, max_exp)
 
-    @classmethod
-    def _update_max_style_information(_class, layer, max_exp):
+    def _update_max_style_information(self, layer, max_exp):
         style_template = string.Template("""\
 CLASSITEM "[pixel]"
     CLASS
@@ -352,13 +396,12 @@ END
 """)
         style_string = style_template.substitute(
             max_exp=max_exp,
-            max_color=' '.join(map(str, _class.MAX_COLOR))
+            max_color=' '.join(map(str, self.MAX_COLOR))
         )
 
         layer.updateFromString(style_string)
 
-    @classmethod
-    def _update_range_style_information(_class, layer, lower_bound, upper_bound, lower_bound_color, upped_bound_color, max_value):
+    def _update_range_style_information(self, layer, lower_bound, upper_bound, lower_bound_color, upped_bound_color, max_value):
         style_template = string.Template("""\
 CLASSITEM "[pixel]"
     CLASS
@@ -405,7 +448,7 @@ END
     def get_minimum_value(self):
         """ Get the minimum value in the raster """
 
-        band_number = self.__class__.BAND_NUMBER
+        band_number = self.BAND_NUMBER
         dataset = self.get_gdal_dataset()
         if dataset == None:
             raise ValueError("Failed to open data_file (%s) as a gdal dataset" % self.data_file_path)
@@ -422,7 +465,7 @@ END
     def get_maximum_value(self):
         """ Get the maximum value in the raster """
 
-        band_number = self.__class__.BAND_NUMBER
+        band_number = self.BAND_NUMBER
         dataset = self.get_gdal_dataset()
         if dataset == None:
             raise ValueError("Failed to open data_file (%s) as a gdal dataset" % self.data_file_path)
@@ -456,11 +499,11 @@ END
             If a file is found to have a maximum value < 1, the file is assumed
             to be of the range 0 to 1.
 
-            If a file is found to have a maximum value > 1, the file is assumed
+            If a file is found to have a maximum value > 1, the max value in the file is assumed.
             to be of the range 0 to 1000.
         """
-        min_value_metadata_key = self.__class__.BCCVL_EXPECTED_VALUE_RANGE_MINIMUM_KEY
-        max_value_metadata_key = self.__class__.BCCVL_EXPECTED_VALUE_RANGE_MAXIMUM_KEY
+        min_value_metadata_key = self.BCCVL_EXPECTED_VALUE_RANGE_MINIMUM_KEY
+        max_value_metadata_key = self.BCCVL_EXPECTED_VALUE_RANGE_MAXIMUM_KEY
 
         value_range_min = None
         value_range_max = None
@@ -494,13 +537,10 @@ END
             value_range_max = file_metadata[max_value_metadata_key]
         # finally, guess
         else:
-            # if the maximum is over 1000, we have no idea what is going on.
+            # if the maximum is over 1, we have no idea what is going on.
             # let the maximum be the maximum in the file
-            if self.get_maximum_value() > 1000:
+            if self.get_maximum_value() > 1:
                 value_range_max = self.get_maximum_value()
-            # if value is > 1, assume max value is 1000 (as is the case for biomod2)
-            elif self.get_maximum_value() > 1:
-                value_range_max = 1000
             # if value is < 1, assume max value is 1 (as is the case for dismo)
             else:
                 value_range_max = 1
@@ -514,7 +554,7 @@ END
 
     def get_band_metadata(self):
         """ Returns the metadata available at the band level """
-        band_number = self.__class__.BAND_NUMBER
+        band_number = self.BAND_NUMBER
         dataset = self.get_gdal_dataset()
         band = dataset.GetRasterBand(band_number)
         return band.GetMetadata()
@@ -522,7 +562,7 @@ END
     def get_scale(self):
         """ Get the scale of the raster """
 
-        band_number = self.__class__.BAND_NUMBER
+        band_number = self.BAND_NUMBER
         dataset = self.get_gdal_dataset()
         if dataset == None:
             raise ValueError("Failed to open data_file (%s) as a gdal dataset" % self.data_file_path)
@@ -558,9 +598,8 @@ class OccurrencesBCCVLMap(BCCVLMap):
         self.set_connection_for_map_connection_if_not_set()
 
     def set_connection_for_map_connection_if_not_set(self):
-        class_ = self.__class__
-        lng_column = class_.LNG_COLUMN_NAME
-        lat_column = class_.LAT_COLUMN_NAME
+        lng_column = self.LNG_COLUMN_NAME
+        lat_column = self.LAT_COLUMN_NAME
 
         log = logging.getLogger(__name__)
 
@@ -585,22 +624,20 @@ class OccurrencesBCCVLMap(BCCVLMap):
         return connection
 
     def _validate_file(self):
-        class_ = self.__class__
-        lng_column = class_.LNG_COLUMN_NAME
-        lat_column = class_.LAT_COLUMN_NAME
+        lng_column = self.LNG_COLUMN_NAME
+        lat_column = self.LAT_COLUMN_NAME
 
         log = logging.getLogger(__name__)
 
         try:
-            valid, problems = class_._check_if_occurrences_csv_valid(self.data_file_path, lng=lng_column, lat=lat_column)
+            valid, problems = self._check_if_occurrences_csv_valid(self.data_file_path, lng=lng_column, lat=lat_column)
         except:
             log.error("Error validating the file: %s", sys.exc_info()[0])
             return False, [ "Error validating the file: %s" % sys.exc_info()[0] ]
 
         return valid, problems
 
-    @classmethod
-    def _check_if_occurrences_csv_valid(class_, file_path, lng='lon', lat='lat', limit=10):
+    def _check_if_occurrences_csv_valid(self, file_path, lng='lon', lat='lat', limit=10):
         """ Determines if the CSV is valid or not
 
             If an invalid CSV is processed via mapscript, a seg fault is likely to
@@ -613,9 +650,12 @@ class OccurrencesBCCVLMap(BCCVLMap):
         field_names = []
         problems = []
 
-        with class_.MAPSCRIPT_RLOCK:
+        # TODO: Isn't this already locked?
+        #with LockFile(self.data_file_path + '.lock'):
+        # Already locked ... method is called during download which is a critical section
+        if True:
             with open(file_path, 'rb') as csvfile:
-                reader = csv.reader(csvfile, class_.OccurrencesDialect)
+                reader = csv.reader(csvfile, self.OccurrencesDialect)
                 field_names = reader.next()
 
                 # Ensure that the expected latitude and longitude columns are in the

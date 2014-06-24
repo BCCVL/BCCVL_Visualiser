@@ -42,7 +42,7 @@ echo "Running unit tests"
 TEST_RESULT=$?
 
 echo "Building coverage data"
-"$COVERAGE" xml --omit=./lib/*/*.py,./tests/*/*.py,./eggs/*/*.py
+"$COVERAGE" xml -i --omit=./lib/*/*.py,./tests/*/*.py,./eggs/*/*.py
 
 # So that Jenkins can see the source
 #sed "s#filename=\"#filename=\"$WORKSPACE/data_mover/#g" coverage.xml > coverage-fixed.xml

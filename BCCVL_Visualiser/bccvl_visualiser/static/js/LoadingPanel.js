@@ -173,8 +173,7 @@ OpenLayers.Control.LoadingPanel = OpenLayers.Class(OpenLayers.Control, {
     minimizeControl: function(evt) {
         this.div.style.display = "none"; 
         this.maximized = false;
-        document.getElementById('loading-overlay').style.display = 'none';
-        
+    
         if (evt != null) {
             OpenLayers.Event.stop(evt);
         }
@@ -190,7 +189,6 @@ OpenLayers.Control.LoadingPanel = OpenLayers.Class(OpenLayers.Control, {
     maximizeControl: function(evt) {
         this.div.style.display = "block";
         this.maximized = true;
-        document.getElementById('loading-overlay').style.display = 'block';
     
         if (evt != null) {
             OpenLayers.Event.stop(evt);
