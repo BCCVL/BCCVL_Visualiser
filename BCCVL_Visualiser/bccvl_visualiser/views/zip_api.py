@@ -146,12 +146,14 @@ class ZIPAPIViewv1(BaseZIPAPIView):
             if name.endswith('/'):
                 # ignore folders within zip
                 continue
-            if name.endswith('.tif') is False:
-                return Response('This zip either does not have a flat file directory or have inconsistent file types.')
+            if not name.endswith('.tif'):
+                # ignore non tif files
+                continue
+                #return Response('This zip either does not have a flat file directory or have inconsistent file types.')
 
         # Extract
         for name in z.namelist():
-            if name.endswith('/'):
+            if name.endswith('/') or not name.endswith('.tif'):
                 # ignore folders within zip
                 continue
             time_epoch = int(time.time() * 1000)
