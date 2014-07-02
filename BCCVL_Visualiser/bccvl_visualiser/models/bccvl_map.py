@@ -500,7 +500,6 @@ END
             to be of the range 0 to 1.
 
             If a file is found to have a maximum value > 1, the max value in the file is assumed.
-            to be of the range 0 to 1000.
         """
         min_value_metadata_key = self.BCCVL_EXPECTED_VALUE_RANGE_MINIMUM_KEY
         max_value_metadata_key = self.BCCVL_EXPECTED_VALUE_RANGE_MAXIMUM_KEY

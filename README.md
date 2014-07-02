@@ -24,7 +24,22 @@ Getting Started
 
         sudo apt-add-repository -y ppa:ubuntugis/ppa
         sudo apt-get update
-        sudo apt-get install build-essential libcurl4-gnutls-dev libpng12-dev libgd2-xpm-dev libgif-dev libjpeg-dev libblas-dev libsuitesparse-dev libatlas-base-dev liblapack-dev swig gfortran libgdal-dev proj libproj-dev libgeos-dev
+        sudo apt-get install build-essential libcurl4-gnutls-dev libpng12-dev libgd2-xpm-dev libgif-dev libjpeg-dev libblas-dev libsuitesparse-dev libatlas-base-dev liblapack-dev swig gfortran libgdal-dev proj libproj-dev libgeos-dev python-pip python-dev
+        sudo pip install pip --upgrade
+        sudo ln -s /usr/local/bin/pip /usr/bin/pip
+        sudo pip install virtualenv
+
+    (pip seemed cantankerous when last tested on Ubuntu 12.04, the symlinking got around it, but this should be investigated further)
+
+    _ubuntu 14.04_:
+
+        sudo apt-add-repository -y ppa:ubuntugis/ubuntugis-unstable
+        sudo apt-get update
+        sudo apt-get install build-essential libcurl4-gnutls-dev libpng12-dev libgd2-xpm-dev libgif-dev libjpeg-dev libblas-dev libsuitesparse-dev libatlas-base-dev liblapack-dev swig gfortran libgdal-dev lib-proj libproj-dev libgeos-dev python-pip python-dev
+        sudo pip install pip --upgrade
+        sudo pip install virtualenv
+        
+    At the time of last edit (15th June, 2014), the ubuntugis ppa didn't have a stable stream for Ubuntu 14.04. If the stable stream is available for 14.04 at the time of your install, you should use it instead.
 
     _ubuntu_14.04_:
 
