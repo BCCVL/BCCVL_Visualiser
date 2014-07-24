@@ -1,28 +1,19 @@
-import mapscript
-import os
-import logging
-import csv
-
-from bccvl_visualiser.models.bccvl_map import OccurrencesBCCVLMap
 from bccvl_visualiser.models.api import BaseAPI
 
-class BasePointAPI(BaseAPI):
+
+class WMSAPI(BaseAPI):
 
     @staticmethod
     def identifier():
-        return "point"
+        return "wms"
 
     @staticmethod
     def description():
-        desc = """\
-The point API is responsible for visualising \
-point data in CSV files. The point data is expected to be in the 4326 \
-projection, i.e. decimal degrees latitude/longitude.\
-"""
+        desc = "Serve raster files as WMS."
         return desc
 
-class PointAPIv1(BasePointAPI, OccurrencesBCCVLMap):
-    """ v1 of the Point API"""
+
+class WMSAPIv1(WMSAPI):
 
     @staticmethod
     def version():
@@ -39,11 +30,11 @@ class PointAPIv1(BasePointAPI, OccurrencesBCCVLMap):
         return_dict = {
             'name':         _class.identifier(),
             'description':  _class.description(),
-            'version':      _class.version()
+            'version': _class.version()
         }
 
         return return_dict
 
     def __init__(self, **kwargs):
         """ init the instance """
-        super(PointAPIv1, self).__init__(**kwargs)
+        super(WMSAPIv1, self).__init__(**kwargs)

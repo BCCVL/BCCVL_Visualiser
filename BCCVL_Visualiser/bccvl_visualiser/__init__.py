@@ -88,6 +88,10 @@ def main(global_config, **settings):
     config.add_route('zip_api_v1', '/api/zip/1*traverse')
     config.add_route('zip_api', '/api/zip*traverse')
 
+    # WMS API
+    config.add_route('wms_api_v1',  '/api/wms/1*traverse')
+    config.add_route('wms_api',  '/api/wms*traverse')
+
     # Auto Detect API
     config.add_route('auto_detect_api_v1', '/api/auto_detect/1*traverse')
     config.add_route('auto_detect_api', '/api/auto_detect*traverse')

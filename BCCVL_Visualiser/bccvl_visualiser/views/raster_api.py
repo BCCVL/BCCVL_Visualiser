@@ -97,7 +97,7 @@ class RasterAPIViewv1(BaseRasterAPIView):
         except:
             log.debug('No raster_list found')
 
-        return Response('Could not visualise raster.') 
+        return Response('Could not visualise raster.')
 
     @view_config(name='map', renderer='../templates/api/raster/v1/map.pt')
     def map(self):

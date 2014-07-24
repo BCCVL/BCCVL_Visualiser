@@ -45,5 +45,3 @@ class ZIPAPIv1(BaseZIPAPI):
     def __init__(self, **kwargs):
         """ init the instance """
         super(ZIPAPIv1, self).__init__(**kwargs)
-
-

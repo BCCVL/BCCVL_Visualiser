@@ -44,4 +44,3 @@ class RasterAPIv1(BaseRasterAPI, GeoTiffBCCVLMap):
     def __init__(self, **kwargs):
         """ init the instance """
         super(RasterAPIv1, self).__init__(**kwargs)
-
