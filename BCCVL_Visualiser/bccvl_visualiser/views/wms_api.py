@@ -67,6 +67,14 @@ class WMSAPIViewv1(WMSAPIView):
 
     @view_config(name='wms')
     def wms(self):
+        """This is a WMS endpoint.
+
+        It uses mapserver mapscript to process a WMS request.
+
+        This endpoint requires an additional WMS parameter
+        DATA_URL. The DATA_URL, should point to a downloadable file
+        which can be used as raster data input for mapserver.
+        """
         log = logging.getLogger(__name__)
         log.debug('Processing ows request')
 
@@ -118,6 +126,10 @@ class WMSAPIViewv1(WMSAPIView):
         # map_image.write() ... write file handle (default stdeout)
 
     def _inspect_data(self, loc):
+        """
+        Extract coordinate reference system and min/max values from a
+        GDAL supported raster data file.
+        """
         # TODO: This method is really ugly, but is nice for testing
         from osgeo import gdal
         from osgeo.osr import SpatialReference
@@ -140,6 +152,12 @@ class WMSAPIViewv1(WMSAPIView):
     #        e.g download, extract, optimise ....  when ready tell
     #            UI OK ... otherwise tell progress and pending
     def _fetch_file(self, url):
+        """Dowload the file from url and place it on the local file system.
+        If file is a zip file it will be extracted to the local file system.
+
+        The method returns the filename of the requested file on the
+        local file system.
+        """
         # TODO: optimize  data files for mapserver?
         # reproject/warp source? to avoid mapserver doing warp on the fly
         # otheroptions:
@@ -195,6 +213,9 @@ class WMSAPIViewv1(WMSAPIView):
         return filename
 
     def _get_map(self):
+        """
+        Generate a mapserver mapObj.
+        """
         # create a mapscript map from scratch
         map = mapscript.mapObj()
         # Configure the map
@@ -265,6 +286,11 @@ class WMSAPIViewv1(WMSAPIView):
         return map
 
     def _setup_layer(self, map, filename):
+        """Add a Layer definition to the mapserver mapObj.
+
+        The raster data for the layer is located at filename, which
+        should be an absolute path on the local filesystem.
+        """
         # create a layer object
         layer = mapscript.layerObj()
         # configure layer
