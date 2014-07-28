@@ -1,16 +1,15 @@
 import logging
 import mapscript
 import urlparse
-import hashlib
-import os.path
-import zipfile
 import urllib
+import os
+import os.path
 
 from pyramid.response import Response
+from pyramid.httpexceptions import HTTPNotImplemented
 from pyramid.view import view_config, view_defaults
 
-from bccvl_visualiser.models.external_api.data_mover import FDataMover
-from bccvl_visualiser.models.bccvl_map import LockFile
+from bccvl_visualiser.utils import fetch_file
 from bccvl_visualiser.views import BaseView
 from bccvl_visualiser.models.wms_api import WMSAPI, WMSAPIv1
 
@@ -87,13 +86,24 @@ class WMSAPIViewv1(WMSAPIView):
             # FIXME: should return an error here)
 
         # get location of local data file
-        loc = self._fetch_file(data_url)
-        # get some metadata if possible
-        self._inspect_data(loc)
+        loc = fetch_file(self.request, data_url)
         # get map
         map = self._get_map()
         # setup layer
-        self._setup_layer(map, loc)
+        # TODO: improve selection of Layer generator
+        # TODO: use python-magic for a more reliable mime type detection
+        import mimetypes
+        mimetype, encoding = mimetypes.guess_type(loc)
+        if mimetype == 'image/tiff':
+            layer = TiffLayer(self.request, loc)
+        elif mimetype == 'text/csv':
+            layer = CSVLayer(self.request, loc)
+        else:
+            msg = "Unknown file type '{}'.".format(mimetype)
+            #HTTPBadRequest(msg)
+            raise HTTPNotImplemented(msg)
+        # add layer into map
+        idx = layer.add_layer_obj(map)
 
         # prepare an ows request object
         # do some map processing here
@@ -125,93 +135,6 @@ class WMSAPIViewv1(WMSAPIView):
         # map_image.format.extension ... typical file extension for image type
         # map_image.write() ... write file handle (default stdeout)
 
-    def _inspect_data(self, loc):
-        """
-        Extract coordinate reference system and min/max values from a
-        GDAL supported raster data file.
-        """
-        # TODO: This method is really ugly, but is nice for testing
-        from osgeo import gdal
-        from osgeo.osr import SpatialReference
-        df = gdal.Open(loc)
-        crs = df.GetProjection()
-        if crs:
-            spref = SpatialReference()
-            spref.ImportFromWkt(crs)
-            crs = "%s:%s" %  (spref.GetAuthorityName(None), spref.GetAuthorityCode(None))
-        band = df.GetRasterBand(1)
-        min, max, _, _ = band.GetStatistics(True, False)
-        self._data = {
-            'crs': crs,
-            'min': min,
-            'max': max
-        }
-
-    # FIXME: for large files we probably have to mave the file transfer to some other process...
-    #        something similar to the data mover interface.
-    #        e.g download, extract, optimise ....  when ready tell
-    #            UI OK ... otherwise tell progress and pending
-    def _fetch_file(self, url):
-        """Dowload the file from url and place it on the local file system.
-        If file is a zip file it will be extracted to the local file system.
-
-        The method returns the filename of the requested file on the
-        local file system.
-        """
-        # TODO: optimize  data files for mapserver?
-        # reproject/warp source? to avoid mapserver doing warp on the fly
-        # otheroptions:
-        #   convert to tiled raster (makes access to tiles faster)
-        #     gdal_translate -co TILED=YES original.tif tiled.tif
-        #   use Erdas Imagine (HFA) format ... always tiled and supports>4GB files
-        #     gdal_translate -of HFA original.tif tiled.img
-        #   add overview image to raster (after possible translate)
-        #     gdaladdo [-r average] tiled.tif 2 4 8 16 32 64 128
-
-        # get fragment identifier and hash url without fragment
-        if not (url.startswith('http://') or url.startswith('https://')):
-            # TODO: probably allow more than just http and https
-            #       and use better exception
-           raise Exception('unsupported url scheme: %s', url)
-        url, fragment = urlparse.urldefrag(url)
-        # TODO: would be nice to use datasetid here
-        urlhash = hashlib.md5(url).hexdigest()
-        # check if we have the file already
-        dataroot = self.request.registry.settings['bccvl.mapscript.map_data_files_root_path']
-        datadir = os.path.join(dataroot, urlhash)
-        with LockFile(datadir + '.lock'):
-            if not os.path.exists(datadir):
-                # the folder doesn't exist so we'll have to fetch the file
-                # TODO: make sure there is no '..' in datadir
-                os.makedirs(datadir)
-                # not available yet so fetch it
-                destfile = os.path.join(datadir, os.path.basename(url))
-                try:
-                    f, h = urllib.urlretrieve(url, destfile)
-                except Exception as e:
-                    # direct download failed try data mover
-                    mover = FDataMover.new_data_mover(destfile,
-                                                      data_url=url)
-                    mover.move_and_wait_for_completion()
-                # if it is a zip we should unpack it
-                # FIXME: do some more robust zip detection
-                if fragment:
-                    with zipfile.ZipFile(destfile, 'r') as zipf:
-                        zipf.extractall(datadir)
-                    # remove zipfile
-                    os.remove(destfile)
-        # we have the data now construct the filepath
-        filename = fragment if fragment else os.path.basename(url)
-        # FIXME: make sure path.join works correctly (trailing/leading slash?)
-        filename = os.path.join(datadir, filename)
-        # make sure filename is within datadir
-        filename = os.path.normpath(filename)
-        if not os.path.normpath(filename).startswith(datadir):
-            # FIXME: should probably check if filename exists and is supported
-            #        and use better exception here
-            raise Exception("Data file path not valid: '%s'", filename)
-        return filename
-
     def _get_map(self):
         """
         Generate a mapserver mapObj.
@@ -236,8 +159,8 @@ class WMSAPIViewv1(WMSAPIView):
         map.transparent = mapscript.MS_ON
         # IMAGECOLOR 255 255 255
         map.imagecolor = mapscript.colorObj(255, 255, 255)
-        # TODO:
-        #   SCALEBAR
+        # SYMBOLSET
+        self._update_symbol_set(map)
 
         # WEB
         # TODO: check return value of setMetaData MS_SUCCESS/MS_FAILURE
@@ -285,12 +208,73 @@ class WMSAPIViewv1(WMSAPIView):
             map.legend = leg
         return map
 
-    def _setup_layer(self, map, filename):
-        """Add a Layer definition to the mapserver mapObj.
+    def _update_symbol_set(self, map):
+        circle = map.symbolset.getSymbolByName('circle')
+        #circle = mapscript.symbolObj("circle")
+        circle.type = mapscript.MS_SYMBOL_ELLIPSE
+        circle.filled = mapscript.MS_ON
+        l1 = mapscript.lineObj()
+        l1.add(mapscript.pointObj(1, 1))
+        circle.setPoints(l1)
+        map.symbolset.appendSymbol(circle)
+
+
+        # test server (1.3.0 for SLD support)
+        # http://my.host.com/cgi-bin/mapserv?SERVICE=WMS&VERSION=1.3.0&REQUEST=GetCapabilities&DATA_URL=file:///home/visualiser/BCCVL_Visualiser/BCCVL_Visualiser/bccvl_visualiser/tests/fixtures/raster.tif
+
+        # test map
+        # http://my.host.com/cgi-bin/mapserv?map=mywms.map&SERVICE=WMS&VERSION=1.1.1
+        # &REQUEST=GetMap&LAYERS=prov_bound&STYLES=&SRS=EPSG:4326
+        # &BBOX=-173.537,35.8775,-11.9603,83.8009&WIDTH=400&HEIGHT=300
+        # &FORMAT=image/png
+
+        # # TODO: spped up large rasters?
+        #     http://mapserver.org/el/input/raster.html#rasters-and-tile-indexing
+
+        # TODO: FONTSET [filename]
+        #    set location of fontset file http://mapserver.org/el/mapfile/fontset.html
+
+
+class TiffLayer(object):
+
+    _data = None
+
+    def __init__(self, request, filename):
+        self.request = request
+        self.filename = filename
+
+    def _inspect_data(self):
+        """
+        Extract coordinate reference system and min/max values from a
+        GDAL supported raster data file.
+        """
+        if self._data is None:
+            # TODO: This method is really ugly, but is nice for testing
+            from osgeo import gdal
+            from osgeo.osr import SpatialReference
+            df = gdal.Open(self.filename)
+            crs = df.GetProjection()
+            if crs:
+                spref = SpatialReference()
+                spref.ImportFromWkt(crs)
+                crs = "%s:%s" %  (spref.GetAuthorityName(None), spref.GetAuthorityCode(None))
+            band = df.GetRasterBand(1)
+            min, max, _, _ = band.GetStatistics(True, False)
+            self._data = {
+                'crs': crs,
+                'min': min,
+                'max': max
+            }
+
+    def add_layer_obj(self, map):
+        """
+        Create mapserver layer object.
 
         The raster data for the layer is located at filename, which
         should be an absolute path on the local filesystem.
         """
+        # inspect data if we haven't yet
+        self._inspect_data()
         # create a layer object
         layer = mapscript.layerObj()
         # configure layer
@@ -299,11 +283,11 @@ class WMSAPIViewv1(WMSAPIView):
         # TYPE
         layer.type = mapscript.MS_LAYER_RASTER
         # STATUS
-        layer.status =  mapscript.MS_ON
+        layer.status = mapscript.MS_ON
         # CONNECTION_TYPE local|ogr?
         # layer.setConnectionType(MS_RASTER) MS_OGR?
         # DATA
-        layer.data = filename
+        layer.data = self.filename
         # PROJECTION ... should we ste this properly?
         if self._data.get('crs'):
             # our dataset has a projection set, let mapserver use it
@@ -341,23 +325,83 @@ class WMSAPIViewv1(WMSAPIView):
             clsobj.insertStyle(styleobj)
             #layer.classitem = "[pixel]"
             layer.insertClass(clsobj)
-
-        # add layer into map
-        idx = map.insertLayer(layer)
-        return idx
+        return map.insertLayer(layer)
 
 
-        # test server (1.3.0 for SLD support)
-        # http://my.host.com/cgi-bin/mapserv?SERVICE=WMS&VERSION=1.3.0&REQUEST=GetCapabilities&DATA_URL=file:///home/visualiser/BCCVL_Visualiser/BCCVL_Visualiser/bccvl_visualiser/tests/fixtures/raster.tif
+class CSVLayer(object):
 
-        # test map
-        # http://my.host.com/cgi-bin/mapserv?map=mywms.map&SERVICE=WMS&VERSION=1.1.1
-        # &REQUEST=GetMap&LAYERS=prov_bound&STYLES=&SRS=EPSG:4326
-        # &BBOX=-173.537,35.8775,-11.9603,83.8009&WIDTH=400&HEIGHT=300
-        # &FORMAT=image/png
+    _data = None
 
-        # # TODO: spped up large rasters?
-        #     http://mapserver.org/el/input/raster.html#rasters-and-tile-indexing
+    def __init__(self, request, filename):
+        self.request = request
+        self.filename = filename
 
-        # TODO: FONTSET [filename]
-        #    set location of fontset file http://mapserver.org/el/mapfile/fontset.html
+    def _inspect_data(self):
+        # TODO: inspect csv, remove invalid values, find extent, and min max values etc...
+        self._data = {
+            'crs': 'epsg:4326',
+        }
+
+    def add_layer_obj(self, map):
+        """Create mapserver layer object.
+
+        The data is assumed to be a csv file with column 'lon' and
+        'lat' describing ponit features.
+        """
+        # inspect data if we haven't yet
+        self._inspect_data()
+        # create a layer object
+        layer = mapscript.layerObj()
+        # configure layer
+        # NAME
+        layer.name = "DEFAULT"  # TODO: filename?, real title?
+        # TYPE
+        # TODO: this supports only POINT datasets for now,... should detect this somehow
+        layer.type = mapscript.MS_LAYER_POINT
+        # STATUS
+        layer.status = mapscript.MS_ON
+        # CONNECTION_TYPE local|ogr?
+        layer.setConnectionType(mapscript.MS_OGR, None)
+        # TODO: the VRT source works fine, but maybe converting the VRT to a real shapefile with ogr2ogr would spped up rendering? (or use a sqlite/spatiallite datasource?)
+        # TODO: check if GDAL dies and kills whole mapserver process in case the csv file is not valid or contains broken values
+        # layer.setConnectionType(MS_RASTER) MS_OGR?
+        layer.connection = """"\
+<OGRVRTDataSource>
+    <OGRVRTLayer name='{0}'>
+        <SrcDataSource>{1}</SrcDataSource>
+        <LayerSRS>WGS84</LayerSRS>
+        <GeometryField encoding='PointFromColumns' x='lon' y='lat'/>
+        <GeometryType>wkbPoint</GeometryType>
+        <!-- <FeatureCount>...</FeatureCount>
+        <ExtentXMin>..</ExtentXMin>
+        <ExtentYMin>..</ExtentYMin>
+        <ExtentXMax>..</ExtentXMax>
+        <ExtentYMax>..</ExtentYMax> -->
+    </OGRVRTLayer>
+</OGRVRTDataSource>""".format(os.path.splitext(os.path.basename(self.filename))[0], self.filename)
+        # PROJECTION ... should we ste this properly?
+        # TODO: this always assume epsg:4326
+        layer.setProjection("init=epsg:4326")
+        # METADATA
+        # TODO: check return value of setMetaData MS_SUCCESS/MS_FAILURE
+        #map.setMetaData("wms_enable_request", "GetCapabilities GetMap")
+        #map.setMetaData("wms_title", "BCCVL WMS Server")
+        #map.setMetaData("wms_srs", "EPSG:3857")  # can be a space separated list
+        # TODO: metadata
+        #       other things like title, author, attribution etc...
+        if not ('STYLES' in self.request.params or
+                'SLD' in self.request.params or
+                'SLD_BODY' in self.request.params):
+            # set some default style if the user didn't specify any'
+            # STYLE
+            styleobj = mapscript.styleObj()
+            styleobj.color = mapscript.colorObj(255, 50, 50)
+            styleobj.minsize = 2
+            styleobj.maxsize = 50
+            styleobj.size = 5
+            styleobj.symbol = map.symbolset.index('circle')
+            clsobj = mapscript.classObj()
+            clsobj.name = "record"
+            clsobj.insertStyle(styleobj)
+            layer.insertClass(clsobj)
+        return map.insertLayer(layer)

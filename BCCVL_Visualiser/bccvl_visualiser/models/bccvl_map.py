@@ -4,59 +4,15 @@ from mapscript import mapObj, OWSRequest
 import logging
 import os
 import sys
-import fcntl
 
 import hashlib
 
 from bccvl_visualiser.models.external_api.data_mover import FDataMover
+from bccvl_visualiser.utils import LockFile
 
 import gdal
 from gdalconst import GA_ReadOnly
 import string
-
-
-class LockFile(object):
-
-    def __init__(self, path):
-        self.path = path
-        self.fd = None
-
-    def acquire(self, timeout=None):
-        while True:
-            self.fd = os.open(self.path, os.O_CREAT)
-            fcntl.flock(self.fd, fcntl.LOCK_EX)
-
-            # check if the file we hold the lock on is the same as the one
-            # the path refers to. (another process might have recreated it)
-            st0 = os.fstat(self.fd)
-            try:
-                st1 = os.stat(self.path)
-                if st0.st_ino == st1.st_ino:
-                    # both the same we locked the correct file
-                    break
-            except:
-                # somethig went wrong. (e.g. some other process deleted the lock file?)
-                # just try again
-                pass
-            # Try it again.
-            os.close(self.fd)
-            self.fd = None
-        # We have a lock
-
-    def release(self):
-        # TODO: Do we have the lock?
-        if self.fd is not None:
-            os.unlink(self.path)
-            fcntl.flock(self.fd, fcntl.LOCK_UN)
-            os.close(self.fd)
-            self.fd = None
-
-    def __enter__(self):
-        self.acquire()
-        return self
-
-    def __exit__(self, type, value, tb):
-        self.release()
 
 
 class BCCVLMap(mapObj):
