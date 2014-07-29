@@ -389,9 +389,10 @@ class CSVLayer(object):
         #map.setMetaData("wms_srs", "EPSG:3857")  # can be a space separated list
         # TODO: metadata
         #       other things like title, author, attribution etc...
-        if not ('STYLES' in self.request.params or
-                'SLD' in self.request.params or
-                'SLD_BODY' in self.request.params):
+        # if not ('STYLES' in self.request.params or
+        #         'SLD' in self.request.params or
+        #         'SLD_BODY' in self.request.params):
+        if True:
             # set some default style if the user didn't specify any'
             # STYLE
             styleobj = mapscript.styleObj()
