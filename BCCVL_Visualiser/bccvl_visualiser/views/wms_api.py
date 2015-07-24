@@ -164,7 +164,7 @@ class WMSAPIViewv1(WMSAPIView):
 
         # WEB
         # TODO: check return value of setMetaData MS_SUCCESS/MS_FAILURE
-        map.setMetaData("wms_enable_request", "GetCapabilities GetMap")
+        map.setMetaData("wms_enable_request", "GetCapabilities GetMap GetFeatureInfo")
         map.setMetaData("wms_title", "BCCVL WMS Server")
         map.setMetaData("wms_srs", "EPSG:3857")  # can be a space separated list
         onlineresource = urlparse.urlunsplit((self.request.scheme,
@@ -360,6 +360,8 @@ class CSVLayer(object):
         layer.type = mapscript.MS_LAYER_POINT
         # STATUS
         layer.status = mapscript.MS_ON
+        # mark layer as queryable
+        layer.template = "query"  # anything non null and with length > 0 works here
         # CONNECTION_TYPE local|ogr?
         layer.setConnectionType(mapscript.MS_OGR, None)
         # TODO: the VRT source works fine, but maybe converting the VRT to a real shapefile with ogr2ogr would spped up rendering? (or use a sqlite/spatiallite datasource?)
