@@ -284,6 +284,8 @@ class TiffLayer(object):
         layer.type = mapscript.MS_LAYER_RASTER
         # STATUS
         layer.status = mapscript.MS_ON
+        # mark layer as queryable
+        layer.template = "query"  # anything non null and with length > 0 works here
         # CONNECTION_TYPE local|ogr?
         # layer.setConnectionType(MS_RASTER) MS_OGR?
         # DATA
