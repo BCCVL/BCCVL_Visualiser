@@ -182,7 +182,7 @@ class WMSAPIViewv1(WMSAPIView):
         #       wms_attribution_xxx ... do we want attribution metadata?
 
         # SCALEBAR
-        if True:
+        if False:
             # LABEL
             sbl = mapscript.labelObj()
             sbl.color = mapscript.colorObj(0, 0, 0)
@@ -193,7 +193,7 @@ class WMSAPIViewv1(WMSAPIView):
             sb.status = mapscript.MS_ON
             map.scalebar = sb
         # LEGEND
-        if True:
+        if False:
             # LABEL
             legl = mapscript.labelObj()
             legl.color = mapscript.colorObj(64, 64, 64)
