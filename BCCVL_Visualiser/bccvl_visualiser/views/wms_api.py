@@ -143,30 +143,31 @@ class WMSAPIViewv1(WMSAPIView):
         map = mapscript.mapObj()
         # Configure the map
         # NAME
-        map.name = "BCCVL Map"
-        # EXTENT ... in projection units
+        map.name = "BCCVLMap"
+        # EXTENT ... in projection units (we use epsg:4326) WGS84
         map.extent = mapscript.rectObj(-180.0, -90.0, 180.0, 90.0)
+        #map.extent = mapscript.rectObj(-20026376.39, -20048966.10, 20026376.39, 20048966.10)
         # UNITS ... in projection units
         map.units = mapscript.MS_DD
         # SIZE
         map.setSize(256, 256)
-        # PROJECTION ... web mercator/ Google mercator
-        # TODO: woulde epsg:3395 be an alternative?
-        map.setProjection("init=epsg:3857")
+        # PROJECTION ... WGS84
+        map.setProjection("init=epsg:4326")
         # IMAGETYPE
         map.selectOutputFormat("PNG")  # PNG, PNG24, JPEG
         # TRANSPARENT ON
         map.transparent = mapscript.MS_ON
         # IMAGECOLOR 255 255 255
         map.imagecolor = mapscript.colorObj(255, 255, 255)
-        # SYMBOLSET
+        # SYMBOLSET  (needed to draw circles for CSV points)
         self._update_symbol_set(map)
-
+        # metadata: wms_feature_info_mime_type text/htm/ application/json
         # WEB
         # TODO: check return value of setMetaData MS_SUCCESS/MS_FAILURE
-        map.setMetaData("wms_enable_request", "GetCapabilities GetMap GetFeatureInfo")
+        map.setMetaData("wms_enable_request", "*")
         map.setMetaData("wms_title", "BCCVL WMS Server")
-        map.setMetaData("wms_srs", "EPSG:3857")  # can be a space separated list
+        map.setMetaData("wms_srs", "EPSG:4326 EPSG:3857")  # allow reprojection to Web Mercator
+        map.setMetaData("ows_enable_request", "*")
         onlineresource = urlparse.urlunsplit((self.request.scheme,
                                               "{}:{}".format(self.request.host, self.request.host_port),
                                               self.request.path,
@@ -257,7 +258,7 @@ class TiffLayer(object):
             if crs:
                 spref = SpatialReference()
                 spref.ImportFromWkt(crs)
-                crs = "%s:%s" %  (spref.GetAuthorityName(None), spref.GetAuthorityCode(None))
+                crs = "%s:%s" %  (spref.GetAuthorityName(None).lower(), spref.GetAuthorityCode(None))
             band = df.GetRasterBand(1)
             min, max, _, _ = band.GetStatistics(True, False)
             self._data = {
@@ -285,28 +286,31 @@ class TiffLayer(object):
         # STATUS
         layer.status = mapscript.MS_ON
         # mark layer as queryable
-        layer.template = "query"  # anything non null and with length > 0 works here
+        layer.template = "dummy"  # anything non null and with length > 0 works here
         # CONNECTION_TYPE local|ogr?
         # layer.setConnectionType(MS_RASTER) MS_OGR?
         # DATA
         layer.data = self.filename
+
+        layer.tolerance = 10.0  # TODO: this should be dynamic based on zoom level
+        # layer.toleranceunits = mapscript.MS_PIXELS
+
         # PROJECTION ... should we ste this properly?
-        if self._data.get('crs'):
-            # our dataset has a projection set, let mapserver use it
-            layer.setProjection("AUTO")
-        else:
-            # otherwise assume epsg:4326
-            layer.setProjection("init=epsg:4326")
+        crs = self._data.get('crs', 'epsg:4326')  # use epsg:4326 as default
+        layer.setProjection("init={}".format(crs))
         # METADATA
         # TODO: check return value of setMetaData MS_SUCCESS/MS_FAILURE
-        #map.setMetaData("wms_enable_request", "GetCapabilities GetMap")
-        #map.setMetaData("wms_title", "BCCVL WMS Server")
-        #map.setMetaData("wms_srs", "EPSG:3857")  # can be a space separated list
+        layer.setMetaData("gml_include_items", "all")  # allow raster queries
+        layer.setMetaData("wms_include_items", "all")
+        layer.setMetaData("wms_enable_request", "*")
+        layer.setMetaData("wms_srs", "{}".format(crs))
+        layer.setMetaData("wms_title", "BCCVL Layer")  # title required for GetCapabilities
         # TODO: metadata
         #       other things like title, author, attribution etc...
         # OPACITY
         # TODO: this should probably be up to the client?
         layer.opacity = 70
+
         # CLASSITEM, CLASS
         # TODO: if we have a STYLES parameter we should add a STYLES element here
         if not ('STYLES' in self.request.params or
@@ -369,28 +373,32 @@ class CSVLayer(object):
         # TODO: the VRT source works fine, but maybe converting the VRT to a real shapefile with ogr2ogr would spped up rendering? (or use a sqlite/spatiallite datasource?)
         # TODO: check if GDAL dies and kills whole mapserver process in case the csv file is not valid or contains broken values
         # layer.setConnectionType(MS_RASTER) MS_OGR?
+        # TODO: other elements to consider:
+        #        Metadata ... on Datasource and LAyer
+        #        OpenOptions ... only gdal >= 2.0
+        #        FID ... ??
+        #        Style ... ???
+        #        FeatureCount
+        #        ExtentXMien, ExtentXMax, ExtentYMin, ExtentYMax
         layer.connection = """"\
 <OGRVRTDataSource>
     <OGRVRTLayer name='{0}'>
         <SrcDataSource>{1}</SrcDataSource>
-        <LayerSRS>WGS84</LayerSRS>
-        <GeometryField encoding='PointFromColumns' x='lon' y='lat'/>
         <GeometryType>wkbPoint</GeometryType>
-        <!-- <FeatureCount>...</FeatureCount>
-        <ExtentXMin>..</ExtentXMin>
-        <ExtentYMin>..</ExtentYMin>
-        <ExtentXMax>..</ExtentXMax>
-        <ExtentYMax>..</ExtentYMax> -->
+        <LayerSRS>EPSG:4326</LayerSRS>
+        <GeometryField name='location' encoding='PointFromColumns' x='lon' y='lat'/>
     </OGRVRTLayer>
 </OGRVRTDataSource>""".format(os.path.splitext(os.path.basename(self.filename))[0], self.filename)
         # PROJECTION ... should we ste this properly?
         # TODO: this always assume epsg:4326
-        layer.setProjection("init=epsg:4326")
+        layer.setProjection("init={}".format(self._data['crs']))
         # METADATA
         # TODO: check return value of setMetaData MS_SUCCESS/MS_FAILURE
-        #map.setMetaData("wms_enable_request", "GetCapabilities GetMap")
-        #map.setMetaData("wms_title", "BCCVL WMS Server")
-        #map.setMetaData("wms_srs", "EPSG:3857")  # can be a space separated list
+        layer.setMetaData("gml_include_items", "all")
+        layer.setMetaData("wms_include_items", "all")
+        #layer.setMetaData("wms_enable_request", "GetCapabilities GetMap")
+        layer.setMetaData("wms_title", "BCCVL Occurrences")
+        layer.setMetaData("wms_srs", self._data['crs'])  # can be a space separated list
         # TODO: metadata
         #       other things like title, author, attribution etc...
         # if not ('STYLES' in self.request.params or
