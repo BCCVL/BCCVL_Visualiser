@@ -254,6 +254,7 @@ class TiffLayer(object):
             # TODO: This method is really ugly, but is nice for testing
             from osgeo import gdal
             from osgeo.osr import SpatialReference
+            self._data = {}
             df = gdal.Open(self.filename)
             crs = df.GetProjection()
             if crs:
@@ -261,12 +262,7 @@ class TiffLayer(object):
                 spref.ImportFromWkt(crs)
                 crs = "%s:%s" %  (spref.GetAuthorityName(None).lower(), spref.GetAuthorityCode(None))
             band = df.GetRasterBand(1)
-            min, max, _, _ = band.GetStatistics(True, False)
-            self._data = {
-                'crs': crs,
-                'min': min,
-                'max': max
-            }
+            self._data['min'], self._data['max'], _, _ = band.GetStatistics(True, False)
 
     def add_layer_obj(self, map):
         """
