@@ -13,6 +13,8 @@ from bccvl_visualiser.utils import fetch_file
 from bccvl_visualiser.views import BaseView
 from bccvl_visualiser.models.wms_api import WMSAPI, WMSAPIv1
 
+LOG = logging.getLogger(__name__)
+
 
 @view_defaults(route_name='wms_api')
 class WMSAPIView(BaseView):
@@ -74,14 +76,13 @@ class WMSAPIViewv1(WMSAPIView):
         DATA_URL. The DATA_URL, should point to a downloadable file
         which can be used as raster data input for mapserver.
         """
-        log = logging.getLogger(__name__)
-        log.debug('Processing ows request')
+        LOG.debug('Processing ows request')
 
         data_url = None
         try:
             data_url = self.request.GET.getone('DATA_URL')
         except:
-            log.warn('No data_url provided')
+            LOG.warn('No data_url provided')
             data_url = None
             # FIXME: should return an error here)
 
