@@ -84,33 +84,36 @@ Getting Started
 
         virtualenv .
 
-6. Upgrade setuptools
+6. Install setuptools version 0.9.8
 
-        ./bin/pip install setuptools --upgrade
+        ./bin/pip install setuptools==0.9.8
 
 7. Install (or upgrade) the numpy egg.
 
         ./bin/pip install numpy --upgrade
     
     You may get a lot of warnings on this step - ignore them. As long as you get "Successfully installed numpy" at the end, it should be fine.
+    
+8. Install mock version 1.0.1
 
-8. Bootstrap
+        ./bin/pip install mock==1.0.1
+9. Bootstrap
 
-        ./bin/python bootstrap.py
+        ./bin/python bootstrap.py -v 2.2.1
 
-9. Buildout
+10. Buildout
 
         ./bin/buildout
 
-10. Run the tests
+11. Run the tests
 
         ./bin/test
 
-11. Serve (with auto-reload on file change)
+12. Serve (with auto-reload on file change)
 
         ./bin/pserve development.ini --reload
 
-12. Testing your server:
+13. Testing your server:
 
     The following are some quick tests you can run against your server to see the visualiser in action. These tests use the project's test fixtures.
     
