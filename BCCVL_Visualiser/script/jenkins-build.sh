@@ -18,22 +18,21 @@ echo "Using WORKSPACE $WORKSPACE"
 cd $WORKSPACE
 
 echo "Setting up virtualenv in $WORKSPACE"
-curl -O https://pypi.python.org/packages/source/v/virtualenv/virtualenv-1.9.tar.gz
-tar -xvzf virtualenv-1.9.tar.gz
-cd virtualenv-1.9
-python virtualenv.py -p /usr/bin/python2.7 "$VISUALISER_DIR"
+curl -O https://pypi.python.org/packages/source/v/virtualenv/virtualenv-12.0.7.tar.gz
+tar -xvzf virtualenv-12.0.7.tar.gz
+python virtualenv-12.0.7/virtualenv.py -p /usr/bin/python2.7 "$VISUALISER_DIR"
 cd "$VISUALISER_DIR"
 source bin/activate
+easy_install setuptools==0.9.8
 
 echo "Python version:"
 "$PYTHON" --version
 
 echo "Installing Dependencies"
-"$PIP" install setuptools --upgrade
 "$PIP" install numpy --upgrade 
 
 echo "Building Visualiser"
-"$PYTHON" bootstrap.py
+"$PYTHON" bootstrap.py -v 2.2.1
 "$BUILDOUT"
 
 # Run unit tests
