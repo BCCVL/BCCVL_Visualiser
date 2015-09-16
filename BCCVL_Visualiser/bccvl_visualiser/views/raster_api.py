@@ -1,5 +1,4 @@
 import logging
-import tempfile
 import mapscript
 import threading
 import urllib2

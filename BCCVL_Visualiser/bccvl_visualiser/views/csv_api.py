@@ -1,8 +1,6 @@
 import logging
-import tempfile
 import mapscript
 import csv
-import tempfile
 import os
 
 from pyramid.response import Response, FileResponse
@@ -61,9 +59,6 @@ class CSVAPIViewv1(BaseCSVAPIView):
         log.debug('Processing view request in CSV API v1')
 
         data_url = self.request.GET.getone('data_url')
-
-        tf = tempfile.NamedTemporaryFile(delete=False, prefix='csv_view_v1_', suffix='.csv')
-        file_path = tf.name
 
         out_str = '<table>'
 

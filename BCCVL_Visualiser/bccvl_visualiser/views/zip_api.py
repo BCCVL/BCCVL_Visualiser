@@ -1,5 +1,4 @@
 import logging
-import tempfile
 import mapscript
 import zipfile
 import os
@@ -90,38 +89,44 @@ class ZIPAPIViewv1(BaseZIPAPIView):
 
         zip_file_path = MyDataMover.download(data_url=data_url, suffix='.zip')
 
-        fh = open(zip_file_path, 'rb')
-        z = zipfile.ZipFile(fh)
-        for name in z.namelist():
-            if name == file_name:
-                # epoch timestamp for unique filename
-                time_epoch = int(time.time() * 1000)
-
-                (dirname, filename) = os.path.split(name)
-
-                new_dirname =  str(time_epoch) + '_' + dirname
-                os.mkdir(MyDataMover.PUBLIC_DIR + '/' + new_dirname)
-                log.debug("directory to extract: %s", new_dirname)
-
-                extract_file_path = new_dirname + '/' + filename
-
-                # write the file
-                fd = open(MyDataMover.PUBLIC_DIR + '/' + extract_file_path,"w")
-                fd.write(z.read(name))
-                fd.close()
-
-                log.debug("finished writing file")
-
-                # Prepare url and query to return it to auto detect
-                new_data_url = self.request.application_url + '/public_data/' + extract_file_path
-                new_query = {'data_url':new_data_url}
-                log.debug("new_data_url: %s", new_data_url)
-                return_url = self.request.route_url('auto_detect_api_v1', traverse='/default', _query=new_query)
-                # extract it
-        fh.close()
-        # delete the zip file
-        log.debug("deleting the zip file")
-        os.remove(zip_file_path)
+        try:
+            fh = open(zip_file_path, 'rb')
+            z = zipfile.ZipFile(fh)
+            for name in z.namelist():
+                if name == file_name:
+                    # epoch timestamp for unique filename
+                    time_epoch = int(time.time() * 1000)
+    
+                    (dirname, filename) = os.path.split(name)
+    
+                    new_dirname =  str(time_epoch) + '_' + dirname
+                    os.mkdir(MyDataMover.PUBLIC_DIR + '/' + new_dirname)
+                    log.debug("directory to extract: %s", new_dirname)
+    
+                    extract_file_path = new_dirname + '/' + filename
+    
+                    # write the file
+                    fd = open(MyDataMover.PUBLIC_DIR + '/' + extract_file_path,"w")
+                    fd.write(z.read(name))
+                    fd.close()
+    
+                    log.debug("finished writing file")
+    
+                    # Prepare url and query to return it to auto detect
+                    new_data_url = self.request.application_url + '/public_data/' + extract_file_path
+                    new_query = {'data_url':new_data_url}
+                    log.debug("new_data_url: %s", new_data_url)
+                    return_url = self.request.route_url('auto_detect_api_v1', traverse='/default', _query=new_query)
+                    # extract it
+        finally:
+            # Close and remove file
+            if fh is not None:
+                fh.close()
+            
+            # delete the zip file
+            log.debug("deleting the zip file")
+            os.remove(zip_file_path)
+            
         if return_url is not None:
             return HTTPFound(location=return_url)
         else:
@@ -137,47 +142,52 @@ class ZIPAPIViewv1(BaseZIPAPIView):
         # Download the zip file
         zip_file_path = MyDataMover.download(data_url=data_url, suffix='.zip')
 
-        # Unzip the file
-        fh = open(zip_file_path, 'rb')
-        z = zipfile.ZipFile(fh)
+        try:
+            # Unzip the file
+            fh = open(zip_file_path, 'rb')
+            z = zipfile.ZipFile(fh)
+    
+            # Validate the files - make sure they end in .tif
+            for name in z.namelist():
+                if name.endswith('/'):
+                    # ignore folders within zip
+                    continue
+                if not name.endswith('.tif'):
+                    # ignore non tif files
+                    continue
+                    #return Response('This zip either does not have a flat file directory or have inconsistent file types.')
+    
+            # Extract
+            for name in z.namelist():
+                if name.endswith('/') or not name.endswith('.tif'):
+                    # ignore folders within zip
+                    continue
+                time_epoch = int(time.time() * 1000)
+    
+                (dirname, filename) = os.path.split(name)
+    
+                new_dirname =  str(time_epoch) + '_' + dirname
+    
+                extract_file_path = new_dirname + '/' + filename
+    
+                hash_string = hashlib.sha224(extract_file_path).hexdigest()
+                new_filename = hash_string + ".tif"
+    
+                path = os.path.join(MyDataMover.MAP_FILES_DIR, new_filename)
+    
+                # write the file
+                fd = open(path,"w")
+                fd.write(z.read(name))
+                fd.close()
+    
+                url_list.append(extract_file_path)
+        finally:
+            # Close and remove file
+            if fh is not None:
+                fh.close()
 
-        # Validate the files - make sure they end in .tif
-        for name in z.namelist():
-            if name.endswith('/'):
-                # ignore folders within zip
-                continue
-            if not name.endswith('.tif'):
-                # ignore non tif files
-                continue
-                #return Response('This zip either does not have a flat file directory or have inconsistent file types.')
-
-        # Extract
-        for name in z.namelist():
-            if name.endswith('/') or not name.endswith('.tif'):
-                # ignore folders within zip
-                continue
-            time_epoch = int(time.time() * 1000)
-
-            (dirname, filename) = os.path.split(name)
-
-            new_dirname =  str(time_epoch) + '_' + dirname
-
-            extract_file_path = new_dirname + '/' + filename
-
-            hash_string = hashlib.sha224(extract_file_path).hexdigest()
-            new_filename = hash_string + ".tif"
-
-            path = os.path.join(MyDataMover.MAP_FILES_DIR, new_filename)
-
-            # write the file
-            fd = open(path,"w")
-            fd.write(z.read(name))
-            fd.close()
-
-            url_list.append(extract_file_path)
-
-        log.debug("deleting the zip file")
-        os.remove(zip_file_path)
+            log.debug("deleting the zip file")
+            os.remove(zip_file_path)
 
         # Send it off to the raster api
         new_query = {'raster_list_url':url_list}
@@ -194,19 +204,25 @@ class ZIPAPIViewv1(BaseZIPAPIView):
         dir_path = '/html_zip_' + str(time_epoch)
         os.mkdir(MyDataMover.PUBLIC_DIR + dir_path)
 
-        fh = open(zip_file_path, 'rb')
-        z = zipfile.ZipFile(fh)
-        for name in z.namelist():
-            dir_file_path = dir_path + '/' + name
-            # write the file
-            fd = open(MyDataMover.PUBLIC_DIR + dir_file_path, "w")
-            fd.write(z.read(name))
-            fd.close()
+        try:
+            fh = open(zip_file_path, 'rb')
+            z = zipfile.ZipFile(fh)
+            for name in z.namelist():
+                dir_file_path = dir_path + '/' + name
+                # write the file
+                fd = open(MyDataMover.PUBLIC_DIR + dir_file_path, "w")
+                fd.write(z.read(name))
+                fd.close()
+    
+                if name.endswith('html'):
+                    index = dir_file_path
+        finally:
+            # Close and remove file
+            if fh is not None:
+                fh.close()
 
-            if name.endswith('html'):
-                index = dir_file_path
-
-        os.remove(zip_file_path)
+            log.debug("deleting the zip file")
+            os.remove(zip_file_path)
 
         new_data_url = self.request.application_url + '/public_data/' + index
         new_query = {'data_url': new_data_url}

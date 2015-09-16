@@ -119,12 +119,16 @@ class BCCVLMap(mapObj):
         # Make sure only one thread is trying to check for
         # the existance of, or trying to write the file
         # at any time.
-        mover.move_and_wait_for_completion()
-
-        valid, problems = self._validate_file()
+        try:
+            mover.move_and_wait_for_completion()
+            valid, problems = self._validate_file()
+        except:
+            # Invalid file if data move does not complete the move
+            valid = False
+            
+        # Delete invalid file
         if not valid:
             log.info("Deleting invalid file: %s", self.data_file_path)
-            # Delete the file
             os.remove(self.data_file_path)
             raise ValueError("Problem validating file. Problems: %s" % (problems))
 

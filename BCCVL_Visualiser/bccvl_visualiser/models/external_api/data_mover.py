@@ -116,22 +116,18 @@ class DataMover(object):
         """ Open a file using the data mover, yield it, and then delete it.
         """
 
-        # Create a tempfile to store the file
-        tf = tempfile.NamedTemporaryFile(delete=False, prefix='data_mover_')
+        # Create a tempfile to store the file, and delete it on close
+        tf = tempfile.NamedTemporaryFile(delete=True, prefix='data_mover_')
         file_path = tf.name
 
-        try:
-            # create a mover to get the file
-            mover = cls(file_path, **kwargs)
-            mover.move_and_wait_for_completion()
+        # create a mover to get the file
+        mover = cls(file_path, **kwargs)
+        mover.move_and_wait_for_completion()
 
-            # open the tempfile
-            with open(file_path, 'r') as f:
-                # yield the file
-                yield f
-        finally:
-            # remove the tempfile
-            os.remove(file_path)
+        # open the tempfile
+        with open(file_path, 'r') as f:
+            # yield the file
+            yield f
 
     @classmethod
     def download(cls, suffix='.tmp', **kwargs):

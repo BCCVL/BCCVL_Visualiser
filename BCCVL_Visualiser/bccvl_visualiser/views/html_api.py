@@ -1,5 +1,4 @@
 import logging
-import tempfile
 import mapscript
 
 from pyramid.response import Response, FileResponse
