@@ -260,7 +260,8 @@ class TiffLayer(object):
             if crs:
                 spref = SpatialReference()
                 spref.ImportFromWkt(crs)
-                crs = "%s:%s" %  (spref.GetAuthorityName(None).lower(), spref.GetAuthorityCode(None))
+                self._data['crs'] = "%s:%s" %  (spref.GetAuthorityName(None).lower(), spref.GetAuthorityCode(None))
+                #LOG.info('Detected CRS: %s', self._data['crs'])
             band = df.GetRasterBand(1)
             self._data['min'], self._data['max'], _, _ = band.GetStatistics(True, False)
 
