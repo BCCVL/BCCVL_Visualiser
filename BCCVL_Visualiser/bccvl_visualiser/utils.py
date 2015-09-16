@@ -5,8 +5,25 @@ import fcntl
 import zipfile
 import urllib
 import urlparse
+import shutil
+import logging
 from bccvl_visualiser.models.external_api.data_mover import FDataMover
 
+
+LOG = logging.getLogger(__name__)
+
+
+class ErrorUrlOpener(urllib.FancyURLopener):
+
+    def http_error_default(self, url, fp, errcode, errmsg, headers):
+        """Default error handler: close the connection and raise IOError."""
+        urllib.URLopener.http_error_default(self, url, fp, errcode, errmsg, headers)
+        #fp.close()
+        #raise IOError, ('http error', errcode, errmsg, headers)
+
+    # def http_error_default(self, url, fp, errcode, errmsg, headers):
+    #     """Default error handling -- don't raise an exception."""
+    #     return addinfourl(fp, headers, "http:" + url, errcode)
 
 class LockFile(object):
 
@@ -91,21 +108,26 @@ def fetch_file(request, url):
             # TODO: make sure there is no '..' in datadir
             os.makedirs(datadir)
             # not available yet so fetch it
-            destfile = os.path.join(datadir, os.path.basename(url))
             try:
-                f, h = urllib.urlretrieve(url, destfile)
+                destfile = os.path.join(datadir, os.path.basename(url))
+                try:
+                    f, h = ErrorUrlOpener().retrieve(url, destfile)
+                except Exception as e:
+                    # direct download failed try data mover
+                    mover = FDataMover.new_data_mover(destfile,
+                                                      data_url=url)
+                    res = mover.move_and_wait_for_completion()
+                    # if it is a zip we should unpack it
+                    # FIXME: do some more robust zip detection
+                if fragment:
+                    with zipfile.ZipFile(destfile, 'r') as zipf:
+                        zipf.extractall(datadir)
+                    # remove zipfile
+                    os.remove(destfile)
             except Exception as e:
-                # direct download failed try data mover
-                mover = FDataMover.new_data_mover(destfile,
-                                                  data_url=url)
-                mover.move_and_wait_for_completion()
-                # if it is a zip we should unpack it
-                # FIXME: do some more robust zip detection
-            if fragment:
-                with zipfile.ZipFile(destfile, 'r') as zipf:
-                    zipf.extractall(datadir)
-                # remove zipfile
-                os.remove(destfile)
+                LOG.error('Could not download %s to %s : %s', url, datadir, e)
+                shutil.rmtree(datadir)
+                raise e
     # we have the data now construct the filepath
     filename = fragment if fragment else os.path.basename(url)
     # FIXME: make sure path.join works correctly (trailing/leading slash?)
