@@ -258,9 +258,11 @@ class TiffLayer(object):
             df = gdal.Open(self.filename)
             crs = df.GetProjection()
             if crs:
-                spref = SpatialReference()
-                spref.ImportFromWkt(crs)
-                self._data['crs'] = "%s:%s" %  (spref.GetAuthorityName(None).lower(), spref.GetAuthorityCode(None))
+                spref = SpatialReference(wkt=crs)
+                # default to epsg:4326
+                auth = spref.GetAuthorityName(None) or 'epsg'
+                code = spref.GetAuthorityCode(None) or '4326'
+                self._data['crs'] = "%s:%s" %  (auth.lower(), code)
                 #LOG.info('Detected CRS: %s', self._data['crs'])
             band = df.GetRasterBand(1)
             self._data['min'], self._data['max'], _, _ = band.GetStatistics(True, False)
