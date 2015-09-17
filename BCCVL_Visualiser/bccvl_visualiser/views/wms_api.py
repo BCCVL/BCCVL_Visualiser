@@ -117,19 +117,26 @@ class WMSAPIViewv1(WMSAPIView):
         # here is probably some room for optimisation
         # e.g. let mapscript write directly to output?
         #      write tile to file system and serve tile via some other means?
+        wms_req = self.request.params['REQUEST']
+        wms_ver = self.request.params.get('VERSION', '1.3.0')
+        res = map.loadOWSParameters(req, wms_ver)  # if != 0 then error
+        # now do something based on REQUEST:
+        if wms_req == u'GetFeatureInfo':
+            mapscript.msIO_installStdoutToBuffer()
+            res = map.OWSDispatch(req)  # if != 0 then error
+            content_type = mapscript.msIO_stripStdoutBufferContentType()
+            content = mapscript.msIO_getStdoutBufferBytes()
+            return Response(content, content_type=content_type)
+        elif wms_req == u'GetMap':
+            img = map.draw()
+            return Response(img.getBytes(), content_type=img.format.mimetype)
 
-        # Let's do some standard mapscripm dispatch for now
-        mapscript.msIO_installStdoutToBuffer()
-        # TODO: check retval for mapscript.MS_SUCCESS
-        retval = map.OWSDispatch(req)
-        content_type = mapscript.msIO_stripStdoutBufferContentType()
-        content = mapscript.msIO_getStdoutBufferBytes()
-        mapscript.msIO_resetHandlers()
+        # We shouldn't end up here.....
+        # let's raise an Error
+        # FIXME: I am sure ther are better pyramid ways to return errors
+        raise Exception('request was not handled correctly')
 
-        # return a pyramid response
-        return Response(content, content_type=content_type)
-
-        # TODO: alternative ways to render map images
+        # TODO: alternative ways to render map images, and cache on FS
         # my_image =  map.draw() ... render map to image
         # map_image.save(file name) ... store on FS
         # map_image.format.mime_type ... get image mime type
