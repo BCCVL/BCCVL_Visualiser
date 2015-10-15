@@ -54,3 +54,4 @@ etc/
 
 # PyCharm Configuration
 BCCVL_Visualiser/.idea
+bccvl_production.ini
