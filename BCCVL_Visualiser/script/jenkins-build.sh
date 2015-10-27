@@ -29,7 +29,7 @@ echo "Python version:"
 "$PYTHON" --version
 
 echo "Installing Dependencies"
-"$PIP" install numpy --upgrade 
+"$PIP" install numpy==1.10.1
 
 echo "Building Visualiser"
 "$PYTHON" bootstrap.py -v 2.2.1
