@@ -35,6 +35,10 @@ echo "Building Visualiser"
 "$PYTHON" bootstrap.py -v 2.2.1
 "$BUILDOUT"
 
+# setup tmp folder
+export TMPDIR=$WORKPSPACE/tmp
+mkdir -p ${TMPDIR}/bccvl/map_data_files
+
 # Run unit tests
 echo "Running unit tests"
 "$TESTS" --with-xunit
