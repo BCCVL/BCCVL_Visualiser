@@ -11,7 +11,7 @@ BIN_DIR="$VISUALISER_DIR/bin"
 PIP="$BIN_DIR/pip"
 PYTHON="$BIN_DIR/python"
 BUILDOUT="$BIN_DIR/buildout"
-TESTS="$BIN_DIR/test"
+TESTS="$BIN_DIR/nosetests"
 COVERAGE="$BIN_DIR/coverage"
 
 echo "Using WORKSPACE $WORKSPACE"
