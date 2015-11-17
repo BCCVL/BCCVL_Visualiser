@@ -66,7 +66,7 @@ class WMSAPIViewv1(WMSAPIView):
     def _to_dict(self):
         return WMSAPIv1.to_dict()
 
-    @view_config(name='wms')
+    @view_config(name='wms', permission='view')
     def wms(self):
         """This is a WMS endpoint.
 
