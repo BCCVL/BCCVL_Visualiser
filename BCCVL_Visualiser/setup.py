@@ -37,6 +37,7 @@ requires = [
     'scipy',
     'repoze.vhm',       # Use repoze middleware for Virtual Host management
     'csvvalidator',
+    'org.bccvl.movelib [http]',
     ]
 
 setup(name='BCCVL_Visualiser',
