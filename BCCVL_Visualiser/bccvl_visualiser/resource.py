@@ -1,9 +1,13 @@
-#from urlparse import urljoin, urlsplit, urlunsplit
+import logging
 from urlparse import urldefrag
-import requests
-from pyramid import security
-from dogpile.cache import make_region
 
+from dogpile.cache import make_region
+from pyramid import security
+from pyrmaid.settings import asbool
+import requests
+
+
+LOG = logging.getLogger(__name__)
 
 # TODO: movke region config to ini file: see region.configure_from_config
 region = make_region().configure(
@@ -44,11 +48,14 @@ class Context(object):
             if cookie:
                 s.cookies.set(name, cookie, secure=True, domain=self.request.host, path='/')
         # TODO: use with or whatever to close session
-        r = s.head(url, verify=False)
+        verify = asbool(self.request.registry.settings.get('bccvl.ssl.verify', True))
+        r = s.head(url, verify=verify, allow_redirects=True)
         s.close()
         # TODO: do we have to handle redirects specially?
         if r.status_code == 200:
             permission = security.Allow
         else:
             permission = security.Deny
+        # LOG.info('Access %s for user %s to %s', permission, user_id, data_url)
+        # LOG.info('   -> %s', r.status_code)
         return (permission, user_id, 'view')
