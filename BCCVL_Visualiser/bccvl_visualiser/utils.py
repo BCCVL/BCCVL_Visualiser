@@ -12,6 +12,9 @@ from org.bccvl import movelib
 
 LOG = logging.getLogger(__name__)
 
+# TODO: replace existing DataMover classes with a configurable utility to remove
+#       bccvl specific code from visualiser
+
 
 class LockFile(object):
 
