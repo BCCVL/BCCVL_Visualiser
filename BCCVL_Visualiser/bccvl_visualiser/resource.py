@@ -3,7 +3,6 @@ from urlparse import urldefrag
 
 from dogpile.cache import make_region
 from pyramid import security
-from pyrmaid.settings import asbool
 import requests
 
 
@@ -48,6 +47,7 @@ class Context(object):
             if cookie:
                 s.cookies.set(name, cookie, secure=True, domain=self.request.host, path='/')
         # TODO: use with or whatever to close session
+        from pyramid.settings import asbool  # FIXME: avoid circular import?
         verify = asbool(self.request.registry.settings.get('bccvl.ssl.verify', True))
         r = s.head(url, verify=verify, allow_redirects=True)
         s.close()

@@ -6,7 +6,6 @@ import zipfile
 import urlparse
 import shutil
 import logging
-from pyrmaid.settings import asbool
 from org.bccvl import movelib
 
 
@@ -91,6 +90,7 @@ def fetch_file(request, url):
     # TODO: would be nice to use datasetid here
     urlhash = hashlib.md5(url).hexdigest()
     # check if we have the file already
+    from pyramid.settings import asbool  # FIXME: have to import here due to circular import
     dataroot = request.registry.settings['bccvl.mapscript.map_data_files_root_path']
     datadir = os.path.join(dataroot, urlhash)
 
