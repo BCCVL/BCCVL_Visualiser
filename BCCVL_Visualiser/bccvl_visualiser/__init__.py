@@ -48,9 +48,9 @@ def main(global_config, **settings):
     """
     # TODO: read config from ini file (settings)
     authn_policy = AuthTktAuthenticationPolicy(
-        secret='secret',
+        secret=settings['authtkt.secret'],
         callback=None,
-        cookie_name='__ac',
+        cookie_name=settings['authtkt.name'],
         secure=True,
         timeout=43200,
         reissue_time=21600,
