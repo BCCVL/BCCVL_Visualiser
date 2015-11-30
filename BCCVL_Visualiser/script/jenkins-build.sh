@@ -32,6 +32,7 @@ echo "Installing Dependencies"
 "$PIP" install numpy==1.10.1
 
 echo "Building Visualiser"
+cp buildout.cfg.example buildout.cfg
 "$PYTHON" bootstrap.py -v 2.2.1
 "$BUILDOUT"
 
