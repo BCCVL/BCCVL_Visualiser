@@ -318,6 +318,9 @@ class TiffLayer(object):
         # TODO: this should probably be up to the client?
         layer.opacity = 70
 
+        # Transparent pixel value for raster layer
+        layer.offsite = mapscript.colorObj(0, 0, 0, 0)
+
         # CLASSITEM, CLASS
         # TODO: if we have a STYLES parameter we should add a STYLES element here
         if not ('STYLES' in self.request.params or
