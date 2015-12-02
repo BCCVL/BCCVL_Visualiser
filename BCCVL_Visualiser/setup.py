@@ -41,7 +41,7 @@ requires = [
     ]
 
 setup(name='BCCVL_Visualiser',
-      version='1.7.0rc1',
+      version='1.7.0',
       description='BCCVL_Visualiser',
       long_description=README + '\n\n' + CHANGES,
       classifiers=[
