@@ -1,5 +1,6 @@
 import binascii
 import time
+from urllib import unquote, quote
 
 from pyramid.authentication import AuthTktAuthenticationPolicy as BasePolicy
 from pyramid.authentication import AuthTktCookieHelper as BaseCookieHelper
@@ -55,7 +56,7 @@ class AuthTktCookieHelper(BaseCookieHelper):
             remote_addr = environ['REMOTE_ADDR']
         else:
             remote_addr = '0.0.0.0'
-        ticket = binascii.a2b_base64(cookie)
+        ticket = binascii.a2b_base64(unquote(cookie))
 
         try:
             timestamp, userid, tokens, user_data = self.parse_ticket(
@@ -176,6 +177,6 @@ class AuthTktCookieHelper(BaseCookieHelper):
             hashalg=self.hashalg
             )
 
-        cookie_value = binascii.b2a_base64(ticket.cookie_value())
+        cookie_value = quote(binascii.b2a_base64(ticket.cookie_value()))
 
         return self._get_cookies(request, cookie_value, max_age)
