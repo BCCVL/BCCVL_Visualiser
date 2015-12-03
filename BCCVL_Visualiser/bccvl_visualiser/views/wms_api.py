@@ -1,9 +1,13 @@
 import logging
-import mapscript
+import mimetypes
 import urlparse
 import urllib
 import os
 import os.path
+
+import mapscript
+from osgeo import gdal
+from osgeo.osr import SpatialReference
 
 from pyramid.response import Response
 from pyramid.httpexceptions import HTTPNotImplemented
@@ -93,7 +97,6 @@ class WMSAPIViewv1(WMSAPIView):
         # setup layer
         # TODO: improve selection of Layer generator
         # TODO: use python-magic for a more reliable mime type detection
-        import mimetypes
         mimetype, encoding = mimetypes.guess_type(loc)
         if mimetype == 'image/tiff':
             layer = TiffLayer(self.request, loc)
@@ -101,7 +104,7 @@ class WMSAPIViewv1(WMSAPIView):
             layer = CSVLayer(self.request, loc)
         else:
             msg = "Unknown file type '{}'.".format(mimetype)
-            #HTTPBadRequest(msg)
+            # HTTPBadRequest(msg)
             raise HTTPNotImplemented(msg)
         # add layer into map
         idx = layer.add_layer_obj(map)
@@ -219,14 +222,13 @@ class WMSAPIViewv1(WMSAPIView):
 
     def _update_symbol_set(self, map):
         circle = map.symbolset.getSymbolByName('circle')
-        #circle = mapscript.symbolObj("circle")
+        # circle = mapscript.symbolObj("circle")
         circle.type = mapscript.MS_SYMBOL_ELLIPSE
         circle.filled = mapscript.MS_ON
         l1 = mapscript.lineObj()
         l1.add(mapscript.pointObj(1, 1))
         circle.setPoints(l1)
         map.symbolset.appendSymbol(circle)
-
 
         # test server (1.3.0 for SLD support)
         # http://my.host.com/cgi-bin/mapserv?SERVICE=WMS&VERSION=1.3.0&REQUEST=GetCapabilities&DATA_URL=file:///home/visualiser/BCCVL_Visualiser/BCCVL_Visualiser/bccvl_visualiser/tests/fixtures/raster.tif
@@ -259,8 +261,6 @@ class TiffLayer(object):
         """
         if self._data is None:
             # TODO: This method is really ugly, but is nice for testing
-            from osgeo import gdal
-            from osgeo.osr import SpatialReference
             self._data = {}
             df = gdal.Open(self.filename)
             crs = df.GetProjection()
@@ -293,7 +293,7 @@ class TiffLayer(object):
         # STATUS
         layer.status = mapscript.MS_ON
         # mark layer as queryable
-        layer.template = "dummy"  # anything non null and with length > 0 works here
+        #layer.template = "dummy"  # anything non null and with length > 0 works here
         # CONNECTION_TYPE local|ogr?
         # layer.setConnectionType(MS_RASTER) MS_OGR?
         # DATA
@@ -403,7 +403,7 @@ class CSVLayer(object):
         # TODO: check return value of setMetaData MS_SUCCESS/MS_FAILURE
         layer.setMetaData("gml_include_items", "all")
         layer.setMetaData("wms_include_items", "all")
-        #layer.setMetaData("wms_enable_request", "GetCapabilities GetMap")
+        # layer.setMetaData("wms_enable_request", "GetCapabilities GetMap")
         layer.setMetaData("wms_title", "BCCVL Occurrences")
         layer.setMetaData("wms_srs", self._data['crs'])  # can be a space separated list
         # TODO: metadata
