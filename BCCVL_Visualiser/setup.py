@@ -19,7 +19,7 @@ requires = [
     # For travis, it's installed via packages
     #
     'GDAL >= 1.7.3',
-    'mapscript >= 7.0.0',      # Python Map Server implementation installed in virtualenv? buildout?
+    #'MapScript >= 7.0.0',      # There is no distirbution we can deppend on.. it's either there ore not
     'zope.interface >= 4.1.0',
 
     'dogpile.cache',    # cache regions, lets you cache the result of queries
