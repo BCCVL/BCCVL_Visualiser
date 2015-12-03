@@ -111,8 +111,11 @@ class WMSAPIViewv1(WMSAPIView):
 
         # prepare an ows request object
         # do some map processing here
-        req = mapscript.OWSRequest()
-        req.loadParamsFromURL(self.request.query_string.strip())
+        ows_req = mapscript.OWSRequest()
+        # our layer.add_layer_obj applies SLD and SLD_BODY
+        # copy request params into ows request except not these two
+        for k, v in ((k, v)for (k, v) in self.request.params.items() if k.lower() not in ('sld', 'sld_body')):
+            ows_req.setParameter(k, v)
         # req.setParameter('SERVICE', 'WMS')
         # req.setParameter('VERSION', '1.3.0')
         # req.setParameter('REQUEST', 'GetCapablities')
@@ -120,13 +123,14 @@ class WMSAPIViewv1(WMSAPIView):
         # here is probably some room for optimisation
         # e.g. let mapscript write directly to output?
         #      write tile to file system and serve tile via some other means?
+        #      cache tile or at least mapobj?
         wms_req = self.request.params['REQUEST']
         wms_ver = self.request.params.get('VERSION', '1.3.0')
-        res = map.loadOWSParameters(req, wms_ver)  # if != 0 then error
+        res = map.loadOWSParameters(ows_req, wms_ver)  # if != 0 then error
         # now do something based on REQUEST:
         if wms_req == u'GetFeatureInfo':
             mapscript.msIO_installStdoutToBuffer()
-            res = map.OWSDispatch(req)  # if != 0 then error
+            res = map.OWSDispatch(ows_req)  # if != 0 then error
             content_type = mapscript.msIO_stripStdoutBufferContentType()
             content = mapscript.msIO_getStdoutBufferBytes()
             return Response(content, content_type=content_type)
@@ -165,11 +169,14 @@ class WMSAPIViewv1(WMSAPIView):
         # PROJECTION ... WGS84
         map.setProjection("init=epsg:4326")
         # IMAGETYPE
-        map.selectOutputFormat("PNG")  # PNG, PNG24, JPEG
+        map.selectOutputFormat("PNG24")  # PNG, PNG24, JPEG
+        map.outputformat.imagemode = mapscript.MS_IMAGEMODE_RGBA
+        map.outputformat.transparent = mapscript.MS_ON
+
         # TRANSPARENT ON
         map.transparent = mapscript.MS_ON
         # IMAGECOLOR 255 255 255
-        map.imagecolor = mapscript.colorObj(255, 255, 255)
+        # map.imagecolor = mapscript.colorObj(255, 255, 255) ... initial color if transparent is on
         # SYMBOLSET  (needed to draw circles for CSV points)
         self._update_symbol_set(map)
         # metadata: wms_feature_info_mime_type text/htm/ application/json
@@ -273,6 +280,8 @@ class TiffLayer(object):
                 #LOG.info('Detected CRS: %s', self._data['crs'])
             band = df.GetRasterBand(1)
             self._data['min'], self._data['max'], _, _ = band.GetStatistics(True, False)
+            self._data['nodata'] = band.GetNoDataValue()
+            self._data['datatype'] = band.DataType
 
     def add_layer_obj(self, map):
         """
@@ -318,9 +327,17 @@ class TiffLayer(object):
         # TODO: this should probably be up to the client?
         layer.opacity = 70
 
+        # If data type is not 8bit integer:
+        if self._data['datatype'] != gdal.GDT_Byte:
+            # mapservers does the right thing with these processing instructions
+            # setting scale, skips the 8bit processing step and reads the raster
+            # as float or 16bit integer
+            layer.addProcessing("SCALE=AUTO,AUTO")
+            layer.addProcessing("NODATA=AUTO")
+
         # CLASSITEM, CLASS
         # TODO: if we have a STYLES parameter we should add a STYLES element here
-        if not ('STYLES' in self.request.params or
+        if not (self.request.params.get('STYLES') or
                 'SLD' in self.request.params or
                 'SLD_BODY' in self.request.params):
             # set some default style if the user didn't specify any'
@@ -331,14 +348,34 @@ class TiffLayer(object):
             if self._data:
                 styleobj.minvalue = self._data['min']
                 styleobj.maxvalue = self._data['max']
-            styleobj.rangetime = "[pixel]"
+            styleobj.rangeitem = "[pixel]"
             clsobj = mapscript.classObj()
             clsobj.name = "-"
-            #clsobj.setExpression("([pixel]>0)")
+            # clsobj.setExpression("([pixel]>0)")
             clsobj.insertStyle(styleobj)
-            #layer.classitem = "[pixel]"
+            # layer.classitem = "[pixel]"
             layer.insertClass(clsobj)
-        return map.insertLayer(layer)
+
+        ret = map.insertLayer(layer)
+
+        sld = self.request.params.get('SLD_BODY')
+        sld_url = self.request.params.get('SLD')
+        if sld_url:
+            map.applySLDURL(sld_url)
+        elif sld:
+            map.applySLD(sld)
+        if ((sld or sld_url) and (self._data['datatype'] == gdal.GDT_Byte and self._data['nodata'] is not None)):
+            # if we have 8bit data, mapserver ignores the NODATA value, so let's classify it as transparent
+            styleobj = mapscript.styleObj()
+            styleobj.color = mapscript.colorObj(0, 0, 0, 0)
+            styleobj.rangeitem = "[pixel]"
+            clsobj = mapscript.classObj()
+            clsobj.name = 'NODATA'
+            clsobj.setExpression("([pixel] = {})".format(int(self._data['nodata'])))
+            clsobj.insertStyle(styleobj)
+            layer.insertClass(clsobj, 0)
+
+        return ret
 
 
 class CSVLayer(object):
@@ -408,10 +445,9 @@ class CSVLayer(object):
         layer.setMetaData("wms_srs", self._data['crs'])  # can be a space separated list
         # TODO: metadata
         #       other things like title, author, attribution etc...
-        # if not ('STYLES' in self.request.params or
-        #         'SLD' in self.request.params or
-        #         'SLD_BODY' in self.request.params):
-        if True:
+        if not (self.request.params.get('STYLES') or
+                'SLD' in self.request.params or
+                'SLD_BODY' in self.request.params):
             # set some default style if the user didn't specify any'
             # STYLE
             styleobj = mapscript.styleObj()
@@ -424,4 +460,14 @@ class CSVLayer(object):
             clsobj.name = "record"
             clsobj.insertStyle(styleobj)
             layer.insertClass(clsobj)
-        return map.insertLayer(layer)
+
+        ret = map.insertLayer(layer)
+        # apply SLD if given
+        sld = self.request.params.get('SLD_BODY')
+        sld_url = self.request.params.get('SLD')
+        if sld_url:
+            map.applySLDURL(sld_url)
+        elif sld:
+            map.applySLD(sld)
+
+        return ret
