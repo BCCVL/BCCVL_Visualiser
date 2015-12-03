@@ -3,27 +3,17 @@ import os
 import os.path
 import fcntl
 import zipfile
-import urllib
 import urlparse
 import shutil
 import logging
-from bccvl_visualiser.models.external_api.data_mover import FDataMover
+from org.bccvl import movelib
 
 
 LOG = logging.getLogger(__name__)
 
+# TODO: replace existing DataMover classes with a configurable utility to remove
+#       bccvl specific code from visualiser
 
-class ErrorUrlOpener(urllib.FancyURLopener):
-
-    def http_error_default(self, url, fp, errcode, errmsg, headers):
-        """Default error handler: close the connection and raise IOError."""
-        urllib.URLopener.http_error_default(self, url, fp, errcode, errmsg, headers)
-        #fp.close()
-        #raise IOError, ('http error', errcode, errmsg, headers)
-
-    # def http_error_default(self, url, fp, errcode, errmsg, headers):
-    #     """Default error handling -- don't raise an exception."""
-    #     return addinfourl(fp, headers, "http:" + url, errcode)
 
 class LockFile(object):
 
@@ -100,8 +90,10 @@ def fetch_file(request, url):
     # TODO: would be nice to use datasetid here
     urlhash = hashlib.md5(url).hexdigest()
     # check if we have the file already
+    from pyramid.settings import asbool  # FIXME: have to import here due to circular import
     dataroot = request.registry.settings['bccvl.mapscript.map_data_files_root_path']
     datadir = os.path.join(dataroot, urlhash)
+
     with LockFile(datadir + '.lock'):
         if not os.path.exists(datadir):
             # the folder doesn't exist so we'll have to fetch the file
@@ -111,14 +103,30 @@ def fetch_file(request, url):
             try:
                 destfile = os.path.join(datadir, os.path.basename(url))
                 try:
-                    f, h = ErrorUrlOpener().retrieve(url, destfile)
+                    src = {
+                        'url': url,
+                        'verify': asbool(request.registry.settings.get('bccvl.ssl.verify', True))
+                    }
+                    # do we have an __ac cookie?
+                    cookie = request.cookies.get('__ac')
+                    if cookie:
+                        src['cookies'] = {
+                            'name': '__ac',
+                            'value': cookie,
+                            'secure': True,
+                            'domain': request.host,
+                            'path': '/'
+                        }
+                    dst = {
+                        'url': 'file://{0}'.format(destfile)
+                    }
+                    movelib.move(src, dst)
                 except Exception as e:
-                    # direct download failed try data mover
-                    mover = FDataMover.new_data_mover(destfile,
-                                                      data_url=url)
-                    res = mover.move_and_wait_for_completion()
-                    # if it is a zip we should unpack it
-                    # FIXME: do some more robust zip detection
+                    # direct download failed what now?
+                    LOG.exception('Failed to download data %s: %s', url, e)
+                    raise
+                # if it is a zip we should unpack it
+                # FIXME: do some more robust zip detection
                 if fragment:
                     with zipfile.ZipFile(destfile, 'r') as zipf:
                         zipf.extractall(datadir)

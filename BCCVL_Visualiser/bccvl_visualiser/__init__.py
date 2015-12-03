@@ -1,10 +1,14 @@
+from pyramid.authorization import ACLAuthorizationPolicy
 from pyramid.config import Configurator
-from sqlalchemy import engine_from_config
-from pyramid.settings import asbool, aslist
+from pyramid.settings import aslist
 import logging
+from bccvl_visualiser.auth import AuthTktAuthenticationPolicy
 from bccvl_visualiser.models import BCCVLMap
 from bccvl_visualiser.models.external_api import DataManager
 from bccvl_visualiser.models.external_api import FDataMover, DataMover
+
+
+
 
 def initialise_cache(settings):
     """ Initialise the application's cache regions
@@ -42,8 +46,23 @@ def configure_data_mover(settings):
 def main(global_config, **settings):
     """ This function returns a Pyramid WSGI application.
     """
+    # TODO: read config from ini file (settings)
+    authn_policy = AuthTktAuthenticationPolicy(
+        secret=settings['authtkt.secret'],
+        callback=None,
+        cookie_name=settings['authtkt.name'],
+        secure=True,
+        timeout=43200,
+        reissue_time=21600,
+        hashalg='md5',  # the only compatible way ... plone doesn't use hexdigest but pyramid does for other hash algorithms
+    )
+
+    authz_policy = ACLAuthorizationPolicy()
 
     config = Configurator(settings=settings)
+
+    config.set_authentication_policy(authn_policy)
+    config.set_authorization_policy(authz_policy)
 
     # Configure dogpile.cache regions from configuration
     initialise_cache(config.registry.settings)
@@ -89,8 +108,10 @@ def main(global_config, **settings):
     config.add_route('zip_api', '/api/zip*traverse')
 
     # WMS API
-    config.add_route('wms_api_v1',  '/api/wms/1*traverse')
-    config.add_route('wms_api',  '/api/wms*traverse')
+    config.add_route('wms_api_v1',  '/api/wms/1*traverse', factory='bccvl_visualiser.resource.Context')
+    config.add_route('wms_api',  '/api/wms*traverse', factory='bccvl_visualiser.resource.Context')
+    # config.add_route('wms_api_v1',  '/api/wms/1*traverse')
+    # config.add_route('wms_api',  '/api/wms*traverse')
 
     # Auto Detect API
     config.add_route('auto_detect_api_v1', '/api/auto_detect/1*traverse')

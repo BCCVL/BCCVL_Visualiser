@@ -11,7 +11,7 @@ BIN_DIR="$VISUALISER_DIR/bin"
 PIP="$BIN_DIR/pip"
 PYTHON="$BIN_DIR/python"
 BUILDOUT="$BIN_DIR/buildout"
-TESTS="$BIN_DIR/test"
+TESTS="$BIN_DIR/nosetests"
 COVERAGE="$BIN_DIR/coverage"
 
 echo "Using WORKSPACE $WORKSPACE"
@@ -29,11 +29,16 @@ echo "Python version:"
 "$PYTHON" --version
 
 echo "Installing Dependencies"
-"$PIP" install numpy --upgrade 
+"$PIP" install numpy==1.10.1
 
 echo "Building Visualiser"
+cp buildout.cfg.example buildout.cfg
 "$PYTHON" bootstrap.py -v 2.2.1
 "$BUILDOUT"
+
+# setup tmp folder
+export TMPDIR=$WORKPSPACE/tmp
+mkdir -p ${TMPDIR}/bccvl/map_data_files
 
 # Run unit tests
 echo "Running unit tests"
