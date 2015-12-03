@@ -16,7 +16,6 @@ MarkupSafe==0.23
 matplotlib==1.4.2
 mock==1.0.1
 monotonic==0.4
-mr.developer==1.34
 msgpack-python==0.4.6
 netaddr==0.7.18
 netifaces==0.10.4
