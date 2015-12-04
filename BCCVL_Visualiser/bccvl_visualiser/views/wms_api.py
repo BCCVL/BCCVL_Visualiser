@@ -325,7 +325,7 @@ class TiffLayer(object):
         #       other things like title, author, attribution etc...
         # OPACITY
         # TODO: this should probably be up to the client?
-        layer.opacity = 70
+        # layer.setOpacity(70)
 
         # If data type is not 8bit integer:
         if self._data['datatype'] != gdal.GDT_Byte:
