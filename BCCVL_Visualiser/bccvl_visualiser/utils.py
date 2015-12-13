@@ -59,6 +59,58 @@ class LockFile(object):
         self.release()
 
 
+class FetchJob():
+    """
+    Fetch Job model to store details about fetch operation and its status
+    """
+
+    STATUS_PENDING = 'PENDING'
+    STATUS_IN_PROGRESS = 'IN_PROGRESS'
+    STATUS_FAILED = 'FAILED'
+    STATUS_COMPLETE = 'COMPLETED'
+
+    def __init__(self, jid):
+        """
+        Constructor
+        @param id: Job identifier
+        @type source: str
+        """
+        self.id = jid
+        self.status = self.STATUS_PENDING
+        self.start_timestamp = None
+        self.end_timestamp = None
+        self.reason = None
+
+    def __eq__(self, other):
+        if isinstance(other, FetchJob):
+            return self.id == other.id
+        return NotImplemented
+
+    def __ne__(self, other):
+        if isinstance(other, FetchJob):
+            return self.id != other.id
+        return NotImplemented
+
+    def update(self, **kwargs):
+        if 'status' in kwargs:
+            self.status = kwargs['status']
+        if 'start_timestamp' in kwargs:
+            self.start_timestamp = kwargs['start_timestamp']
+        if 'end_timestamp' in kwargs:
+            self.end_timestamp = kwargs['end_timestamp']
+        if 'reason' in kwargs:
+            self.reason = kwargs['reason']
+
+
+def data_dir(request, data_url):
+    """ Return an unique directory path for the data_url """
+    # get fragment identifier and hash url without fragment
+    url, fragment = urlparse.urldefrag(data_url)
+    urlhash = hashlib.md5(url).hexdigest()
+    dataroot = request.registry.settings['bccvl.mapscript.map_data_files_root_path']
+    return os.path.join(dataroot, urlhash)
+
+
 # FIXME: for large files we probably have to mave the file transfer to some other process...
 #        something similar to the data mover interface.
 #        e.g download, extract, optimise ....  when ready tell
@@ -81,19 +133,16 @@ def fetch_file(request, url):
     #     gdaladdo [-r average] tiled.tif 2 4 8 16 32 64 128
     # for rs point data maybe convert to shapefile?
 
-    # get fragment identifier and hash url without fragment
     if not (url.startswith('http://') or url.startswith('https://')):
         # TODO: probably allow more than just http and https
         #       and use better exception
         raise Exception('unsupported url scheme: %s', url)
-    url, fragment = urlparse.urldefrag(url)
-    # TODO: would be nice to use datasetid here
-    urlhash = hashlib.md5(url).hexdigest()
-    # check if we have the file already
-    from pyramid.settings import asbool  # FIXME: have to import here due to circular import
-    dataroot = request.registry.settings['bccvl.mapscript.map_data_files_root_path']
-    datadir = os.path.join(dataroot, urlhash)
 
+    # Check if a local data file is already exist
+    datadir = data_dir(request, url)
+    url, fragment = urlparse.urldefrag(url)
+
+    from pyramid.settings import asbool  # FIXME: have to import here due to circular import
     with LockFile(datadir + '.lock'):
         if not os.path.exists(datadir):
             # the folder doesn't exist so we'll have to fetch the file

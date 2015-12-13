@@ -37,6 +37,7 @@ requires = [
     'scipy',
     'repoze.vhm',       # Use repoze middleware for Virtual Host management
     'csvvalidator',
+    'futures',
     'org.bccvl.movelib [http]',
     ]
 
