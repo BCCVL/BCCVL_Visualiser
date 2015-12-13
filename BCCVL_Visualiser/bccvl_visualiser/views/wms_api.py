@@ -270,6 +270,7 @@ class TiffLayer(object):
             # TODO: This method is really ugly, but is nice for testing
             self._data = {}
             df = gdal.Open(self.filename)
+            # TODO: df may be None?
             crs = df.GetProjection()
             if crs:
                 spref = SpatialReference(wkt=crs)
