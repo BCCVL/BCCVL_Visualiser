@@ -20,7 +20,7 @@ LOG = logging.getLogger(__name__)
 def fetch_worker(request, data_url, job):
     # get location of local data file
     job.update(status=FetchJob.STATUS_IN_PROGRESS, start_timestamp=datetime.datetime.now())
-    try:           
+    try:
         loc = fetch_file(request, data_url)
         job.update(status=FetchJob.STATUS_COMPLETE, end_timestamp=datetime.datetime.now())
     except Exception as e:
@@ -53,7 +53,7 @@ class ApiCollectionView(BaseView):
         return super(ApiCollectionView, self).xmlrpc()
 
     @view_config(name='.fetch')
-    def fetch(self):p
+    def fetch(self):
         """This is a fetch endpoint to fetch data from the data url specified.
 
         This endpoint requires an additional WMS parameter
@@ -74,7 +74,7 @@ class ApiCollectionView(BaseView):
         # Check if a job has been submitted or data has been dowbloaded for this data url.
         datadir = data_dir(self.request, data_url)
         job = self._fetch_jobs.get(datadir)
-        if job:            
+        if job:
             reason = job.reason
             status = job.status
             if job.status in (FetchJob.STATUS_FAILED, FetchJob.STATUS_COMPLETE):
@@ -94,4 +94,4 @@ class ApiCollectionView(BaseView):
         return APICollection.to_dict()
 
     def StatusResponse(self, status, reason=None):
-        return {'status': status, 'reason': reason} 
+        return {'status': status, 'reason': reason}
