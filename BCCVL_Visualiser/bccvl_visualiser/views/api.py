@@ -52,7 +52,7 @@ class ApiCollectionView(BaseView):
     def xmlrpc(self):
         return super(ApiCollectionView, self).xmlrpc()
 
-    @view_config(name='.fetch')
+    @view_config(name='fetch', renderer='json')
     def fetch(self):
         """This is a fetch endpoint to fetch data from the data url specified.
 
