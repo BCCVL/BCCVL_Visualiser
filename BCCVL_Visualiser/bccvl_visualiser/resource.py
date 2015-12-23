@@ -20,6 +20,7 @@ class Context(object):
     def __init__(self, request):
         self.request = request
         data_url = self.request.params.get('DATA_URL')
+        data_url, _ = urldefrag(data_url)
         user_id = security.authenticated_userid(self.request) or security.Everyone
 
         self.__acl__ = [
@@ -38,7 +39,6 @@ class Context(object):
         # check_url = urljoin(check_url, 'API/site/v1/can_access')
 
         # TODO: ensure that request Session passes cookie on to correct domain
-        url, _ = urldefrag(data_url)
         s = requests.Session()
         for name in ('__ac',): # 'serverid'):
             # pass all interesting cookies for our domain on
@@ -49,7 +49,7 @@ class Context(object):
         # TODO: use with or whatever to close session
         from pyramid.settings import asbool  # FIXME: avoid circular import?
         verify = asbool(self.request.registry.settings.get('bccvl.ssl.verify', True))
-        r = s.head(url, verify=verify, allow_redirects=True)
+        r = s.head(data_url, verify=verify, allow_redirects=True)
         s.close()
         # TODO: do we have to handle redirects specially?
         if r.status_code == 200:
