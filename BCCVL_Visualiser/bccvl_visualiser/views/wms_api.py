@@ -114,7 +114,7 @@ class WMSAPIViewv1(WMSAPIView):
         ows_req = mapscript.OWSRequest()
         # our layer.add_layer_obj applies SLD and SLD_BODY
         # copy request params into ows request except not these two
-        for k, v in ((k, v)for (k, v) in self.request.params.items() if k.lower() not in ('sld', 'sld_body')):
+        for k, v in ((k, v)for (k, v) in self.request.params.items() if k.lower() not in ('sld', 'sld_body', 'data_url')):
             ows_req.setParameter(k, v)
         # req.setParameter('SERVICE', 'WMS')
         # req.setParameter('VERSION', '1.3.0')
@@ -126,21 +126,28 @@ class WMSAPIViewv1(WMSAPIView):
         #      cache tile or at least mapobj?
         wms_req = self.request.params['REQUEST']
         wms_ver = self.request.params.get('VERSION', '1.3.0')
-        res = map.loadOWSParameters(ows_req, wms_ver)  # if != 0 then error
         # now do something based on REQUEST:
-        if wms_req == u'GetFeatureInfo':
+        if wms_req == u'GetMap':
+            res = map.loadOWSParameters(ows_req, wms_ver)  # if != 0 then error
+            img = map.draw()
+            return Response(img.getBytes(), content_type=img.format.mimetype)
+        elif wms_req == u'GetCapabilities':
             mapscript.msIO_installStdoutToBuffer()
             res = map.OWSDispatch(ows_req)  # if != 0 then error
             content_type = mapscript.msIO_stripStdoutBufferContentType()
             content = mapscript.msIO_getStdoutBufferBytes()
             return Response(content, content_type=content_type)
-        elif wms_req == u'GetMap':
-            img = map.draw()
-            return Response(img.getBytes(), content_type=img.format.mimetype)
+        elif wms_req == u'GetFeatureInfo':
+            res = map.loadOWSParameters(ows_req, wms_ver)  # if != 0 then error
+            mapscript.msIO_installStdoutToBuffer()
+            res = map.OWSDispatch(ows_req)  # if != 0 then error
+            content_type = mapscript.msIO_stripStdoutBufferContentType()
+            content = mapscript.msIO_getStdoutBufferBytes()
+            return Response(content, content_type=content_type)
 
         # We shouldn't end up here.....
         # let's raise an Error
-        # FIXME: I am sure ther are better pyramid ways to return errors
+        # FIXME: I am sure there are better pyramid ways to return errors
         raise Exception('request was not handled correctly')
 
         # TODO: alternative ways to render map images, and cache on FS
@@ -185,7 +192,7 @@ class WMSAPIViewv1(WMSAPIView):
         map.setMetaData("wms_enable_request", "*")
         map.setMetaData("wms_title", "BCCVL WMS Server")
         map.setMetaData("wms_srs", "EPSG:4326 EPSG:3857")  # allow reprojection to Web Mercator
-        map.setMetaData("ows_enable_request", "*")
+        map.setMetaData("ows_enable_request", "*")  # wms_enable_request enough?
         onlineresource = urlparse.urlunsplit((self.request.scheme,
                                               "{}:{}".format(self.request.host, self.request.host_port),
                                               self.request.path,
@@ -319,7 +326,6 @@ class TiffLayer(object):
         # TODO: check return value of setMetaData MS_SUCCESS/MS_FAILURE
         layer.setMetaData("gml_include_items", "all")  # allow raster queries
         layer.setMetaData("wms_include_items", "all")
-        layer.setMetaData("wms_enable_request", "*")
         layer.setMetaData("wms_srs", "{}".format(crs))
         layer.setMetaData("wms_title", "BCCVL Layer")  # title required for GetCapabilities
         # TODO: metadata
@@ -441,7 +447,6 @@ class CSVLayer(object):
         # TODO: check return value of setMetaData MS_SUCCESS/MS_FAILURE
         layer.setMetaData("gml_include_items", "all")
         layer.setMetaData("wms_include_items", "all")
-        # layer.setMetaData("wms_enable_request", "GetCapabilities GetMap")
         layer.setMetaData("wms_title", "BCCVL Occurrences")
         layer.setMetaData("wms_srs", self._data['crs'])  # can be a space separated list
         # TODO: metadata
