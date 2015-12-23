@@ -108,6 +108,10 @@ class WMSAPIViewv1(WMSAPIView):
             raise HTTPNotImplemented(msg)
         # add layer into map
         idx = layer.add_layer_obj(map)
+        # set map projection and extent from layer data
+        lx = map.getLayer(idx).getExtent()
+        map.extent = mapscript.rectObj(lx.minx, lx.miny, lx.maxx, lx.maxy)
+        map.setProjection = "init={}".format(layer._data['crs'])
 
         # prepare an ows request object
         # do some map processing here
@@ -273,6 +277,7 @@ class TiffLayer(object):
         Extract coordinate reference system and min/max values from a
         GDAL supported raster data file.
         """
+
         if self._data is None:
             # TODO: This method is really ugly, but is nice for testing
             self._data = {}
