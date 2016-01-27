@@ -291,6 +291,8 @@ class TiffLayer(object):
                 code = spref.GetAuthorityCode(None) or '4326'
                 self._data['crs'] = "%s:%s" %  (auth.lower(), code)
                 #LOG.info('Detected CRS: %s', self._data['crs'])
+            else:
+                self._data['crs'] = 'epsg:4326'  # use epsg:4326 as default
             band = df.GetRasterBand(1)
             self._data['min'], self._data['max'], _, _ = band.GetStatistics(True, False)
             self._data['nodata'] = band.GetNoDataValue()
@@ -325,7 +327,7 @@ class TiffLayer(object):
         # layer.toleranceunits = mapscript.MS_PIXELS
 
         # PROJECTION ... should we ste this properly?
-        crs = self._data.get('crs', 'epsg:4326')  # use epsg:4326 as default
+        crs = self._data['crs']
         layer.setProjection("init={}".format(crs))
         # METADATA
         # TODO: check return value of setMetaData MS_SUCCESS/MS_FAILURE
@@ -339,11 +341,12 @@ class TiffLayer(object):
         # TODO: this should probably be up to the client?
         # layer.setOpacity(70)
 
-        # If data type is not 8bit integer:
-        if self._data['datatype'] != gdal.GDT_Byte:
+        # If data type is not integer:
+        if self._data['datatype'] not in (gdal.GDT_Byte, gdal.GDT_UInt16, gdal.GDT_Int16,
+                                          gdal.GDT_UInt32, gdal.GDT_Int32):
             # mapservers does the right thing with these processing instructions
-            # setting scale, skips the 8bit processing step and reads the raster
-            # as float or 16bit integer
+            # setting scale, skips the integer processing step and reads the raster
+            # as float
             layer.addProcessing("SCALE=AUTO,AUTO")
             layer.addProcessing("NODATA=AUTO")
 
