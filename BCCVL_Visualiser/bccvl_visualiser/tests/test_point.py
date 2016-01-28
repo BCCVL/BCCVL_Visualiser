@@ -248,31 +248,31 @@ class TestPointAPIv1(unittest.TestCase):
 
         self.assertEqual(res.content_type, 'text/html')
 
-    def test_wms_view_point_api_csv_with_large_file(self):
-        start_t = time.clock()
-        params = {
-            'DATA_URL':     'https://raw.github.com/BCCVL/BCCVL_Visualiser/master/BCCVL_Visualiser/bccvl_visualiser/tests/fixtures/magpies.csv',
-            'TRANSPARENT':  'true',
-            'FORMAT':       'image/png',
-            'SERVICE':      'WMS',
-            'VERSION':      '1.1.1',
-            'REQUEST':      'GetMap',
-            'STYLES':       '',
-            'SRS':          'EPSG:4326',
-            'BBOX':         '-180,-90,180,90',
-            'WIDTH':        '100',
-            'HEIGHT':       '100',
-            'LAYERS':       'DEFAULT',
-        }
+    # def test_wms_view_point_api_csv_with_large_file(self):
+    #     start_t = time.clock()
+    #     params = {
+    #         'DATA_URL':     'https://raw.github.com/BCCVL/BCCVL_Visualiser/master/BCCVL_Visualiser/bccvl_visualiser/tests/fixtures/magpies.csv',
+    #         'TRANSPARENT':  'true',
+    #         'FORMAT':       'image/png',
+    #         'SERVICE':      'WMS',
+    #         'VERSION':      '1.1.1',
+    #         'REQUEST':      'GetMap',
+    #         'STYLES':       '',
+    #         'SRS':          'EPSG:4326',
+    #         'BBOX':         '-180,-90,180,90',
+    #         'WIDTH':        '100',
+    #         'HEIGHT':       '100',
+    #         'LAYERS':       'DEFAULT',
+    #     }
 
-        res = self.testapp.get('/api/point/1/wms_data_url', status='*', params=params)
-        end_t = time.clock()
-        took = end_t - start_t
+    #     res = self.testapp.get('/api/point/1/wms_data_url', status='*', params=params)
+    #     end_t = time.clock()
+    #     took = end_t - start_t
 
-        self.assertEqual(res.status_int, 200)
-        self.assertEqual(res.content_type, 'image/png')
+    #     self.assertEqual(res.status_int, 200)
+    #     self.assertEqual(res.content_type, 'image/png')
 
-        self.assertTrue(took < 5, "Time to process large file is too long. Should be less than 5 seconds, took: %f seconds" % took)
+    #     self.assertTrue(took < 5, "Time to process large file is too long. Should be less than 5 seconds, took: %f seconds" % took)
 
     def test_view_point_api_wfs_with_additional_columns(self):
         params = {
