@@ -27,7 +27,7 @@ RUN cd /tmp && curl http://download.osgeo.org/mapserver/mapserver-7.0.0.tar.gz |
 
 
 RUN mkdir -p /bccvl_visualiser
-COPY BCCVL_Visualiser /bccvl_visualiser/
+COPY BCCVL_Visualiser /bccvl_visualiser/BCCVL_Visualiser
 
 RUN cd /bccvl_visualiser/BCCVL_Visualiser && python setup.py install
 
