@@ -4,8 +4,6 @@ RUN groupadd -g 1042 bccvl && useradd -m -g bccvl -u 1042 bccvl
 
 RUN yum install -y epel-release
 
-#RUN yum install -y rpm -i http://yum.postgresql.org/9.4/redhat/rhel-6-x86_64/pgdg-centos94-9.4-1.noarch.rpm
-
 RUN yum install -y gcc make git python python-devel gdal-devel gdal atlas-devel blas-devel \ 
     lapack-devel proj proj-devel proj-epsg proj-nad geos geos-devel ogr_fdw94 gcc-c++ libpng \
     libpng-devel freetype-devel giflib giflib-devel libxml2 libxml2-devel cairo cairo-devel \
