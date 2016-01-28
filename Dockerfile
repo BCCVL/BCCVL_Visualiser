@@ -51,7 +51,7 @@ COPY cmd.sh /cmd.sh
 RUN chmod a+x /cmd.sh
 
 USER bccvl
-RUN mkdir /tmp/bccvl
+RUN mkdir -p /tmp/bccvl/map_data_files
 
 CMD ["/cmd.sh"]
 
