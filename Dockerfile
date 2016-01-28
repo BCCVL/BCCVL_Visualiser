@@ -46,11 +46,13 @@ ENV NTHREADS 2
 
 EXPOSE 10600 9191
 
-RUN mkdir /bccvltmp && chown -R bccvl:bccvl /bccvltmp
-USER bccvl
+RUN mkdir /bccvltmp && chown -R bccvl:bccvl /bccvltmp 
+COPY cmd.sh /cmd.sh
+RUN chmod a+x /cmd.sh
 
-CMD mkdir -p $BCCVL_MAPSCRIPT_MAP_DATA_FILES_ROOT_PATH && \
-    mkdir -p $BCCVL_DATA_MOVER_PUBLIC_DIR && \
-    /usr/bin/gunicorn --workers $NWORKERS \
-                      --threads $NTHREADS \
-                      --paste /bccvl_visualiser/BCCVL_Visualiser/docker_production.ini
+USER bccvl
+RUN mkdir /tmp/bccvl
+
+CMD ["/cmd.sh"]
+
+

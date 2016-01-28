@@ -1,0 +1,6 @@
+visualiser:
+  build: .
+  expose:
+    - "10600"
+  environment:
+    ENV: PROD
