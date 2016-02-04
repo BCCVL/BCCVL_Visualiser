@@ -4,6 +4,7 @@ import urlparse
 import urllib
 import os
 import os.path
+from xml.sax.saxutils import escape, quoteattr
 
 import mapscript
 from osgeo import gdal
@@ -441,13 +442,13 @@ class CSVLayer(object):
         #        ExtentXMien, ExtentXMax, ExtentYMin, ExtentYMax
         layer.connection = """"\
 <OGRVRTDataSource>
-    <OGRVRTLayer name='{0}'>
+    <OGRVRTLayer name={0}>
         <SrcDataSource>{1}</SrcDataSource>
         <GeometryType>wkbPoint</GeometryType>
         <LayerSRS>EPSG:4326</LayerSRS>
         <GeometryField name='location' encoding='PointFromColumns' x='lon' y='lat'/>
     </OGRVRTLayer>
-</OGRVRTDataSource>""".format(os.path.splitext(os.path.basename(self.filename))[0], self.filename)
+</OGRVRTDataSource>""".format(quoteattr(os.path.splitext(os.path.basename(self.filename))[0]), escape(self.filename))
         # PROJECTION ... should we ste this properly?
         # TODO: this always assume epsg:4326
         layer.setProjection("init={}".format(self._data['crs']))
