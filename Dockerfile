@@ -29,6 +29,8 @@ COPY BCCVL_Visualiser /bccvl_visualiser/BCCVL_Visualiser
 
 RUN cd /bccvl_visualiser/BCCVL_Visualiser && python setup.py install
 
+RUN chown -R bccvl:bccvl /bccvl_visualiser/BCCVL_Visualiser
+
 RUN pip install --no-cache gunicorn==19.4.1
 
 ENV LD_LIBRARY_PATH=/lib:/usr/lib:/usr/local/lib
