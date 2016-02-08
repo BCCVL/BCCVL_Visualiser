@@ -1,6 +1,8 @@
 #!/bin/bash
 set -e
 
+CONFIG=${CONFIG:-docker_production.ini}
+
 if [ "$ENV" = 'UNIT' ]; then
   echo "Running Unit Tests"
   cd /opt/visualiser/
@@ -13,7 +15,7 @@ else
   mkdir -p $BCCVL_DATA_MOVER_PUBLIC_DIR
   /usr/bin/gunicorn --workers $NWORKERS \
                     --threads $NTHREADS \
-                    --paste /opt/visualiser/docker_production.ini \
+                    --paste /opt/visualiser/${CONFIG} \
                     --user visualiser \
                     --group visualiser \
                     $@
