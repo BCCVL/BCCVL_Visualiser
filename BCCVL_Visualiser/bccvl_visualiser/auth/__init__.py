@@ -8,6 +8,20 @@ from pyramid.authentication import VALID_TOKEN
 from pyramid.compat import text_type, ascii_native_
 
 
+def update_auth_cookie(cookie, tokens):
+    # add given tokens to cookie, assumes existing cookie is base64 encoded
+    cookie = cookie.decode('base64')  # decode cookie
+    cookie = cookie.split('!')  # splip parts
+    if len(cookie) == 2:
+        # if we have ticket + user_data
+        cookie = [cookie[0], tokens, cookie[1]]
+    elif len(cookie) == 3:
+        # if we have already tokens to pass on
+        cookie = [cookie[0], cookie[1] + tokens, cookie[2]]
+    # encode updated cookie
+    return '!'.join(cookie).encode('base64').strip().replace('\n', '')
+
+
 class AuthTktAuthenticationPolicy(BasePolicy):
 
     def __init__(self,

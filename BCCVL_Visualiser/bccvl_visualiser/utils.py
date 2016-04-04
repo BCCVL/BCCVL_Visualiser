@@ -8,6 +8,8 @@ import shutil
 import logging
 from org.bccvl import movelib
 
+from bccvl_visualiser.auth import update_auth_cookie
+
 
 LOG = logging.getLogger(__name__)
 
@@ -158,10 +160,13 @@ def fetch_file(request, url):
                     }
                     # do we have an __ac cookie?
                     cookie = request.cookies.get('__ac')
+                    # get my tokens
+                    tokens = ','.join([token.strip() for token in
+                                       request.registry.settings.get('authtkt.tokens', '').split('\n') if token.strip()])
                     if cookie:
                         src['cookies'] = {
                             'name': '__ac',
-                            'value': cookie,
+                            'value': update_auth_cookie(cookie, tokens),
                             'secure': True,
                             'domain': request.host,
                             'path': '/'
