@@ -334,7 +334,7 @@ class TiffLayer(object):
         # TODO: check return value of setMetaData MS_SUCCESS/MS_FAILURE
         layer.setMetaData("gml_include_items", "all")  # allow raster queries
         layer.setMetaData("wms_include_items", "all")
-        layer.setMetaData("wms_srs", "{}".format(crs))
+        layer.setMetaData("wms_srs", "EPSG:4326 EPSG:3857")  # projection to serve
         layer.setMetaData("wms_title", "BCCVL Layer")  # title required for GetCapabilities
         # TODO: metadata
         #       other things like title, author, attribution etc...
