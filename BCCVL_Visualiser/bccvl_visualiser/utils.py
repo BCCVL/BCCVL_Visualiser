@@ -166,7 +166,7 @@ def fetch_file(request, url):
                     if cookie:
                         src['cookies'] = {
                             'name': '__ac',
-                            'value': update_auth_cookie(cookie, tokens),
+                            'value': update_auth_cookie(cookie, tokens, request),
                             'secure': True,
                             'domain': request.host,
                             'path': '/'
