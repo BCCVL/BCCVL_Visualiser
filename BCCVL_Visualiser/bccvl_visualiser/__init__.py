@@ -107,6 +107,10 @@ def main(global_config, **settings):
     config.add_route('zip_api_v1', '/api/zip/1*traverse')
     config.add_route('zip_api', '/api/zip*traverse')
 
+    # WFS API
+    config.add_route('wfs_api_v1', '/api/wfs/1*traverse', factory='bccvl_visualiser.resource.Context')
+    config.add_route('wfs_api', '/api/wfs*traverse', factory='bccvl_visualiser.resource.Context')
+
     # WMS API
     config.add_route('wms_api_v1',  '/api/wms/1*traverse', factory='bccvl_visualiser.resource.Context')
     config.add_route('wms_api',  '/api/wms*traverse', factory='bccvl_visualiser.resource.Context')
