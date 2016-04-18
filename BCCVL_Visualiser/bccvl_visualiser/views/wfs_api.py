@@ -249,7 +249,7 @@ class ShapeLayer(object):
         # METADATA
         # TODO: check return value of setMetaData MS_SUCCESS/MS_FAILURE
         layer.setMetaData("gml_types", "auto")
-        layer.setMetaData("gml_featureid", "id")  # set to segmentNo ??
+        layer.setMetaData("gml_featureid", "NCB_ID") 
         layer.setMetaData("gml_include_items", "all")  # allow raster queries
         layer.setMetaData("wfs_include_items", "all")
         layer.setMetaData("wfs_srs", "EPSG:4326 EPSG:3857")  # projection to serve
