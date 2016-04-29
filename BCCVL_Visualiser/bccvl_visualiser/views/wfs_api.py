@@ -4,6 +4,7 @@ import urlparse
 import urllib
 import os
 import os.path
+import json
 from xml.sax.saxutils import escape, quoteattr
 
 import mapscript
@@ -90,36 +91,41 @@ class WFSAPIViewv1(WFSAPIView):
         except:
             LOG.warn('No data_url provided')
             data_url = None
-            # FIXME: should return an error here)
 
         # get location of local data file
-        loc = fetch_file(self.request, data_url)
+        if data_url:
+            loc = fetch_file(self.request, data_url)
 
         # get map
         map = self._get_map()
 
-        # setup layer, only accept zipped shape file.
-        # Extract the shape files.
+        # Check that appropriate files are already exist.
         datadir, filename = os.path.split(loc)
         fname, fext = os.path.splitext(filename)
         if fext == '.zip':
-            # Check if shape file exists. If so, already unzip.
-            shapeFilename = os.path.join(datadir, fname + ".shp")
-            if not ps.path.isFile(shapeFilename):
-                with zipfile.ZipFile(loc, 'r') as zipf:
-                    zipf.extractall(datadir)
-            if os.path.isfile(shapeFilename):
-                layer = ShapeLayer(self.request, shapeFilename)
+            # Check if layer mapping file exists.
+            mdfile = os.path.join(datadir, 'layer_mappings.json')
+            if os.path.isfile(mdfile):
+                layer_mapping = json.load(open(mdfile, 'r'))
             else:
-                msg = "Invalid shape file name '{}'.".format(shapeFilename)           
+                raise HTTPNotImplemented("Missing layer mapping meta data file '{}'".format(mdfile))
+
+            # Check if shape file exists.
+            if os.path.isfile(os.path.join(datadir, fname + ".shp")):
+                dbFilename = os.path.join(datadir, fname + ".shp")
+            elif os.path.isdir(os.path.join(datadir, fname + ".gdb")):
+                dbFilename = os.path.join(datadir, fname + ".gdb")
+            else:
+                msg = "Invalid zip file '{}' -- is not in shape/gdb format.".format(filename)           
                 raise HTTPNotImplemented(msg)
         else:
-            # HTTPBadRequest(msg)
-            msg = "Unknown file type '{}'.".format(mimetype)           
-            raise HTTPNotImplemented(msg)
+            raise HTTPNotImplemented("Invalid zip file '{}'".format(filename))
+
+        # if DB server is configured, get layer data from DB server. Otherwise get data from db file.
+        layer = ShapeLayer(self.request, dbFilename)
 
         # add the shape layer into map
-        idx = layer.add_layer_obj(map)
+        idx = layer.add_layer_obj(map, layer_mapping)
 
         # set map projection and extent from layer data
         lx = map.getLayer(idx).getExtent()
@@ -143,7 +149,6 @@ class WFSAPIViewv1(WFSAPIView):
         content_type = mapscript.msIO_stripStdoutBufferContentType()
         content = mapscript.msIO_getStdoutBufferBytes()
         return Response(content, content_type=content_type)
-        
 
     def _get_map(self):
         """
@@ -156,7 +161,7 @@ class WFSAPIViewv1(WFSAPIView):
         map.name = "BCCVLMap"
         # EXTENT ... in projection units (we use epsg:4326) WGS84
         map.extent = mapscript.rectObj(-180.0, -90.0, 180.0, 90.0)
-        #map.extent = mapscript.rectObj(-20026376.39, -20048966.10, 20026376.39, 20048966.10)
+        
         # UNITS ... in projection units
         map.units = mapscript.MS_DD
         # SIZE
@@ -216,7 +221,7 @@ class ShapeLayer(object):
 
         # TODO: find extent using orginfo -al -fid 0
 
-    def add_layer_obj(self, map):
+    def add_layer_obj(self, map, layer_mapping):
         """
         Create mapserver layer object.
 
@@ -227,7 +232,7 @@ class ShapeLayer(object):
         self._inspect_data()
         # create a layer object
         layer = mapscript.layerObj()
-        # configure layer
+
         # NAME
         layer.name = "DEFAULT"  # TODO: filename?
         # TYPE
@@ -237,19 +242,72 @@ class ShapeLayer(object):
         # mark layer as queryable
         layer.template = "query"  # anything non null and with length > 0 works here
 
-        # DATA
-        layer.data = self.filename
 
-        # layer.tolerance = 10.0  # TODO: this should be dynamic based on zoom level
-        # layer.toleranceunits = mapscript.MS_PIXELS
+        # DATA, in the format of "<column> from <tablename> using unique fid using srid=xxxx"
+        # table must have fid and geom
+        # table_attribute in the form 'table-name:attrubute1'
+        # TODO: Shall we check that the column and table exists??
 
-        # PROJECTION ... should we ste this properly?
+        base_table = layer_mapping.get('base_layer')         # Base table where geom and id columns are found
+        common_col = layer_mapping.get('common_column')      # joinable column
+        id_col = layer_mapping.get('id_column')              # ID column
+        geom_col =  layer_mapping.get('geometry_column')
+
+        layer_name = self.request.params.get('typeNames', None)
+        if layer_name is not None:
+            layer.name = layer_name
+            
+        # get the feature ids. in it is the format: layername:fid
+        featureId = self.request.params.get('featureID', '')
+        fids = featureId.split(',')
+        fid = ''
+        for i in fids:
+            l,n = i.split('.')
+            fid += ',{}'.format(n)
+        if len(fid) > 0:
+            fid = fid[1:]
+        else:
+            fid = None
+
+        fid_col = id_col
+        if db_is_configured():
+            # Connection to POSTGIS DB server 
+            layer.connectiontype = mapscript.MS_POSTGIS
+            layer.connection = "user=postgres password=ibycgtpw dbname=mydb host=localhost port=5432"
+            if layer_name:
+                layer_table = layer_mapping.get('layer_mappings').get(layer_name, None)
+            else:
+                layer_table = base_table
+
+            if layer_table is None:
+                raise Exception("Invalid typeNames in request")
+
+            if layer_table != base_table:
+                fid_col = 'gid'
+                if fid is not None:
+                    newtable = "(select b.{idcol} as gid, b.{geom}, a.* from {layer} a join {base} b on a.{ccol} = b.{ccol} and b.{idcol} in ({ids}))".format(layer=layer_table, base=base_table, ccol=common_col, idcol=id_col, ids=fid, geom=geom_col)
+                else:
+                    newtable = "(select b.{idcol} as gid, b.{geom}, a.* from {layer} a join {base} b on a.{ccol} = b.{ccol})".format(layer=layer_table, base=base_table, ccol=common_col, idcol=id_col, geom=geom_col)                    
+            else:
+                if fid is not None:
+                    newtable = "(select * from {layer} where {idcol} in ({ids}))".format(layer=layer_table, idcol=id_col, ids=fid)
+                else:
+                    newtable = "(select * from {layer})".format(layer=layer_table)
+
+        srid = self.request.params.get('SRID', '4326')
+        layer.data = "{geom} from {table} as new_layer using unique {idcol} using srid={srid}".format(geom=geom_col, table=newtable, idcol=id_col, srid=srid)
+
+        # Defer closing connection
+        layer.addProcessing("CLOSE_CONNECTION=DEFER")
+
+        # PROJECTION ... should we set this properly?
         crs = self._data['crs']
         layer.setProjection("init={}".format(crs))
+
         # METADATA
         # TODO: check return value of setMetaData MS_SUCCESS/MS_FAILURE
         layer.setMetaData("gml_types", "auto")
-        layer.setMetaData("gml_featureid", "NCB_ID") 
+        layer.setMetaData("gml_featureid", fid_col) # Shall be the id column of the base table
         layer.setMetaData("gml_include_items", "all")  # allow raster queries
         layer.setMetaData("wfs_include_items", "all")
         layer.setMetaData("wfs_srs", "EPSG:4326 EPSG:3857")  # projection to serve
