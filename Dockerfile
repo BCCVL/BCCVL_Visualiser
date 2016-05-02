@@ -13,7 +13,7 @@ RUN yum install -y gcc make git python python-devel gdal-devel gdal-python gdal 
 RUN pip install --no-cache numpy==1.10.1 scipy==0.14.0 requests[security]==2.8.1
 COPY requirements.txt /tmp/requirements.txt
 RUN CPLUS_INCLUDE_PATH=/usr/include/gdal C_INCLUDE_PATH=/usr/include/gdal pip install --upgrade --no-cache -r /tmp/requirements.txt && \
-    pip install -f https://github.com/BCCVL/org.bccvl.movelib/archive/1.2.0.tar.gz#egg=org.bccvl.movelib-1.2.0 org.bccvl.movelib[http,swift]==1.1.0
+    pip install -f https://github.com/BCCVL/org.bccvl.movelib/archive/1.2.0.tar.gz#egg=org.bccvl.movelib-1.2.0 org.bccvl.movelib[http,swift]==1.2.0
 
 
 RUN cd /tmp && curl http://download.osgeo.org/mapserver/mapserver-7.0.1.tar.gz | tar xz \
