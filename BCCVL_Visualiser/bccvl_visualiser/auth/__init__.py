@@ -5,7 +5,27 @@ from urllib import unquote, quote
 from pyramid.authentication import AuthTktAuthenticationPolicy as BasePolicy
 from pyramid.authentication import AuthTktCookieHelper as BaseCookieHelper
 from pyramid.authentication import VALID_TOKEN
+from pyramid.interfaces import IAuthenticationPolicy
 from pyramid.compat import text_type, ascii_native_
+
+
+def update_auth_cookie(cookie, tokens, request):
+    # add given tokens to cookie, assumes existing cookie is base64 encoded
+    cookie = binascii.a2b_base64(unquote(cookie))  # decode cookie
+    # properly decode cookie and create a new one, so that updated token list is part of digest
+    authpol = request.registry.getUtility(IAuthenticationPolicy)
+    identity = authpol.cookie.identify(request)
+    ticket = authpol.cookie.AuthTicket(
+        authpol.cookie.secret,
+        identity['userid'],
+        '0.0.0.0',  # only needed if settings ask for include_ip
+        tokens=identity['tokens'] + tokens.split(','),
+        user_data=identity['userdata'],
+        cookie_name=authpol.cookie.cookie_name,
+        secure=authpol.cookie.secure,
+        hashalg=authpol.cookie.hashalg)
+    # encode updated cookie
+    return quote(binascii.b2a_base64(ticket.cookie_value()))
 
 
 class AuthTktAuthenticationPolicy(BasePolicy):
@@ -128,6 +148,7 @@ class AuthTktCookieHelper(BaseCookieHelper):
         """
 
         # WE are only consuming AuthTKT tickets....
+        # FIXME: ... we should probaly ensure we update cookies as well
         return {}
         # TODO: Also the code belowe generates cookie, which cause a 502 error
         #       if there is a n Apache reverse proxy in front of us

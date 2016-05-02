@@ -19,7 +19,7 @@ requires = [
     # For travis, it's installed via packages
     #
     'GDAL >= 1.7.3',
-    #'mapscript >= 6.0.1',      # Python Map Server implementation
+    #'MapScript >= 7.0.0',      # There is no distirbution we can deppend on.. it's either there ore not
     'zope.interface >= 4.1.0',
 
     'dogpile.cache',    # cache regions, lets you cache the result of queries
@@ -37,11 +37,12 @@ requires = [
     'scipy',
     'repoze.vhm',       # Use repoze middleware for Virtual Host management
     'csvvalidator',
+    'futures',
     'org.bccvl.movelib [http]',
     ]
 
 setup(name='BCCVL_Visualiser',
-      version='1.7.0',
+      version='1.8.0.dev',
       description='BCCVL_Visualiser',
       long_description=README + '\n\n' + CHANGES,
       classifiers=[
