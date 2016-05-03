@@ -4,7 +4,7 @@ from pyramid.settings import aslist
 import logging
 from bccvl_visualiser.auth import AuthTktAuthenticationPolicy
 from bccvl_visualiser.models import BCCVLMap
-from bccvl_visualiser.models.external_api import DataManager
+from bccvl_visualiser.models.external_api import DataManager, DatabaseManager
 from bccvl_visualiser.models.external_api import FDataMover, DataMover
 
 
@@ -15,7 +15,7 @@ def initialise_cache(settings):
     """
 
     log = logging.getLogger(__name__)
-
+    
     from bccvl_visualiser import cache as cache_module
 
     settings['cache.regions'] = aslist(settings['cache.regions'])
@@ -42,6 +42,10 @@ def configure_data_manager(settings):
 def configure_data_mover(settings):
     """ Configure the Data Mover """
     FDataMover.configure_from_config(settings)
+
+def configure_database_manager(settings):
+    """ Configure the Database Manager """
+    DatabaseManager.configure_from_config(settings)
 
 def main(global_config, **settings):
     """ This function returns a Pyramid WSGI application.
@@ -72,6 +76,8 @@ def main(global_config, **settings):
     configure_data_manager(config.registry.settings)
     # Configure our DataMover class
     configure_data_mover(config.registry.settings)
+    # Configure the postgis database server
+    configure_database_manager(config.registry.settings)
 
     config.add_static_view('static', 'static', cache_max_age=3600)
     config.add_static_view(name='public_data', path=DataMover.PUBLIC_DIR)

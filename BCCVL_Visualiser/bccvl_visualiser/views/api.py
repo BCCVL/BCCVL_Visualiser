@@ -19,6 +19,7 @@ from bccvl_visualiser.models import (
 from bccvl_visualiser.views import BaseView
 from bccvl_visualiser.utils import FetchJob, fetch_file, data_dir
 from concurrent.futures import ThreadPoolExecutor
+from bccvl_visualiser.models.external_api import DatabaseManager
 
 LOG = logging.getLogger(__name__)
 
@@ -45,7 +46,7 @@ def fetch_worker(request, data_url, job):
 
             # Import dataset to postgis server
             schemaname = None
-            if db_server_config():
+            if DatabaseManager.is_configured():
                 # TODO: To support other file type?
                 if os.path.isfile(os.path.join(datadir, fname + ".shp")):
                     dbFilename = os.path.join(datadir, fname + ".shp")
@@ -65,8 +66,6 @@ def fetch_worker(request, data_url, job):
         LOG.warning(reason)
         job.update(status=FetchJob.STATUS_FAILED, end_timestamp=datetime.datetime.now(), reason=reason)
 
-def db_server_config():
-    return True
 
 def write_dataset_metadata(layer_mappings, blayer, schemaname, filepath):
     # Metadata about mapping layer name to a table from the request params 
@@ -94,12 +93,20 @@ def import_into_db(dbfname, schemaname):
     # Import dataset into db server
     try:
         # create schema
-        command = 'ogrinfo -so PG:"host=132.234.148.51 user=postgres password=ibycgtpw dbname=mydb port=5432" -sql "create schema if not exists {schema}"'.format(schema=schemaname)
-        subprocess.call(shlex.split(command))
+        #command = 'ogrinfo -so PG:"host=132.234.148.51 user=postgres password=ibycgtpw dbname=mydb port=5432" -sql "create schema if not exists {schema}"'.format(schema=schemaname)
+        command = 'ogrinfo -so PG:"{dbconn}" -sql "create schema if not exists {schema}"'.format(dbconn=DatabaseManager.connection_details(), schema=schemaname)
+        p = subprocess.Popen(shlex.split(command), stdout=subprocess.PIPE, stderr=subprocess.PIPE)
+        output, err = p.communicate()
+        if p.returncode != 0:
+            raise Exception("Fail to create schema '{}'. {}".format(schemaname, err))
             
         # import the dataset. Set FID and geometry name.
-        command = 'ogr2ogr -f PostgreSQL PG:"host=132.234.148.51 user=postgres password=ibycgtpw dbname=mydb port=5432" -lco schema={schema} -lco FID=fid -GEOMETRY_NAME=geom  {dbfile} -skipfailures'.format(schema=schemaname, dbfile=dbfname)
-        subprocess.call(shlex.split(command))
+        command = 'ogr2ogr -f PostgreSQL PG:"{dbconn}" -lco schema={schema} -lco FID=fid -lco GEOMETRY_NAME=geom  {dbfile} -skipfailures'.format(dbconn=DatabaseManager.connection_details(), schema=schemaname, dbfile=dbfname)
+        p = subprocess.Popen(shlex.split(command), stdout=subprocess.PIPE, stderr=subprocess.PIPE)
+        output, err = p.communicate()
+        if p.returncode != 0:
+            raise Exception("Fail to import dataset '{}. {}'".format(dbfname, err))
+
     except Exception as e:
         raise Exception("Failed to import dataset into DB server. {0}".format(str(e)))
 

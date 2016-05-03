@@ -19,6 +19,7 @@ from pyramid.view import view_config, view_defaults
 from bccvl_visualiser.utils import fetch_file
 from bccvl_visualiser.views import BaseView
 from bccvl_visualiser.models.wfs_api import WFSAPI, WFSAPIv1
+from bccvl_visualiser.models.external_api import DatabaseManager
 
 LOG = logging.getLogger(__name__)
 
@@ -256,24 +257,19 @@ class ShapeLayer(object):
         layer_name = self.request.params.get('typeNames', None)
         if layer_name is not None:
             layer.name = layer_name
-            
+
         # get the feature ids. in it is the format: layername:fid
         featureId = self.request.params.get('featureID', '')
         fids = featureId.split(',')
-        fid = ''
-        for i in fids:
-            l,n = i.split('.')
-            fid += ',{}'.format(n)
-        if len(fid) > 0:
-            fid = fid[1:]
-        else:
+        fid = ','.join([v.split('.')[1] for v in fids if len(v.split('.')) > 1])
+        if len(fid) == 0:
             fid = None
 
         fid_col = id_col
-        if db_is_configured():
+        if DatabaseManager.is_configured():
             # Connection to POSTGIS DB server 
             layer.connectiontype = mapscript.MS_POSTGIS
-            layer.connection = "user=postgres password=ibycgtpw dbname=mydb host=localhost port=5432"
+            layer.connection = DatabaseManager.connection_details()
             if layer_name:
                 layer_table = layer_mapping.get('layer_mappings').get(layer_name, None)
             else:
@@ -284,12 +280,12 @@ class ShapeLayer(object):
 
             if layer_table != base_table:
                 fid_col = 'gid'
-                if fid is not None:
+                if fid:
                     newtable = "(select b.{idcol} as gid, b.{geom}, a.* from {layer} a join {base} b on a.{ccol} = b.{ccol} and b.{idcol} in ({ids}))".format(layer=layer_table, base=base_table, ccol=common_col, idcol=id_col, ids=fid, geom=geom_col)
                 else:
                     newtable = "(select b.{idcol} as gid, b.{geom}, a.* from {layer} a join {base} b on a.{ccol} = b.{ccol})".format(layer=layer_table, base=base_table, ccol=common_col, idcol=id_col, geom=geom_col)                    
             else:
-                if fid is not None:
+                if fid:
                     newtable = "(select * from {layer} where {idcol} in ({ids}))".format(layer=layer_table, idcol=id_col, ids=fid)
                 else:
                     newtable = "(select * from {layer})".format(layer=layer_table)
