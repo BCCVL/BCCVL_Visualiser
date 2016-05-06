@@ -4,6 +4,7 @@ import urlparse
 import urllib
 import os
 import os.path
+import json
 from xml.sax.saxutils import escape, quoteattr
 
 import mapscript
@@ -17,6 +18,7 @@ from pyramid.view import view_config, view_defaults
 from bccvl_visualiser.utils import fetch_file
 from bccvl_visualiser.views import BaseView
 from bccvl_visualiser.models.wms_api import WMSAPI, WMSAPIv1
+from bccvl_visualiser.models.external_api import DatabaseManager
 
 LOG = logging.getLogger(__name__)
 
@@ -103,10 +105,31 @@ class WMSAPIViewv1(WMSAPIView):
             layer = TiffLayer(self.request, loc)
         elif mimetype == 'text/csv':
             layer = CSVLayer(self.request, loc)
+        elif mimetype == 'application/zip':
+            datadir, filename = os.path.split(loc)
+            fname, fext = os.path.splitext(filename)
+            # Check if layer mapping file exists.
+            mdfile = os.path.join(datadir, 'layer_mappings.json')
+            if os.path.isfile(mdfile):
+                metadata = json.load(open(mdfile, 'r'))
+            else:
+                raise HTTPNotImplemented("Missing layer mapping meta data file '{}'".format(mdfile))
+
+            # Check if shape/gdb file exists.
+            if os.path.isfile(os.path.join(datadir, fname + ".shp")):
+                dbFilename = os.path.join(datadir, fname + ".shp")
+            elif os.path.isdir(os.path.join(datadir, fname + ".gdb")):
+                dbFilename = os.path.join(datadir, fname + ".gdb")
+            else:
+                msg = "Invalid zip file '{}' -- is not in shape/gdb format.".format(filename)           
+                raise HTTPNotImplemented(msg)
+
+            layer = ShapeLayer(self.request, dbFilename, metadata)
         else:
             msg = "Unknown file type '{}'.".format(mimetype)
             # HTTPBadRequest(msg)
             raise HTTPNotImplemented(msg)
+
         # add layer into map
         idx = layer.add_layer_obj(map)
         # set map projection and extent from layer data
@@ -263,6 +286,138 @@ class WMSAPIViewv1(WMSAPIView):
 
         # TODO: FONTSET [filename]
         #    set location of fontset file http://mapserver.org/el/mapfile/fontset.html
+
+
+
+class ShapeLayer(object):
+
+    _data = None
+
+    def __init__(self, request, filename, metadata):
+        self.request = request
+        self.filename = filename
+        self.metadata = metadata
+
+    def _inspect_data(self):
+        # TODO: inspect csv, remove invalid values, find extent, and min max values etc...
+        # TODO: get CRS from the meta data file? CRS is determined by the base file with geometry data.
+        self._data = {
+            'crs': 'epsg:4326',
+        }
+
+    def add_layer_obj(self, map):
+        """
+        Create mapserver layer object.
+
+        The raster data for the layer is located at filename, which
+        should be an absolute path on the local filesystem.
+        """
+        # inspect data if we haven't yet
+        self._inspect_data()
+        # create a layer object
+        layer = mapscript.layerObj()
+
+        # NAME
+        layer.name = "DEFAULT"  # TODO: filename?
+        # TYPE
+        layer.type = mapscript.MS_LAYER_POLYGON
+        # STATUS
+        layer.status = mapscript.MS_ON
+        # mark layer as queryable
+        layer.template = "query"  # anything non null and with length > 0 works here
+
+
+        # DATA, in the format of "<column> from <tablename> using unique fid using srid=xxxx"
+        # table must have fid and geom
+        # table_attribute in the form 'table-name:attrubute1'
+        # TODO: Shall we check that the column and table exists??
+
+        base_table = self.metadata.get('base_layer')         # Base table where geom and id columns are found
+        common_col = self.metadata.get('common_column')      # joinable column
+        id_col = self.metadata.get('id_column')              # ID column
+        geom_col =  self.metadata.get('geometry_column')
+
+        layer_name = self.request.params.get('layers', None)
+        if layer_name is not None:
+            layer.name = layer_name
+
+        if DatabaseManager.is_configured():
+            # Connection to POSTGIS DB server 
+            layer.connectiontype = mapscript.MS_POSTGIS
+            layer.connection = DatabaseManager.connection_details()
+            property_name = None
+            layer_table = None
+            #layer name is layer.columnname
+            if layer_name:
+                layername, property_name = layer_name.split('.')
+                layer_table = self.metadata.get('layer_mappings').get(layername, None)
+
+            if layer_table is None:
+                raise Exception("Invalid typeNames in request")
+
+            # Get property as value
+            if layer_table != base_table:
+                newtable = "(select a.{colname} as value, b.* from {layer} a join {base} b on a.{ccol} = b.{ccol})".format(colname=property_name, layer=layer_table, base=base_table, ccol=common_col)
+            else:
+                newtable = "(select {colname} as value, * from {layer})".format(colname=property_name, layer=layer_table)
+
+            srid = self.request.params.get('SRID', '4326')
+            layer.data = "{geom} from {table} as new_layer using unique {idcol} using srid={srid}".format(geom=geom_col, table=newtable, idcol=id_col, srid=srid)
+
+            # Defer closing connection
+            layer.addProcessing("CLOSE_CONNECTION=DEFER")
+
+        else:
+            # TO DO: read from file
+            raise Exception("Databse serveris not configured")
+
+
+        # PROJECTION ... should we set this properly?
+        crs = self._data['crs']
+        layer.setProjection("init={}".format(crs))
+
+        # METADATA
+        # TODO: check return value of setMetaData MS_SUCCESS/MS_FAILURE
+        layer.setMetaData("gml_types", "auto")
+        layer.setMetaData("gml_featureid", id_col) # Shall be the id column of the base table
+        layer.setMetaData("gml_include_items", "all")  # allow raster queries
+        layer.setMetaData("wfs_include_items", "all")
+        layer.setMetaData("wfs_srs", "EPSG:4326 EPSG:3857")  # projection to serve
+        layer.setMetaData("wfs_title", "BCCVL Layer")  # title required for GetCapabilities
+
+        # TODO: metadata
+        #       other things like title, author, attribution etc...
+
+        # TODO: if we have a STYLES parameter we should add a STYLES element here
+        if not (self.request.params.get('STYLES') or
+                'SLD' in self.request.params or
+                'SLD_BODY' in self.request.params):
+            # set some default style if the user didn't specify any' STYLE
+            layer.insertClass(self.default_class_style('value'))
+
+        ret = map.insertLayer(layer)
+
+        sld = self.request.params.get('SLD_BODY')
+        sld_url = self.request.params.get('SLD')
+        if sld_url:
+            map.applySLDURL(sld_url)
+        elif sld:
+            map.applySLD(sld)
+        return ret
+
+    def default_class_style(self, col_name):
+        # return a default class for styling based on the value of a specified column
+        styleobj = mapscript.styleObj()
+        styleobj.mincolor = mapscript.colorObj(255, 255, 255)
+        styleobj.maxcolor = mapscript.colorObj(0, 128, 255)
+        if 'min' in self._data and 'max' in self._data:
+            styleobj.minvalue = self._data['min']
+            styleobj.maxvalue = self._data['max']
+        styleobj.rangeitem = col_name
+        clsobj = mapscript.classObj()
+        clsobj.name = "-"
+        clsobj.insertStyle(styleobj)
+        return clsobj
 
 
 class TiffLayer(object):

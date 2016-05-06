@@ -290,11 +290,16 @@ class ShapeLayer(object):
                 else:
                     newtable = "(select * from {layer})".format(layer=layer_table)
 
-        srid = self.request.params.get('SRID', '4326')
-        layer.data = "{geom} from {table} as new_layer using unique {idcol} using srid={srid}".format(geom=geom_col, table=newtable, idcol=id_col, srid=srid)
+            srid = self.request.params.get('SRID', '4326')
+            layer.data = "{geom} from {table} as new_layer using unique {idcol} using srid={srid}".format(geom=geom_col, table=newtable, idcol=id_col, srid=srid)
 
-        # Defer closing connection
-        layer.addProcessing("CLOSE_CONNECTION=DEFER")
+            # Defer closing connection
+            layer.addProcessing("CLOSE_CONNECTION=DEFER")
+
+        else:
+            # TO DO: read from file
+            raise Exception("Database is not configured.")
+
 
         # PROJECTION ... should we set this properly?
         crs = self._data['crs']
