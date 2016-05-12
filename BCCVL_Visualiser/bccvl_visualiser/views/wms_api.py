@@ -5,6 +5,7 @@ import urllib
 import os
 import os.path
 import json
+import math
 from xml.sax.saxutils import escape, quoteattr
 
 import mapscript
@@ -333,9 +334,14 @@ class ShapeLayer(object):
         # TODO: Shall we check that the column and table exists??
 
         base_table = self.metadata.get('base_layer')         # Base table where geom and id columns are found
+        extent = self.metadata.get('base_extent')            # Extent of base table
         common_col = self.metadata.get('common_column')      # joinable column
         id_col = self.metadata.get('id_column')              # ID column
-        geom_col =  self.metadata.get('geometry_column')
+        geom_col = self.metadata.get('geometry_column')      # layer extent (in degree)
+
+        # Set extent to improve performance of getting data from DB server
+        if extent:
+            layer.setExtent(extent['xmin'], extent['ymin'], extent['xmax'], extent['ymax'])
 
         layer_name = self.request.params.get('layers', None)
         if layer_name is not None:
@@ -355,11 +361,17 @@ class ShapeLayer(object):
             if layer_table is None:
                 raise Exception("Invalid typeNames in request")
 
+            # To speed up DB performance, simplify geometry for low resolution i.e. <= 300000 pixel per degree.
+            resolution, tolerance = self.resolution_tolerance(layer)
+            the_geom = 'b.{geomcol}'.format(geomcol=geom_col)
+            if resolution <= 300000 and tolerance > 0.001:
+                the_geom = "ST_Simplify(b.{geomcol}, {tol}) as {geomcol}".format(geomcol=geom_col, tol=tolerance)
+
             # Get property as value
             if layer_table != base_table:
-                newtable = "(select a.{colname} as value, b.* from {layer} a join {base} b on a.{ccol} = b.{ccol})".format(colname=property_name, layer=layer_table, base=base_table, ccol=common_col)
+                newtable = "(select a.{colname} as value, b.{idcol}, {geom} from {layer} a join {base} b on a.{ccol} = b.{ccol})".format(colname=property_name, layer=layer_table, base=base_table, ccol=common_col, idcol=id_col, geom=the_geom)
             else:
-                newtable = "(select {colname} as value, * from {layer})".format(colname=property_name, layer=layer_table)
+                newtable = "(select b.{colname} as value, b.{idcol}, {geom} from {base} b)".format(colname=property_name, base=layer_table, idcol=id_col, geom=the_geom)
 
             srid = self.request.params.get('SRID', '4326')
             layer.data = "{geom} from {table} as new_layer using unique {idcol} using srid={srid}".format(geom=geom_col, table=newtable, idcol=id_col, srid=srid)
@@ -404,6 +416,30 @@ class ShapeLayer(object):
         elif sld:
             map.applySLD(sld)
         return ret
+
+    # Return resolution required, and the tolerance used for simplify geometry.
+    # TODO: Fine tune this
+    def resolution_tolerance(self, layer):
+        resolution = 0.0
+        tolerance = 0.0
+        try:
+            width = int(self.request.params.get('WIDTH'))       # in pixel
+            height = int(self.request.params.get('HEIGHT'))
+            bbox = self.request.params.get('BBOX')              # This is in meter
+            if bbox:
+                xmin, ymin, xmax, ymax = [float(a) for a in bbox.split(',')]
+                area = ((xmax - xmin)/1000.0) * ((ymax - ymin)/1000.0)      # in square KM
+            else:
+                # Use the extent of the layer, which is in degree. Calculate area in square km.
+                lx = layer.getExtent()                                     
+                area = ((lx.maxx - lx.minx) * 111.1) * ((lx.maxy - lx.miny) * 111.1)
+            resolution = (width * height * 111.1) / math.sqrt(area)        # number of pixels per degree
+            tolerance = 0.1/(math.log(resolution) - 4.5)                   # tolerance used for simplify geometry
+        except Exception:            
+            pass
+
+        print "tolerance = %f, area = %f, resolution = %f" %(tolerance, area, resolution)
+        return resolution, tolerance
 
     def default_class_style(self, col_name):
         # return a default class for styling based on the value of a specified column
