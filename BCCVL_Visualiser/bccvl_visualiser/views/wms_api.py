@@ -334,10 +334,10 @@ class ShapeLayer(object):
         # TODO: Shall we check that the column and table exists??
 
         base_table = self.metadata.get('base_layer')         # Base table where geom and id columns are found
-        extent = self.metadata.get('base_extent')            # Extent of base table
+        extent = self.metadata.get('base_extent', None)      # Extent of base table
         common_col = self.metadata.get('common_column')      # joinable column
         id_col = self.metadata.get('id_column')              # ID column
-        geom_col = self.metadata.get('geometry_column')      # layer extent (in degree)
+        geom_col = self.metadata.get('geometry_column')      # layer geometry
 
         # Set extent to improve performance of getting data from DB server
         if extent:

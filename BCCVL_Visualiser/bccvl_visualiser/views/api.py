@@ -5,7 +5,7 @@ import subprocess
 import shlex
 import zipfile
 import json
-from osgeo import gdal
+from osgeo import gdal, ogr
 
 from pyramid.response import Response
 from pyramid.view import view_config, view_defaults
@@ -84,16 +84,32 @@ def write_dataset_metadata(layer_mappings, blayer, schemaname, filepath):
                  'id_column': 'fid',
                  'geometry_column': 'geom'
                 }
+
+    # dataset only has extent if it has geometry column.
+    extent = get_Extent_from(base_layer)
+    if extent:
+        xmin, xmax, ymin, ymax = extent
+        layer_md['base_extent'] = {'xmin': xmin, 'ymin': ymin, 'xmax': xmax, 'ymax': ymax}
+
     jsonfile = open(os.path.join(datadir, "layer_mappings.json"), 'w')
     json.dump(layer_md, jsonfile, indent=4)
     jsonfile.close()
 
+def get_Extent_from db(tablename):
+    # Get extent of the table specified from DB server
+    command = 'PG:{dbconn}'.format(dbconn=DatabaseManager.connection_details())
+    dbconn = ogr.Open(command)
+    layerdata = dbconn.ExecuteSQL("select * from {table}".format(table=tablename))
+    extent = None
+    if len(layerdata.GetGeometryColumn()) > 0:
+        extent = layerdata.GetExtent()
+    dbconn.Destroy()
+    return extent
 
 def import_into_db(dbfname, schemaname):
     # Import dataset into db server
     try:
         # create schema
-        #command = 'ogrinfo -so PG:"host=132.234.148.51 user=postgres password=ibycgtpw dbname=mydb port=5432" -sql "create schema if not exists {schema}"'.format(schema=schemaname)
         command = 'ogrinfo -so PG:"{dbconn}" -sql "create schema if not exists {schema}"'.format(dbconn=DatabaseManager.connection_details(), schema=schemaname)
         p = subprocess.Popen(shlex.split(command), stdout=subprocess.PIPE, stderr=subprocess.PIPE)
         output, err = p.communicate()
