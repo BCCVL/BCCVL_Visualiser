@@ -1,4 +1,7 @@
 import logging
+import os
+import glob
+import json
 
 class DatabaseManager(object):
 
@@ -7,6 +10,9 @@ class DatabaseManager(object):
     PORT = None
     HOST = None
     DB_NAME = None
+    MAP_FILES_DIR = None
+
+    METADATA = {}
 
     @classmethod
     def configure_from_config(class_, settings):
@@ -22,6 +28,13 @@ class DatabaseManager(object):
         class_.DB_NAME = settings['bccvl.database_manager.db_name']
         class_.USER = settings['bccvl.database_manager.user']
         class_.PASSWORD = settings['bccvl.database_manager.password']
+        class_.MAP_FILES_DIR = settings['bccvl.mapscript.map_data_files_root_path']
+
+        # Read in the metadata for each dataset
+        for mdfile in glob.glob(os.path.join(class_.MAP_FILES_DIR, '*/layer_mappings.json')):
+            layer_mapping = json.load(open(mdfile, 'r'))
+            dirname, filename = os.path.split(layer_mapping.get('filename'))
+            class_.METADATA[filename] = layer_mapping
 
     @classmethod
     def is_configured(cls):
@@ -30,3 +43,11 @@ class DatabaseManager(object):
     @classmethod
     def connection_details(cls):
         return "user={} password={} dbname={} host={} port={}".format(cls.USER, cls.PASSWORD, cls.DB_NAME, cls.HOST, cls.PORT)
+
+    @classmethod
+    def update_metadata(cls, key, metadata):
+        cls.METADATA[key] = metadata
+
+    @classmethod
+    def get_metadata(cls, key):
+        return cls.METADATA.get(key, None)

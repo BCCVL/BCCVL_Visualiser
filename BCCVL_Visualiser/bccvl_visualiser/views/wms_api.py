@@ -119,8 +119,8 @@ class WMSAPIViewv1(WMSAPIView):
             # Check if shape/gdb file exists.
             if os.path.isfile(os.path.join(datadir, fname + ".shp")):
                 dbFilename = os.path.join(datadir, fname + ".shp")
-            elif os.path.isdir(os.path.join(datadir, fname + ".gdb")):
-                dbFilename = os.path.join(datadir, fname + ".gdb")
+            elif os.path.isdir(os.path.join(datadir, fname)) and fname.endswith(".gdb"):
+                dbFilename = os.path.join(datadir, fname)
             else:
                 msg = "Invalid zip file '{}' -- is not in shape/gdb format.".format(filename)           
                 raise HTTPNotImplemented(msg)
@@ -328,38 +328,76 @@ class ShapeLayer(object):
         layer.template = "query"  # anything non null and with length > 0 works here
 
 
+        # Extract the base table and attribute table from layers
+        # typeNames = {base_filename}:{{base layername}.{attribute layername}} i.e. stream_attributesv1.1.5.gdb:catchment.climate
+        layers = self.request.params.get('layers', None)
+        if layers is None:
+            raise Exception("Missing layers parameter")
+
+        layer.name = layers
+        if layers.find(":") >= 0:
+            filename, layername = layers.split(':')
+        else:
+            filename = None
+            layername = layers
+
+        # Get the corresposning base layer table and attribute table
+        #layername = {base layername}.{attribute layername}.columnName
+        # or {base layername}.columnName
+        layerItems = layername.split('.')
+        if  len(layerItems) < 2:
+            raise Exception("Invalid layers '{layer}'".format(layer=layers))
+
+        base_layer = attr_layer = property_name = None
+        if len(layerItems) == 2:
+            attr_layer, property_name = layerItems
+        else:
+            base_layer, attr_layer, property_name = layerItems
+
+        # get the attribute table metadata
+        attr_table = None
+        if attr_layer:
+            layer_info = self.metadata.get('layer_mappings').get(attr_layer, None)
+            if layer_info:
+                attr_table = layer_info.get('table', None)
+        if attr_table is None:
+            raise Exception("Invalid 'layers' parameter in request: no such layer '{layername}'".format(layername=layername))
+        
+        # Get the corresposning base table, and its id and geometry column names
+        base_table = None
+        common_col = None
+        if base_layer:
+            base_table, id_col, geom_col, extent = self.get_table_details(filename, base_layer)
+
+            # Get the foreign key i.e. the joinable column
+            # This is only required for joining tables
+            common_col = self.request.params.get('foreignKey', None)
+            if common_col is None:
+                raise Exception("Missing 'foreignKey' parameter in request")
+        else:
+            base_table = attr_table
+            layer_info = self.metadata.get('layer_mappings').get(attr_layer, None)
+            id_col = layer_info.get('id_column')                # ID column
+            geom_col = layer_info.get('geometry_column', None)
+            extent = layer_info.get('base_extent', None)
+
+        if base_table is None or id_col is None or geom_col is None:
+            raise Exception("Missing or invalid table for {layer}".format(layer=base_layer or attr_layer))
+
+
         # DATA, in the format of "<column> from <tablename> using unique fid using srid=xxxx"
         # table must have fid and geom
         # table_attribute in the form 'table-name:attrubute1'
         # TODO: Shall we check that the column and table exists??
 
-        base_table = self.metadata.get('base_layer')         # Base table where geom and id columns are found
-        extent = self.metadata.get('base_extent', None)      # Extent of base table
-        common_col = self.metadata.get('common_column')      # joinable column
-        id_col = self.metadata.get('id_column')              # ID column
-        geom_col = self.metadata.get('geometry_column')      # layer geometry
-
         # Set extent to improve performance of getting data from DB server
         if extent:
             layer.setExtent(extent['xmin'], extent['ymin'], extent['xmax'], extent['ymax'])
-
-        layer_name = self.request.params.get('layers', None)
-        if layer_name is not None:
-            layer.name = layer_name
 
         if DatabaseManager.is_configured():
             # Connection to POSTGIS DB server 
             layer.connectiontype = mapscript.MS_POSTGIS
             layer.connection = DatabaseManager.connection_details()
-            property_name = None
-            layer_table = None
-            #layer name is layer.columnname
-            if layer_name:
-                layername, property_name = layer_name.split('.')
-                layer_table = self.metadata.get('layer_mappings').get(layername, None)
-
-            if layer_table is None:
-                raise Exception("Invalid typeNames in request")
 
             # To speed up DB performance, simplify geometry for low resolution i.e. <= 300000 pixel per degree.
             resolution, tolerance = self.resolution_tolerance(layer)
@@ -368,10 +406,10 @@ class ShapeLayer(object):
                 the_geom = "ST_Simplify(b.{geomcol}, {tol}) as {geomcol}".format(geomcol=geom_col, tol=tolerance)
 
             # Get property as value
-            if layer_table != base_table:
-                newtable = "(select a.{colname} as value, b.{idcol}, {geom} from {layer} a join {base} b on a.{ccol} = b.{ccol})".format(colname=property_name, layer=layer_table, base=base_table, ccol=common_col, idcol=id_col, geom=the_geom)
+            if attr_table != base_table:
+                newtable = "(select a.{colname} as value, b.{idcol}, {geom} from {layer} a join {base} b on a.{ccol} = b.{ccol})".format(colname=property_name, layer=attr_table, base=base_table, ccol=common_col, idcol=id_col, geom=the_geom)
             else:
-                newtable = "(select b.{colname} as value, b.{idcol}, {geom} from {base} b)".format(colname=property_name, base=layer_table, idcol=id_col, geom=the_geom)
+                newtable = "(select b.{colname} as value, b.{idcol}, {geom} from {base} b)".format(colname=property_name, base=base_table, idcol=id_col, geom=the_geom)
 
             srid = self.request.params.get('SRID', '4326')
             layer.data = "{geom} from {table} as new_layer using unique {idcol} using srid={srid}".format(geom=geom_col, table=newtable, idcol=id_col, srid=srid)
@@ -381,7 +419,7 @@ class ShapeLayer(object):
 
         else:
             # TO DO: read from file
-            raise Exception("Databse serveris not configured")
+            raise Exception("Database server is not configured")
 
 
         # PROJECTION ... should we set this properly?
@@ -416,6 +454,14 @@ class ShapeLayer(object):
         elif sld:
             map.applySLD(sld)
         return ret
+
+    def get_table_details(self, filename, layername):
+        # return table name, id column name, geometry column name, and extent.
+        mddata = DatabaseManager.get_metadata(filename)
+        if mddata:
+            layer_info = mddata.get('layer_mappings').get(layername)
+            return (layer_info.get('table', None), layer_info.get('id_column', None), layer_info.get('geometry_column', None), layer_info.get('base_extent', None))
+        return (None, None, None, None)
 
     # Return resolution required, and the tolerance used for simplify geometry.
     # TODO: Fine tune this

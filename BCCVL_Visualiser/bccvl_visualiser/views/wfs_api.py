@@ -107,26 +107,26 @@ class WFSAPIViewv1(WFSAPIView):
             # Check if layer mapping file exists.
             mdfile = os.path.join(datadir, 'layer_mappings.json')
             if os.path.isfile(mdfile):
-                layer_mapping = json.load(open(mdfile, 'r'))
+                ds_metadata = json.load(open(mdfile, 'r'))
             else:
                 raise HTTPNotImplemented("Missing layer mapping meta data file '{}'".format(mdfile))
 
             # Check if shape file exists.
             if os.path.isfile(os.path.join(datadir, fname + ".shp")):
                 dbFilename = os.path.join(datadir, fname + ".shp")
-            elif os.path.isdir(os.path.join(datadir, fname + ".gdb")):
-                dbFilename = os.path.join(datadir, fname + ".gdb")
+            elif os.path.isdir(os.path.join(datadir, fname)) and fname.endswith(".gdb"):
+                dbFilename = os.path.join(datadir, fname)
             else:
-                msg = "Invalid zip file '{}' -- is not in shape/gdb format.".format(filename)           
+                msg = "Invalid zip file '{}' -- is not in shape/gdb format.".format(filename)
                 raise HTTPNotImplemented(msg)
         else:
             raise HTTPNotImplemented("Invalid zip file '{}'".format(filename))
 
         # if DB server is configured, get layer data from DB server. Otherwise get data from db file.
-        layer = ShapeLayer(self.request, dbFilename)
+        layer = ShapeLayer(self.request, dbFilename, ds_metadata)
 
         # add the shape layer into map
-        idx = layer.add_layer_obj(map, layer_mapping)
+        idx = layer.add_layer_obj(map)
 
         # set map projection and extent from layer data
         lx = map.getLayer(idx).getExtent()
@@ -210,9 +210,10 @@ class ShapeLayer(object):
 
     _data = None
 
-    def __init__(self, request, filename):
+    def __init__(self, request, filename, metadata):
         self.request = request
         self.filename = filename
+        self.metadata = metadata
 
     def _inspect_data(self):
         # TODO: inspect csv, remove invalid values, find extent, and min max values etc...
@@ -222,7 +223,7 @@ class ShapeLayer(object):
 
         # TODO: find extent using orginfo -al -fid 0
 
-    def add_layer_obj(self, map, layer_mapping):
+    def add_layer_obj(self, map):
         """
         Create mapserver layer object.
 
@@ -244,51 +245,100 @@ class ShapeLayer(object):
         layer.template = "query"  # anything non null and with length > 0 works here
 
 
+        # Extract the base table and attribute table from typeNames
+        # typeNames = {base_filename}:{{base layername}.{attribute layername}} i.e. stream_attributesv1.1.5.gdb:catchment.climate
+        type_name = self.request.params.get('typeNames', None)
+        if type_name is None:
+            raise Exception("Missing typeNames")
+
+        if type_name.find(":") >= 0:
+            filename, layername = type_name.split(':')
+        else:
+            filename = None
+            layername = type_name
+
+        # set layer name
+        layer.name = layername
+
+        # Get the corresposning base layer table and attribute table
+        #layername = {base layername}.{attribute layername}
+        base_layer = None
+        if layername.find(".") >= 0:
+            base_layer, attr_layer = layername.split('.')
+        else:
+            # No base layer. Only attribute layer
+            attr_layer = layername
+
+        # get the attribute table metadata
+        attr_table = None
+        if attr_layer:
+            layer_info = self.metadata.get('layer_mappings').get(attr_layer, None)
+            if layer_info:
+                attr_table = layer_info.get('table', None)
+        if attr_table is None:
+            raise Exception("Invalid typeNames in request: no such layer '{layername}'".format(layername=layername))
+        
+        # Get the corresposning base table, and its id and geometry column names
+        base_table = None
+        common_col = None
+        if base_layer:
+            base_table, id_col, geom_col, extent = self.get_table_details(filename, base_layer)
+
+            if base_table is None or id_col is None or geom_col is None:
+                raise Exception("Missing or invalid base table for {layer}".format(layer=base_layer))
+
+            # Get the foreign key i.e. the joinable column
+            common_col = self.request.params.get('foreignKey', None)
+            if common_col is None:
+                raise Exception("Missing foreignKey in request")
+        else:
+            base_table = attr_table
+            layer_info = self.metadata.get('layer_mappings').get(attr_layer, None)
+            id_col = layer_info.get('id_column')                # ID column
+            geom_col = layer_info.get('geometry_column', None)
+            extent = layer_info.get('base_extent', None)
+            
+        if extent:
+            layer.setExtent(extent['xmin'], extent['ymin'], extent['xmax'], extent['ymax'])
+
+
+        # get the feature ids. It must be in the format: {layername}.fid 
+        featureId = self.request.params.get('featureID', '')
+        fidlist = featureId.split(',')
+        fid = ','.join([v.split('{layername}.'.format(layername=attr_layer))[1] for v in fidlist if len(v.split('.')) > 1])
+        if len(fid) == 0:
+            fid = None
+
+        # get the attribute names.
+        attributeNames = self.request.params.get('attributes', None)
+
         # DATA, in the format of "<column> from <tablename> using unique fid using srid=xxxx"
         # table must have fid and geom
         # table_attribute in the form 'table-name:attrubute1'
         # TODO: Shall we check that the column and table exists??
-
-        base_table = layer_mapping.get('base_layer')         # Base table where geom and id columns are found
-        common_col = layer_mapping.get('common_column')      # joinable column
-        id_col = layer_mapping.get('id_column')              # ID column
-        geom_col =  layer_mapping.get('geometry_column')
-
-        layer_name = self.request.params.get('typeNames', None)
-        if layer_name is not None:
-            layer.name = layer_name
-
-        # get the feature ids. in it is the format: layername:fid
-        featureId = self.request.params.get('featureID', '')
-        fids = featureId.split(',')
-        fid = ','.join([v.split('.')[1] for v in fids if len(v.split('.')) > 1])
-        if len(fid) == 0:
-            fid = None
-
-        fid_col = id_col
         if DatabaseManager.is_configured():
             # Connection to POSTGIS DB server 
             layer.connectiontype = mapscript.MS_POSTGIS
             layer.connection = DatabaseManager.connection_details()
-            if layer_name:
-                layer_table = layer_mapping.get('layer_mappings').get(layer_name, None)
-            else:
-                layer_table = base_table
 
-            if layer_table is None:
-                raise Exception("Invalid typeNames in request")
-
-            if layer_table != base_table:
-                fid_col = 'gid'
+            if attr_table != base_table:
+                # Get all attributes of the attribute table if not specified
+                if attributeNames is None:
+                    fields = [i.lower() for i in self.metadata.get('layer_mappings').get(attr_layer).get('fields')]
+                    a_idcol = self.metadata.get('layer_mappings').get(attr_layer).get('id_column')
+                    for item in [a_idcol.lower(), common_col.lower()]:
+                        if item in fields:
+                            fields.remove(item)
+                    attributeNames = ','.join(fields)
                 if fid:
-                    newtable = "(select b.{idcol} as gid, b.{geom}, a.* from {layer} a join {base} b on a.{ccol} = b.{ccol} and b.{idcol} in ({ids}))".format(layer=layer_table, base=base_table, ccol=common_col, idcol=id_col, ids=fid, geom=geom_col)
+                    newtable = "(select b.*, {attributes} from {atable} a join {base} b on a.{ccol} = b.{ccol} and b.{idcol} in ({ids}))".format(attributes=attributeNames, atable=attr_table, base=base_table, ccol=common_col, idcol=id_col, ids=fid, geom=geom_col)
                 else:
-                    newtable = "(select b.{idcol} as gid, b.{geom}, a.* from {layer} a join {base} b on a.{ccol} = b.{ccol})".format(layer=layer_table, base=base_table, ccol=common_col, idcol=id_col, geom=geom_col)                    
+                    newtable = "(select b.*, {attributes} from {atable} a join {base} b on a.{ccol} = b.{ccol})".format(attributes=attributeNames, atable=attr_table, base=base_table, ccol=common_col, idcol=id_col, geom=geom_col)                    
             else:
                 if fid:
-                    newtable = "(select * from {layer} where {idcol} in ({ids}))".format(layer=layer_table, idcol=id_col, ids=fid)
+                    newtable = "(select * from {base} where {idcol} in ({ids}))".format(base=base_table, idcol=id_col, ids=fid)
                 else:
-                    newtable = "(select * from {layer})".format(layer=layer_table)
+                    newtable = "(select * from {base})".format(base=base_table)
 
             srid = self.request.params.get('SRID', '4326')
             layer.data = "{geom} from {table} as new_layer using unique {idcol} using srid={srid}".format(geom=geom_col, table=newtable, idcol=id_col, srid=srid)
@@ -300,7 +350,6 @@ class ShapeLayer(object):
             # TO DO: read from file
             raise Exception("Database is not configured.")
 
-
         # PROJECTION ... should we set this properly?
         crs = self._data['crs']
         layer.setProjection("init={}".format(crs))
@@ -308,7 +357,7 @@ class ShapeLayer(object):
         # METADATA
         # TODO: check return value of setMetaData MS_SUCCESS/MS_FAILURE
         layer.setMetaData("gml_types", "auto")
-        layer.setMetaData("gml_featureid", fid_col) # Shall be the id column of the base table
+        layer.setMetaData("gml_featureid", id_col) # Shall be the id column of the base table
         layer.setMetaData("gml_include_items", "all")  # allow raster queries
         layer.setMetaData("wfs_include_items", "all")
         layer.setMetaData("wfs_srs", "EPSG:4326 EPSG:3857")  # projection to serve
@@ -318,3 +367,12 @@ class ShapeLayer(object):
         #       other things like title, author, attribution etc...
 
         return map.insertLayer(layer)
+
+    def get_table_details(self, filename, layername):
+        # return table name, id column name, geometry column name, and extent.
+        mddata = DatabaseManager.get_metadata(filename)
+        if mddata:
+            layer_info = mddata.get('layer_mappings').get(layername)
+            return (layer_info.get('table', None), layer_info.get('id_column', None), layer_info.get('geometry_column', None), layer_info.get('base_extent', None))
+        return (None, None, None, None)
+        
