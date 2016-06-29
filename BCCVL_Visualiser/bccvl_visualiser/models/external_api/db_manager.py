@@ -31,10 +31,10 @@ class DatabaseManager(object):
         class_.MAP_FILES_DIR = settings['bccvl.mapscript.map_data_files_root_path']
 
         # Read in the metadata for each dataset
-        for mdfile in glob.glob(os.path.join(class_.MAP_FILES_DIR, '*/layer_mappings.json')):
-            layer_mapping = json.load(open(mdfile, 'r'))
-            dirname, filename = os.path.split(layer_mapping.get('filename'))
-            class_.METADATA[filename] = layer_mapping
+        for mdfile in glob.glob(os.path.join(class_.MAP_FILES_DIR, '*/layer_info.json')):
+            mddata = json.load(open(mdfile, 'r'))
+            for filename in mddata:
+                class_.METADATA[filename] = mddata[filename]
 
     @classmethod
     def is_configured(cls):

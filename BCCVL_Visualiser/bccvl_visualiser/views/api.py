@@ -5,6 +5,7 @@ import subprocess
 import shlex
 import zipfile
 import json
+import glob
 from osgeo import gdal, ogr
 
 from pyramid.response import Response
@@ -32,10 +33,6 @@ def fetch_worker(request, data_url, job):
 
         # Check the dataset is to be imported to database server
         if install_to_db:
-            layer_mappings = request.params.get('LAYER_MAPPING', None)
-            if layer_mappings is None:
-                raise Exception("No layer/table mappings")
-
             datadir, filename = os.path.split(loc)
             fname, fext = os.path.splitext(filename)
             if fext == '.zip':
@@ -47,17 +44,38 @@ def fetch_worker(request, data_url, job):
             schemaname = None
             if DatabaseManager.is_configured():
                 # TODO: To support other file type?
-                if os.path.isfile(os.path.join(datadir, fname + ".shp")):
-                    dbFilename = os.path.join(datadir, fname + ".shp")
-                elif os.path.isdir(os.path.join(datadir, fname)) and fname.endswith(".gdb"):
-                    dbFilename = os.path.join(datadir, fname)
-                else:
+                # Check for shape file, then for gdb directories
+                dbFiles = [dbfile for dbfile in glob.glob(os.path.join(datadir, fname, 'data/*.dbf'))]
+                if len(dbFiles) == 0:
+                    dbFiles = [dbfile for dbfile in glob.glob(os.path.join(datadir, fname, 'data/*.gdb'))]
+                if len(dbFiles) == 0:
                     raise Exception("Unsupported dataset type")
-                schemaname = fname.replace('.', '_').replace('-', '_').lower()
-                import_into_db(dbFilename, schemaname)
 
-            # write the layer mapping info as metadata.
-            write_dataset_metadata(layer_mappings, schemaname, loc)
+                # Import each df file into database
+                metadata = {}
+                for dbFilename in dbFiles:
+                    dbfname = os.path.basename(dbFilename)
+
+                    # Skip this db file if it has been imported before
+                    #if DatabaseManager.get_metadata(filename) is not None:
+                    #    continue
+
+                    # Import db file into the database
+                    schemaname = fname.replace('.', '_').replace('-', '_').lower()
+                    import_into_db(dbFilename, schemaname)
+
+                    # get the layer info as metadata.
+                    md = get_dataset_metadata(schemaname, dbFilename)
+                    metadata[dbfname] = md
+                    #metadata.update(md)
+
+                    # update the metadata stored in DatabaseManager
+                    DatabaseManager.update_metadata(dbfname, md)
+
+                # Save the metadata as json file for loading when visualiser start
+                jsonfile = open(os.path.join(datadir, "layer_info.json"), 'w')
+                json.dump(metadata, jsonfile, indent=4)
+                jsonfile.close()   
 
         job.update(status=FetchJob.STATUS_COMPLETE, end_timestamp=datetime.datetime.now())
     except Exception as e:
@@ -66,15 +84,14 @@ def fetch_worker(request, data_url, job):
         job.update(status=FetchJob.STATUS_FAILED, end_timestamp=datetime.datetime.now(), reason=reason)
 
 
-def write_dataset_metadata(layer_mappings, schemaname, filepath):
-    # Metadata about mapping layer name to a table from the request params 
-    # i.e. layername1:tablename1,layername2:tablename2
-    datadir, filename = os.path.split(filepath)
-    mappings = dict(item.split(':') for item in layer_mappings.split(','))
+def get_dataset_metadata(schemaname, filepath):
+    # list of table names for the given db file
+    tablenames = get_tablenames(filepath)
 
-    # Use filename as schema
-    for k in mappings:
-        tablename = schemaname + '.' + mappings[k]
+    # Get info about the table
+    metadata = {}
+    for name in tablenames:
+        tablename = schemaname + '.' + name.lower()
         extent, fieldnames = get_layerinfo_from_db(tablename)
 
         md = { 'table' : tablename,
@@ -87,20 +104,8 @@ def write_dataset_metadata(layer_mappings, schemaname, filepath):
             xmin, xmax, ymin, ymax = extent
             md['base_extent'] = {'xmin': xmin, 'ymin': ymin, 'xmax': xmax, 'ymax': ymax}
             md['geometry_column'] = 'geom'
-
-        mappings[k] = md
-
-        metadata = { 'layer_mappings': mappings,
-                     'filename': filepath
-                   }
-
-    jsonfile = open(os.path.join(datadir, "layer_mappings.json"), 'w')
-    json.dump(metadata, jsonfile, indent=4)
-    jsonfile.close()
-
-    # update the metadata stored in DatabaseManager
-    DatabaseManager.update_metadata(filename, metadata)
-
+        metadata[name.lower()] = md
+    return metadata
 
 def get_layerinfo_from_db(tablename):
     # Get extent of the table specified from DB server
@@ -139,6 +144,18 @@ def import_into_db(dbfname, schemaname):
     except Exception as e:
         raise Exception("Failed to import dataset into DB server. {0}".format(str(e)))
 
+def get_tablenames(dbfname):
+    command = "ogrinfo -so -q {filename}".format(filename=dbfname)
+    p = subprocess.Popen(shlex.split(command), stdout=subprocess.PIPE, stderr=subprocess.PIPE)
+    output, err = p.communicate()
+    if p.returncode != 0 or len(err) > 0:
+        raise Exception("Fail to get table names from '{}': {}".format(dbfname, err))
+
+    # parse for tablenames. 
+    # output format: 1: tablename1 (None) \n\r2: tablename2 (polygon) \n\r3:
+    tokens = output.split(":")
+    names = [tokens[i].split()[0].strip() for i in range(1, len(tokens))]
+    return names
 
 @view_defaults(route_name='api')
 class ApiCollectionView(BaseView):
@@ -181,7 +198,6 @@ class ApiCollectionView(BaseView):
             LOG.warn('No data_url provided')
             data_url = None
             return self.StatusResponse(FetchJob.STATUS_FAILED, 'No data_url provided')
-
 
         # Check if a job has been submitted or data has been dowbloaded for this data url.
         datadir = data_dir(self.request, data_url)

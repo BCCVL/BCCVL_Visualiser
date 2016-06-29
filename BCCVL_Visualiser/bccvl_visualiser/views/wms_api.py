@@ -108,24 +108,19 @@ class WMSAPIViewv1(WMSAPIView):
             layer = CSVLayer(self.request, loc)
         elif mimetype == 'application/zip':
             datadir, filename = os.path.split(loc)
-            fname, fext = os.path.splitext(filename)
-            # Check if layer mapping file exists.
-            mdfile = os.path.join(datadir, 'layer_mappings.json')
-            if os.path.isfile(mdfile):
-                metadata = json.load(open(mdfile, 'r'))
-            else:
-                raise HTTPNotImplemented("Missing layer mapping meta data file '{}'".format(mdfile))
+            #fname, fext = os.path.splitext(filename)
 
             # Check if shape/gdb file exists.
-            if os.path.isfile(os.path.join(datadir, fname + ".shp")):
-                dbFilename = os.path.join(datadir, fname + ".shp")
-            elif os.path.isdir(os.path.join(datadir, fname)) and fname.endswith(".gdb"):
-                dbFilename = os.path.join(datadir, fname)
-            else:
-                msg = "Invalid zip file '{}' -- is not in shape/gdb format.".format(filename)           
-                raise HTTPNotImplemented(msg)
+            #if os.path.isfile(os.path.join(datadir, fname + ".shp")):
+            #    dbFilename = os.path.join(datadir, fname + ".shp")
+            #elif os.path.isdir(os.path.join(datadir, fname)) and fname.endswith(".gdb"):
+            #    dbFilename = os.path.join(datadir, fname)
+            #else:
+            #    msg = "Invalid zip file '{}' -- is not in shape/gdb format.".format(filename)           
+            #    raise HTTPNotImplemented(msg)
 
-            layer = ShapeLayer(self.request, dbFilename, metadata)
+            # FIXME: filename shall be gdb/shape filename
+            layer = ShapeLayer(self.request, filename)
         else:
             msg = "Unknown file type '{}'.".format(mimetype)
             # HTTPBadRequest(msg)
@@ -294,10 +289,9 @@ class ShapeLayer(object):
 
     _data = None
 
-    def __init__(self, request, filename, metadata):
+    def __init__(self, request, filename):
         self.request = request
         self.filename = filename
-        self.metadata = metadata
 
     def _inspect_data(self):
         # TODO: inspect csv, remove invalid values, find extent, and min max values etc...
@@ -328,46 +322,31 @@ class ShapeLayer(object):
         layer.template = "query"  # anything non null and with length > 0 works here
 
 
-        # Extract the base table and attribute table from layers
-        # typeNames = {base_filename}:{{base layername}.{attribute layername}} i.e. stream_attributesv1.1.5.gdb:catchment.climate
+        # Extract the base table and attribute table from layers in the format below.
+        # {base_filename}-{base tablename}.{attrinute_filename}-{attribute tablename}.{column name}
+        # i.e. SH_Network.gdb.zip:catchment.stream_attributesv1.1.5.gdb.zip:climate.catannrad
         layers = self.request.params.get('layers', None)
         if layers is None:
             raise Exception("Missing layers parameter")
 
         layer.name = layers
-        if layers.find(":") >= 0:
-            filename, layername = layers.split(':')
-        else:
-            filename = None
-            layername = layers
 
-        # Get the corresposning base layer table and attribute table
-        #layername = {base layername}.{attribute layername}.columnName
-        # or {base layername}.columnName
-        layerItems = layername.split('.')
-        if  len(layerItems) < 2:
+        # Parse to get filenames and short table names so that we can get the corresponding geometry and attribute tables.
+        base_fname, base_table, attr_fname, attr_table, property_name = self.parse_layers(layers)
+
+        if attr_fname is None or attr_table is None or property_name is None:
             raise Exception("Invalid layers '{layer}'".format(layer=layers))
 
-        base_layer = attr_layer = property_name = None
-        if len(layerItems) == 2:
-            attr_layer, property_name = layerItems
-        else:
-            base_layer, attr_layer, property_name = layerItems
-
-        # get the attribute table metadata
-        attr_table = None
-        if attr_layer:
-            layer_info = self.metadata.get('layer_mappings').get(attr_layer, None)
-            if layer_info:
-                attr_table = layer_info.get('table', None)
-        if attr_table is None:
-            raise Exception("Invalid 'layers' parameter in request: no such layer '{layername}'".format(layername=layername))
+        # get the attribute table and its metadata
+        db_attr_table, id_col, geom_col, extent = self.get_table_details(attr_fname, attr_table)
+        if db_attr_table is None:
+            raise Exception("Invalid 'layers' parameter in request: no such table '{tablename}'".format(tablename=attr_table))
         
         # Get the corresposning base table, and its id and geometry column names
-        base_table = None
+        db_base_table = None
         common_col = None
-        if base_layer:
-            base_table, id_col, geom_col, extent = self.get_table_details(filename, base_layer)
+        if base_table:
+            db_base_table, id_col, geom_col, extent = self.get_table_details(base_fname, base_table)
 
             # Get the foreign key i.e. the joinable column
             # This is only required for joining tables
@@ -375,14 +354,10 @@ class ShapeLayer(object):
             if common_col is None:
                 raise Exception("Missing 'foreignKey' parameter in request")
         else:
-            base_table = attr_table
-            layer_info = self.metadata.get('layer_mappings').get(attr_layer, None)
-            id_col = layer_info.get('id_column')                # ID column
-            geom_col = layer_info.get('geometry_column', None)
-            extent = layer_info.get('base_extent', None)
+            db_base_table = db_attr_table
 
-        if base_table is None or id_col is None or geom_col is None:
-            raise Exception("Missing or invalid table for {layer}".format(layer=base_layer or attr_layer))
+        if db_base_table is None or id_col is None or geom_col is None:
+            raise Exception("Missing or invalid table for {layer}".format(layer=base_table or attr_table))
 
 
         # DATA, in the format of "<column> from <tablename> using unique fid using srid=xxxx"
@@ -406,10 +381,10 @@ class ShapeLayer(object):
                 the_geom = "ST_Simplify(b.{geomcol}, {tol}) as {geomcol}".format(geomcol=geom_col, tol=tolerance)
 
             # Get property as value
-            if attr_table != base_table:
-                newtable = "(select a.{colname} as value, b.{idcol}, {geom} from {layer} a join {base} b on a.{ccol} = b.{ccol})".format(colname=property_name, layer=attr_table, base=base_table, ccol=common_col, idcol=id_col, geom=the_geom)
+            if db_attr_table != db_base_table:
+                newtable = "(select a.{colname} as value, b.{idcol}, {geom} from {layer} a join {base} b on a.{ccol} = b.{ccol})".format(colname=property_name, layer=db_attr_table, base=db_base_table, ccol=common_col, idcol=id_col, geom=the_geom)
             else:
-                newtable = "(select b.{colname} as value, b.{idcol}, {geom} from {base} b)".format(colname=property_name, base=base_table, idcol=id_col, geom=the_geom)
+                newtable = "(select b.{colname} as value, b.{idcol}, {geom} from {base} b)".format(colname=property_name, base=db_base_table, idcol=id_col, geom=the_geom)
 
             srid = self.request.params.get('SRID', '4326')
             layer.data = "{geom} from {table} as new_layer using unique {idcol} using srid={srid}".format(geom=geom_col, table=newtable, idcol=id_col, srid=srid)
@@ -455,12 +430,30 @@ class ShapeLayer(object):
             map.applySLD(sld)
         return ret
 
-    def get_table_details(self, filename, layername):
+
+    def parse_layers(self, layerstr):
+        # Parse the string to get filenames and table names.
+        # Expected input: {base filename}-{base tablename}.{attribute filename}-{attribute tablename}.{columnName}
+        # or {attribute filename}-{attribute tablename}.{columnName} if both geometry and attribute are in 1 file
+        tokens = layerstr.split('-')
+        base_fname = base_table = None
+        attr_fname = attr_table = attr_property = None
+        if len(tokens) == 2:
+            attr_fname = tokens[0]
+            attr_table, attr_property = tokens[1].split('.', 1)
+        elif len(tokens) == 3:
+            base_fname = tokens[0]
+            base_table, attr_fname = tokens[1].split('.', 1)
+            attr_table, attr_property = tokens[2].split('.', 1)
+        return (base_fname, base_table, attr_fname, attr_table, attr_property)
+
+    def get_table_details(self, filename, tablename):
         # return table name, id column name, geometry column name, and extent.
         mddata = DatabaseManager.get_metadata(filename)
         if mddata:
-            layer_info = mddata.get('layer_mappings').get(layername)
-            return (layer_info.get('table', None), layer_info.get('id_column', None), layer_info.get('geometry_column', None), layer_info.get('base_extent', None))
+            layer_info = mddata.get(tablename, None)
+            if layer_info:
+                return (layer_info.get('table', None), layer_info.get('id_column', None), layer_info.get('geometry_column', None), layer_info.get('base_extent', None))
         return (None, None, None, None)
 
     # Return resolution required, and the tolerance used for simplify geometry.
