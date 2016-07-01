@@ -9,7 +9,7 @@ import math
 from xml.sax.saxutils import escape, quoteattr
 
 import mapscript
-from osgeo import gdal
+from osgeo import gdal, ogr
 from osgeo.osr import SpatialReference
 
 from pyramid.response import Response
@@ -399,6 +399,9 @@ class ShapeLayer(object):
 
         # PROJECTION ... should we set this properly?
         crs = self._data['crs']
+        # set the min and max of the attribute
+        self._data['min'], self._data['max'] = self.get_minmax_value(property_name, db_attr_table)
+
         layer.setProjection("init={}".format(crs))
 
         # METADATA
@@ -455,6 +458,22 @@ class ShapeLayer(object):
             if layer_info:
                 return (layer_info.get('table', None), layer_info.get('id_column', None), layer_info.get('geometry_column', None), layer_info.get('base_extent', None))
         return (None, None, None, None)
+
+    def get_minmax_value(self, attrname, table):
+        # return the min and max for a given attribute of a table.
+        connect = 'PG:{dbconn}'.format(dbconn=DatabaseManager.connection_details())
+        dbconn = ogr.Open(connect)
+
+        sql = 'select min({attr}), max({attr}) from {table}'.format(attr=attrname, table=table)
+        result = dbconn.ExecuteSQL(sql)
+
+        if result is None:
+            raise Exception("Error in getting min/max value for {} from table {}".format(attrname, table))
+
+        row = result.next()
+        return row.GetField(0), row.GetField(1)   # min, max
+
+
 
     # Return resolution required, and the tolerance used for simplify geometry.
     # TODO: Fine tune this
