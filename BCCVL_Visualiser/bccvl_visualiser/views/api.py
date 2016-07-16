@@ -135,7 +135,7 @@ def import_into_db(dbfname, schemaname):
             raise Exception("Fail to create schema '{}'. {}".format(schemaname, err))
             
         # import the dataset. Set FID and geometry name.
-        command = 'ogr2ogr -f PostgreSQL PG:"{dbconn}" -lco schema={schema} -lco FID=fid -lco GEOMETRY_NAME=geom  {dbfile} -skipfailures'.format(dbconn=DatabaseManager.connection_details(), schema=schemaname, dbfile=dbfname)
+        command = 'ogr2ogr -f PostgreSQL PG:"{dbconn}" -lco schema={schema} -lco FID=fid -lco GEOMETRY_NAME=geom  {dbfile} -skipfailures -overwrite --config PG_USE_COPY YES'.format(dbconn=DatabaseManager.connection_details(), schema=schemaname, dbfile=dbfname)
         p = subprocess.Popen(shlex.split(command), stdout=subprocess.PIPE, stderr=subprocess.PIPE)
         output, err = p.communicate()
         if p.returncode != 0 or len(err) > 0:
