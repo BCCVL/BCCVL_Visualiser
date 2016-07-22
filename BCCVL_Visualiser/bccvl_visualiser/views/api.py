@@ -47,7 +47,7 @@ def fetch_worker(request, data_url, job):
                 # Check for shape file, then for gdb directories
                 dbFiles = [dbfile for dbfile in glob.glob(os.path.join(datadir, fname, 'data/*.dbf'))]
                 if len(dbFiles) == 0:
-                    dbFiles = [dbfile for dbfile in glob.glob(os.path.join(datadir, fname, 'data/*.gdb'))]
+                    dbFiles = [dbfile for dbfile in glob.glob(os.path.join(datadir, fname, 'data/*.gdb.zip'))]
                 if len(dbFiles) == 0:
                     raise Exception("Unsupported dataset type")
 
