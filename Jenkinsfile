@@ -47,8 +47,7 @@ node {
             echo "Deploy turned off"
             //sh "docker push '${imagename}'"
 
-            def depl = new org.bccvl.Deplay()
-            depl.triggerDeploy("Visualiser", env.BRANCH_NAME, imagename);
+            deploy("Visualiser", env.BRANCH_NAME, imagename);
         }
     }
 }
