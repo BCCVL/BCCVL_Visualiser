@@ -8,7 +8,8 @@ RUN yum install -y gcc make git python python-devel gdal-devel gdal-python gdal 
     lapack-devel proj proj-devel proj-epsg proj-nad geos geos-devel ogr_fdw94 gcc-c++ libpng \
     libpng-devel freetype-devel giflib giflib-devel libxml2 libxml2-devel cairo cairo-devel \
     libjpeg-turbo-devel ibjpeg-turbo libcurl-devel python-pip openssl libffi libffi-devel cmake \
-    swig harfbuzz harfbuzz-devel fribidi-devel fribidi fcgi fcgi-devel openssl-devel mailcap
+    swig harfbuzz harfbuzz-devel fribidi-devel fribidi fcgi fcgi-devel openssl-devel mailcap \
+    && yum clean all
 
 RUN pip install --no-cache numpy==1.10.1 scipy==0.14.0 requests[security]==2.8.1
 COPY requirements.txt /tmp/requirements.txt
