@@ -35,7 +35,7 @@ node {
         sh "pip install cobertura-clover-transform"  // needs lxml
         sh "cobertura-clover-transform coverage.xml > clover.xml"
 
-        step([$class: 'CloverPublisher', cloverReportFileName: 'clover.xml'])
+        step([$class: 'CloverPublisher', cloverReportDir: '', cloverReportFileName: 'clover.xml'])
 
         // generate coverage report as html and capture it?
         //sh "cd /opt/zope; ./bin/coverage html -d parts/jenkins-test/coverage-report"
