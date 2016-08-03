@@ -1,3 +1,6 @@
+
+def imagename;
+
 node {
 
     stage 'Checkout'
@@ -13,7 +16,7 @@ node {
     stage 'Build Image'
 
     def version = getPythonVersion('BCCVL_Visualiser/setup.py')
-    def imagename = "hub.bccvl.org.au/bccvl/visualiser:${version}-${env.BUILD_NUMBER}"
+    imagename = "hub.bccvl.org.au/bccvl/visualiser:${version}-${env.BUILD_NUMBER}"
 
     def image = docker.build(imagename)
 
@@ -46,16 +49,46 @@ node {
         //             reportName: 'Coverage Report'])
     }
 
-    // if (env.BRANCH_NAME == 'master') {
+    switch(env.BRANCH_NAME) {
+        case 'docker':
+        case 'master':
+        case 'qa':
+            stage 'Image Push'
+            image.push()
+            break
+            // TODO: notify email/slack about new image?
+            //       maybe even update dev-compose/config?
+    }
 
-    //     stage 'Push Image'
+}
 
-    //     image.push()
+switch(env.BRANCH_NAME) {
 
-    //     stage 'Deploy'
+    case 'master':
 
-    //     deploy("Visualiser", env.BRANCH_NAME, imagename)
+        stage 'Approve'
 
-    // }
+        mail(to: 'g.weis@griffith.edu.au',
+             subject: "Job '${env.JOB_NAME}' (${env.BUILD_NUMBER}) is waiting for input",
+             body: "Please go to ${env.BUILD_URL}.");
+
+        slackSend color: 'good', message: "Ready to deploy ${env.JOB_NAME} ${env.BUILD_NUMBER} (<${env.BUILD_URL}|Open>)"
+
+        input 'Ready to deploy?';
+
+    case 'docker':
+    case 'qa':
+
+        stage 'Deploy'
+
+        node {
+
+            deploy("Visualiser", env.BRANCH_NAME, imagename)
+
+            slackSend color: 'good', message: "Deployed ${env.JOB_NAME} ${env.BUILD_NUMBER}"
+
+        }
+
+        break
 
 }
