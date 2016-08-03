@@ -28,11 +28,10 @@ node {
         sh 'cp /tmp/coverage.xml "${PWD}/"'
 
         // capture unit test outputs in jenkins
-        // step([$class: 'JUnitResultArchiver', testResults: 'nosetests.xml'])
-        junit 'nosetsts.xml'
+        step([$class: 'JUnitResultArchiver', testResults: 'nosetests.xml'])
 
         // install cobertura -> clover transform (until robertura is supported in pipelines)
-        sh "yum install -y python-pip"
+        sh "yum install -y python-pip libxslt-devel "
         sh "pip install cobertura-clover-transform"  // needs lxml
         sh "cobertura-clover-transform coverage.xml > clover.xml"
 
