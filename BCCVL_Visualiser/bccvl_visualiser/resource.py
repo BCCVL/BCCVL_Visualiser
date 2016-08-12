@@ -54,7 +54,7 @@ class Context(object):
                 tokens = ','.join([token.strip() for token in
                           self.request.registry.settings.get('authtkt.tokens', '').split('\n') if token.strip()])
                 if cookie and tokens:
-                    cookie = update_auth_cookie(cookie, tokens)
+                    cookie = update_auth_cookie(cookie, tokens, self.request)
             s.cookies.set(name, cookie, secure=True, domain=self.request.host, path='/')
         # TODO: use with or whatever to close session
         from pyramid.settings import asbool  # FIXME: avoid circular import?
