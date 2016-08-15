@@ -11,11 +11,11 @@ RUN yum install -y gcc make git python python-devel gdal-devel gdal-python gdal 
     swig harfbuzz harfbuzz-devel fribidi-devel fribidi fcgi fcgi-devel openssl-devel mailcap \
     && yum clean all
 
-RUN pip install --no-cache numpy==1.10.1 scipy==0.14.0 requests[security]==2.8.1
 COPY requirements.txt /tmp/requirements.txt
-RUN CPLUS_INCLUDE_PATH=/usr/include/gdal C_INCLUDE_PATH=/usr/include/gdal pip install --upgrade --no-cache -r /tmp/requirements.txt && \
+RUN pip install --no-cache numpy==1.10.1 scipy==0.14.0 requests[security]==2.8.1 && \
+    CPLUS_INCLUDE_PATH=/usr/include/gdal C_INCLUDE_PATH=/usr/include/gdal pip install --upgrade --no-cache -r /tmp/requirements.txt && \
+    pip install --no-cache gunicorn==19.4.1 && \
     pip install -f https://github.com/BCCVL/org.bccvl.movelib/archive/1.2.0.tar.gz#egg=org.bccvl.movelib-1.2.0 org.bccvl.movelib[http,swift]==1.2.0
-
 
 RUN cd /tmp && curl http://download.osgeo.org/mapserver/mapserver-7.0.1.tar.gz | tar xz \
     && cd mapserver-7.0.1 && mkdir build && cd build \
@@ -26,8 +26,6 @@ RUN cd /tmp && curl http://download.osgeo.org/mapserver/mapserver-7.0.1.tar.gz |
 COPY BCCVL_Visualiser/ /opt/visualiser/
 
 RUN cd /opt/visualiser && python setup.py install
-
-RUN pip install --no-cache gunicorn==19.4.1
 
 ENV LD_LIBRARY_PATH=/lib:/usr/lib:/usr/local/lib
 
