@@ -8,6 +8,9 @@ from pyramid.authentication import VALID_TOKEN
 from pyramid.interfaces import IAuthenticationPolicy
 from pyramid.compat import text_type, ascii_native_
 
+import logging
+LOG = logging.getLogger(__name__)
+
 
 def update_auth_cookie(cookie, tokens, request):
     # add given tokens to cookie, assumes existing cookie is base64 encoded
@@ -16,7 +19,11 @@ def update_auth_cookie(cookie, tokens, request):
     # is part of digest
     authpol = request.registry.getUtility(IAuthenticationPolicy)
     identity = authpol.cookie.identify(request)
-    # FIXME: identity may be None ... continuing here cause an Error 500
+
+    if not identity:
+        LOG.warn("Can't update cookie because we don't have a valid identity")
+        return None
+
     ticket = authpol.cookie.AuthTicket(
         authpol.cookie.secret,
         identity['userid'],
