@@ -8,13 +8,22 @@ from pyramid.authentication import VALID_TOKEN
 from pyramid.interfaces import IAuthenticationPolicy
 from pyramid.compat import text_type, ascii_native_
 
+import logging
+LOG = logging.getLogger(__name__)
+
 
 def update_auth_cookie(cookie, tokens, request):
     # add given tokens to cookie, assumes existing cookie is base64 encoded
     cookie = binascii.a2b_base64(unquote(cookie))  # decode cookie
-    # properly decode cookie and create a new one, so that updated token list is part of digest
+    # properly decode cookie and create a new one, so that updated token list
+    # is part of digest
     authpol = request.registry.getUtility(IAuthenticationPolicy)
     identity = authpol.cookie.identify(request)
+
+    if not identity:
+        LOG.warn("Can't update cookie because we don't have a valid identity")
+        return None
+
     ticket = authpol.cookie.AuthTicket(
         authpol.cookie.secret,
         identity['userid'],
@@ -84,12 +93,12 @@ class AuthTktCookieHelper(BaseCookieHelper):
         except self.BadTicket:
             return None
 
-        now = self.now # service tests
+        now = self.now  # service tests
 
         if now is None:
             now = time.time()
 
-        if self.timeout and ( (timestamp + self.timeout) < now ):
+        if self.timeout and ((timestamp + self.timeout) < now):
             # the auth_tkt data has expired
             return None
 
@@ -105,11 +114,12 @@ class AuthTktCookieHelper(BaseCookieHelper):
         reissue = self.reissue_time is not None
 
         if reissue and not hasattr(request, '_authtkt_reissued'):
-            if ( (now - timestamp) > self.reissue_time ):
+            if ((now - timestamp) > self.reissue_time):
                 # See https://github.com/Pylons/pyramid/issues#issue/108
                 tokens = list(filter(None, tokens))
                 headers = self.remember(request, userid, max_age=self.max_age,
                                         tokens=tokens)
+
                 def reissue_authtkt(request, response):
                     if not hasattr(request, '_authtkt_reissue_revoked'):
                         for k, v in headers:
@@ -127,7 +137,6 @@ class AuthTktCookieHelper(BaseCookieHelper):
         identity['tokens'] = tokens
         identity['userdata'] = user_data
         return identity
-
 
     def remember(self, request, userid, max_age=None, tokens=()):
         """ Return a set of Set-Cookie headers; when set into a response,
@@ -196,7 +205,7 @@ class AuthTktCookieHelper(BaseCookieHelper):
             cookie_name=self.cookie_name,
             secure=self.secure,
             hashalg=self.hashalg
-            )
+        )
 
         cookie_value = quote(binascii.b2a_base64(ticket.cookie_value()))
 
