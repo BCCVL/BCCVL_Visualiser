@@ -25,7 +25,7 @@ RUN cd /tmp && curl http://download.osgeo.org/mapserver/mapserver-7.0.1.tar.gz |
 
 COPY BCCVL_Visualiser/ /opt/visualiser/
 
-RUN cd /opt/visualiser && python setup.py install
+RUN cd /opt/visualiser && python setup.py develop
 
 ENV LD_LIBRARY_PATH=/lib:/usr/lib:/usr/local/lib
 
