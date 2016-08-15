@@ -42,7 +42,7 @@ class Context(object):
 
         # TODO: ensure that request Session passes cookie on to correct domain
         s = requests.Session()
-        for name in ('__ac',): # 'serverid'):
+        for name in ('__ac',):  # 'serverid'):
             # pass all interesting cookies for our domain on
             # we copy cookies, so that we can set domain etc...
             cookie = self.request.cookies.get(name)
@@ -52,10 +52,12 @@ class Context(object):
                 # append tokens if we set __ac cookie
                 # get my tokens
                 tokens = ','.join([token.strip() for token in
-                          self.request.registry.settings.get('authtkt.tokens', '').split('\n') if token.strip()])
+                                  self.request.registry.settings.get('authtkt.tokens', '').split('\n') if token.strip()])
                 if cookie and tokens:
                     cookie = update_auth_cookie(cookie, tokens, self.request)
-            s.cookies.set(name, cookie, secure=True, domain=self.request.host, path='/')
+            if cookie:
+                secure = self.request.registry.get('authtkt.secure', 'False').lower() not in ('false', '0', 'no')
+                s.cookies.set(name, cookie, secure=secure, domain=self.request.host, path='/')
         # TODO: use with or whatever to close session
         from pyramid.settings import asbool  # FIXME: avoid circular import?
         verify = asbool(self.request.registry.settings.get('bccvl.ssl.verify', True))
