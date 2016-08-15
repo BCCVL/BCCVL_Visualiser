@@ -1,4 +1,5 @@
 
+def image;
 def imagename;
 def imagetag;
 
@@ -12,7 +13,7 @@ node {
 
     imagename = "hub.bccvl.org.au/bccvl/visualiser"
 
-    def image = docker.build(imagename)
+    image = docker.build(imagename)
 
     stage 'Test'
 
