@@ -1,22 +1,16 @@
 
 def imagename;
+def imagetag;
 
 node {
 
     stage 'Checkout'
 
-    if (! env.BRANCH_NAME) {
-        env.BRANCH_NAME = 'docker'
-        // checkout source
-        git url: "https://github.com/BCCVL/BCCVL_Visualiser.git", branch: env.BRANCH_NAME
-    } else {
-        checkout scm
-    }
+    checkout scm
 
     stage 'Build Image'
 
-    def version = getPythonVersion('BCCVL_Visualiser/setup.py')
-    imagename = "hub.bccvl.org.au/bccvl/visualiser:${version}-${env.BUILD_NUMBER}"
+    imagename = "hub.bccvl.org.au/bccvl/visualiser"
 
     def image = docker.build(imagename)
 
@@ -51,13 +45,13 @@ node {
 
     switch(env.BRANCH_NAME) {
         case 'docker':
-        case 'master':
-        case 'qa':
             stage 'Image Push'
-            image.push()
+
+            image.push('latest')
+
+            slackSend color: 'good', message: "New Image ${imagename}:latest\n${env.JOB_NAME} ${env.BUILD_NUMBER}"
+
             break
-            // TODO: notify email/slack about new image?
-            //       maybe even update dev-compose/config?
     }
 
 }
@@ -83,9 +77,16 @@ switch(env.BRANCH_NAME) {
 
         node {
 
-            deploy("Visualiser", env.BRANCH_NAME, imagename)
+            // Tag image for deployment
+            def version = getPythonVersion('BCCVL_Visualiser/setup.py')
+            imagetag = "${version}-${env.BUILD_NUMBER}"
 
-            slackSend color: 'good', message: "Deployed ${env.JOB_NAME} ${env.BUILD_NUMBER}"
+            image.push(imagetag)
+            slackSend color: 'good', message: "New Image ${imagename}:${imagetag}\n${env.JOB_NAME} ${env.BUILD_NUMBER}"
+
+            deploy("Visualiser", env.BRANCH_NAME, "${imagename}:${imagetag}")
+
+            slackSend color: 'good', message: "Deployed ${imagename}:${imagetag}\n${env.JOB_NAME} ${env.BUILD_NUMBER}"
 
         }
 
