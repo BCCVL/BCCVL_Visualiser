@@ -4,9 +4,8 @@ import urlparse
 import urllib
 import os
 import os.path
-import json
 import math
-from xml.sax.saxutils import escape, quoteattr
+from xml.sax.saxutils import escape
 
 import mapscript
 from osgeo import gdal, ogr
@@ -45,7 +44,10 @@ class WMSAPIView(BaseView):
         return super(WMSAPIView, self).xmlrpc()
 
     def _to_dict(self):
-        return_dict = {str(k): str(v) for k, v in WMSAPI.get_human_readable_inheritors_version_dict().items()}
+        return_dict = {
+            str(k): str(v) for k, v in
+            WMSAPI.get_human_readable_inheritors_version_dict().items()
+        }
         return return_dict
 
 
@@ -108,15 +110,15 @@ class WMSAPIViewv1(WMSAPIView):
             layer = CSVLayer(self.request, loc)
         elif mimetype == 'application/zip':
             datadir, filename = os.path.split(loc)
-            #fname, fext = os.path.splitext(filename)
+            # fname, fext = os.path.splitext(filename)
 
             # Check if shape/gdb file exists.
-            #if os.path.isfile(os.path.join(datadir, fname + ".shp")):
+            # if os.path.isfile(os.path.join(datadir, fname + ".shp")):
             #    dbFilename = os.path.join(datadir, fname + ".shp")
-            #elif os.path.isdir(os.path.join(datadir, fname)) and fname.endswith(".gdb"):
+            # elif os.path.isdir(os.path.join(datadir, fname)) and fname.endswith(".gdb"):
             #    dbFilename = os.path.join(datadir, fname)
-            #else:
-            #    msg = "Invalid zip file '{}' -- is not in shape/gdb format.".format(filename)           
+            # else:
+            #    msg = "Invalid zip file '{}' -- is not in shape/gdb format.".format(filename)
             #    raise HTTPNotImplemented(msg)
 
             # FIXME: filename shall be gdb/shape filename
@@ -192,7 +194,7 @@ class WMSAPIViewv1(WMSAPIView):
         map.name = "BCCVLMap"
         # EXTENT ... in projection units (we use epsg:4326) WGS84
         map.extent = mapscript.rectObj(-180.0, -90.0, 180.0, 90.0)
-        #map.extent = mapscript.rectObj(-20026376.39, -20048966.10, 20026376.39, 20048966.10)
+        # map.extent = mapscript.rectObj(-20026376.39, -20048966.10, 20026376.39, 20048966.10)
         # UNITS ... in projection units
         map.units = mapscript.MS_DD
         # SIZE
@@ -284,7 +286,6 @@ class WMSAPIViewv1(WMSAPIView):
         #    set location of fontset file http://mapserver.org/el/mapfile/fontset.html
 
 
-
 class ShapeLayer(object):
 
     _data = None
@@ -341,7 +342,7 @@ class ShapeLayer(object):
         db_attr_table, id_col, geom_col, extent = self.get_table_details(attr_fname, attr_table)
         if db_attr_table is None:
             raise Exception("Invalid 'layers' parameter in request: no such table '{tablename}'".format(tablename=attr_table))
-        
+
         # Get the corresposning base table, and its id and geometry column names
         db_base_table = None
         common_col = None
@@ -367,10 +368,11 @@ class ShapeLayer(object):
 
         # Set extent to improve performance of getting data from DB server
         if extent:
-            layer.setExtent(extent['xmin'], extent['ymin'], extent['xmax'], extent['ymax'])
+            layer.setExtent(extent['xmin'], extent['ymin'],
+                            extent['xmax'], extent['ymax'])
 
         if DatabaseManager.is_configured():
-            # Connection to POSTGIS DB server 
+            # Connection to POSTGIS DB server
             layer.connectiontype = mapscript.MS_POSTGIS
             layer.connection = DatabaseManager.connection_details()
 
@@ -433,7 +435,6 @@ class ShapeLayer(object):
             map.applySLD(sld)
         return ret
 
-
     def parse_layers(self, layerstr):
         # Parse the string to get filenames and table names.
         # Expected input: {base filename}-{base tablename}.{attribute filename}-{attribute tablename}.{columnName}
@@ -456,7 +457,10 @@ class ShapeLayer(object):
         if mddata:
             layer_info = mddata.get(tablename, None)
             if layer_info:
-                return (layer_info.get('table', None), layer_info.get('id_column', None), layer_info.get('geometry_column', None), layer_info.get('base_extent', None))
+                return (layer_info.get('table', None),
+                        layer_info.get('id_column', None),
+                        layer_info.get('geometry_column', None),
+                        layer_info.get('base_extent', None))
         return (None, None, None, None)
 
     def get_minmax_value(self, attrname, table):
@@ -473,8 +477,6 @@ class ShapeLayer(object):
         row = result.next()
         return row.GetField(0), row.GetField(1)   # min, max
 
-
-
     # Return resolution required, and the tolerance used for simplify geometry.
     # TODO: Fine tune this
     def resolution_tolerance(self, layer):
@@ -483,24 +485,26 @@ class ShapeLayer(object):
         try:
             width = int(self.request.params.get('WIDTH'))       # in pixel
             height = int(self.request.params.get('HEIGHT'))
-            bbox = self.request.params.get('BBOX')              # This is in meter
+            bbox = self.request.params.get('BBOX')  # This is in meter
             if bbox:
                 xmin, ymin, xmax, ymax = [float(a) for a in bbox.split(',')]
-                area = ((xmax - xmin)/1000.0) * ((ymax - ymin)/1000.0)      # in square KM
+                area = ((xmax - xmin)/1000.0) * ((ymax - ymin)/1000.0)  # in square KM
             else:
-                # Use the extent of the layer, which is in degree. Calculate area in square km.
-                lx = layer.getExtent()                                     
+                # Use the extent of the layer, which is in degree. Calculate
+                # area in square km.
+                lx = layer.getExtent()
                 area = ((lx.maxx - lx.minx) * 111.1) * ((lx.maxy - lx.miny) * 111.1)
-            resolution = (width * height * 111.1) / math.sqrt(area)        # number of pixels per degree
-            tolerance = 0.1/(math.log(resolution) - 4.5)                   # tolerance used for simplify geometry
-        except Exception:            
+            resolution = (width * height * 111.1) / math.sqrt(area)  # number of pixels per degree
+            tolerance = 0.1/(math.log(resolution) - 4.5)  # tolerance used for simplify geometry
+        except Exception:
             pass
 
-        print "tolerance = %f, area = %f, resolution = %f" %(tolerance, area, resolution)
+        print "tolerance = %f, area = %f, resolution = %f" % (tolerance, area, resolution)
         return resolution, tolerance
 
     def default_class_style(self, col_name):
-        # return a default class for styling based on the value of a specified column
+        # return a default class for styling based on the value of a specified
+        # column
         styleobj = mapscript.styleObj()
         styleobj.mincolor = mapscript.colorObj(255, 255, 255)
         styleobj.maxcolor = mapscript.colorObj(0, 128, 255)
@@ -539,8 +543,8 @@ class TiffLayer(object):
                 # default to epsg:4326
                 auth = spref.GetAuthorityName(None) or 'epsg'
                 code = spref.GetAuthorityCode(None) or '4326'
-                self._data['crs'] = "%s:%s" %  (auth.lower(), code)
-                #LOG.info('Detected CRS: %s', self._data['crs'])
+                self._data['crs'] = "%s:%s" % (auth.lower(), code)
+                # LOG.info('Detected CRS: %s', self._data['crs'])
             else:
                 self._data['crs'] = 'epsg:4326'  # use epsg:4326 as default
             band = df.GetRasterBand(1)
@@ -592,16 +596,18 @@ class TiffLayer(object):
         # layer.setOpacity(70)
 
         # If data type is not integer:
-        if self._data['datatype'] not in (gdal.GDT_Byte, gdal.GDT_UInt16, gdal.GDT_Int16,
-                                          gdal.GDT_UInt32, gdal.GDT_Int32):
-            # mapservers does the right thing with these processing instructions
-            # setting scale, skips the integer processing step and reads the raster
-            # as float
+        if self._data['datatype'] not in (gdal.GDT_Byte, gdal.GDT_UInt16,
+                                          gdal.GDT_Int16, gdal.GDT_UInt32,
+                                          gdal.GDT_Int32):
+            # mapservers does the right thing with these processing
+            # instructions setting scale, skips the integer processing step and
+            # reads the raster as float
             layer.addProcessing("SCALE=AUTO,AUTO")
             layer.addProcessing("NODATA=AUTO")
 
         # CLASSITEM, CLASS
-        # TODO: if we have a STYLES parameter we should add a STYLES element here
+        # TODO: if we have a STYLES parameter we should add a STYLES element
+        #       here
         if not (self.request.params.get('STYLES') or
                 'SLD' in self.request.params or
                 'SLD_BODY' in self.request.params):
@@ -652,7 +658,8 @@ class CSVLayer(object):
         self.filename = filename
 
     def _inspect_data(self):
-        # TODO: inspect csv, remove invalid values, find extent, and min max values etc...
+        # TODO: inspect csv, remove invalid values, find extent, and min max
+        #       values etc...
         self._data = {
             'crs': 'epsg:4326',
         }
@@ -671,7 +678,8 @@ class CSVLayer(object):
         # NAME
         layer.name = "DEFAULT"  # TODO: filename?, real title?
         # TYPE
-        # TODO: this supports only POINT datasets for now,... should detect this somehow
+        # TODO: this supports only POINT datasets for now,... should detect
+        #       this somehow
         layer.type = mapscript.MS_LAYER_POINT
         # STATUS
         layer.status = mapscript.MS_ON
@@ -679,8 +687,11 @@ class CSVLayer(object):
         layer.template = "query"  # anything non null and with length > 0 works here
         # CONNECTION_TYPE local|ogr?
         layer.setConnectionType(mapscript.MS_OGR, None)
-        # TODO: the VRT source works fine, but maybe converting the VRT to a real shapefile with ogr2ogr would spped up rendering? (or use a sqlite/spatiallite datasource?)
-        # TODO: check if GDAL dies and kills whole mapserver process in case the csv file is not valid or contains broken values
+        # TODO: the VRT source works fine, but maybe converting the VRT to a
+        #       real shapefile with ogr2ogr would spped up rendering? (or use a
+        #       sqlite/spatiallite datasource?)
+        # TODO: check if GDAL dies and kills whole mapserver process in case
+        #       the csv file is not valid or contains broken values
         # layer.setConnectionType(MS_RASTER) MS_OGR?
         # TODO: other elements to consider:
         #        Metadata ... on Datasource and LAyer
