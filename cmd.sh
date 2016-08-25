@@ -12,7 +12,9 @@ if [ "$ENV" = 'UNIT' ]; then
 else
   echo "Running BCCVL Visualisation Server"
   mkdir -p $BCCVL_MAPSCRIPT_MAP_DATA_FILES_ROOT_PATH
+  chown -R visualiser:visualiser $BCCVL_MAPSCRIPT_MAP_DATA_FILES_ROOT_PATH
   mkdir -p $BCCVL_DATA_MOVER_PUBLIC_DIR
+  chown -R visualiser:visualiser $BCCVL_DATA_MOVER_PUBLIC_DIR
   /usr/bin/gunicorn --workers $NWORKERS \
                     --threads $NTHREADS \
                     --paste ${CONFIG} \
