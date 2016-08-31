@@ -6,6 +6,7 @@ import zipfile
 import urlparse
 import shutil
 import logging
+import mimetypes
 from org.bccvl import movelib
 
 from bccvl_visualiser.auth import update_auth_cookie
@@ -181,7 +182,7 @@ def fetch_file(request, url):
                     raise
                 # if it is a zip we should unpack it
                 # FIXME: do some more robust zip detection
-                if fragment:
+                if 'application/zip' in mimetypes.guess_type(destfile):
                     with zipfile.ZipFile(destfile, 'r') as zipf:
                         zipf.extractall(datadir)
                     # remove zipfile
