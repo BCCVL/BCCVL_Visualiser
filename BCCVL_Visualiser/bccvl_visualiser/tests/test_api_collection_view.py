@@ -6,63 +6,63 @@ from time import sleep
 from pyramid.request import Request
 
 from bccvl_visualiser.views.api import ApiCollectionView
-from bccvl_visualiser.utils import FetchJob
+from bccvl_visualiser.utils import FetchJob, FETCH_JOBS
 
 
-@mock.patch('bccvl_visualiser.utils.fetch_worker')
-@mock.patch('bccvl_visualiser.utils.data_dir', side_effect=['/tmp/def', '/tmp/def'])
-@mock.patch('pyramid.request.Request.GET', side_effect=[None])
-@mock.patch('bccvl_visualiser.views.get_localizer', side_effect=[None])
+@mock.patch('bccvl_visualiser.views.api.data_dir', return_value='/tmp/def')
+@mock.patch('pyramid.request.Request.GET', return_value=None)
+@mock.patch('bccvl_visualiser.views.get_localizer', return_value=None)
 class TestApiCollectionView(unittest.TestCase):
+
     def setUp(self):
         pass
 
     def tearDown(self):
         pass
 
+    @mock.patch('bccvl_visualiser.views.api.fetch_worker')
     @mock.patch('bccvl_visualiser.utils.fetch_file',
-                side_effect=['/tmp/abc/filename'])
+                return_value='/tmp/abc/filename')
     def test_api_collection_view_submit_new_job(self, *mocks):
         request = Request({})
-        view = None
         view = ApiCollectionView({}, request)
         resp = view.fetch()
 
-        job = view._fetch_jobs['/tmp/def']
+        job = FETCH_JOBS['/tmp/def']
         self.assertEqual(view.request, request)
         self.assertEqual(job.status, FetchJob.STATUS_PENDING)
         self.assertEqual(resp, {'status': FetchJob.STATUS_PENDING,
                                 'reason': None})
 
+    @mock.patch('bccvl_visualiser.views.api.fetch_worker')
     @mock.patch('bccvl_visualiser.utils.fetch_file',
-                side_effect=['/tmp/abc/filename'])
+                return_value='/tmp/abc/filename')
     def test_api_collection_view_not_submit_job(self, *mocks):
         request = Request({})
-        view = None
         view = ApiCollectionView({}, request)
         resp = view.fetch()
 
         # Check that second fetch does not submit another job
         resp = view.fetch()
-        self.assertEqual(view._fetch_jobs.keys(), ['/tmp/def'])
+        self.assertEqual(FETCH_JOBS.keys(), ['/tmp/def'])
         self.assertEqual(resp, {'status': FetchJob.STATUS_PENDING,
                                 'reason': None})
 
-        job = view._fetch_jobs['/tmp/def']
+        job = FETCH_JOBS['/tmp/def']
         self.assertEqual(view.request, request)
         self.assertEqual(job.status, FetchJob.STATUS_PENDING)
         self.assertEqual(resp, {'status': FetchJob.STATUS_PENDING,
                                 'reason': None})
 
+    @mock.patch('bccvl_visualiser.views.api.fetch_worker')
     @mock.patch('bccvl_visualiser.utils.fetch_file',
-                side_effect=['/tmp/abc/filename'])
+                return_value='/tmp/abc/filename')
     def test_api_collection_view_remove_completed_job(self, *mocks):
         request = Request({})
-        view = None
         view = ApiCollectionView({}, request)
         resp = view.fetch()
 
-        job = view._fetch_jobs['/tmp/def']
+        job = FETCH_JOBS['/tmp/def']
         self.assertEqual(view.request, request)
         self.assertEqual(job.status, FetchJob.STATUS_PENDING)
         self.assertEqual(resp, {'status': FetchJob.STATUS_PENDING,
@@ -74,19 +74,19 @@ class TestApiCollectionView(unittest.TestCase):
 
         resp = view.fetch()
         self.assertEqual(job.status, FetchJob.STATUS_COMPLETE)
-        self.assertEqual(view._fetch_jobs.keys(), [])
+        self.assertEqual(FETCH_JOBS.keys(), [])
         self.assertEqual(resp, {'status': FetchJob.STATUS_COMPLETE,
                                 'reason': None})
 
+    @mock.patch('bccvl_visualiser.views.api.fetch_worker')
     @mock.patch('bccvl_visualiser.utils.fetch_file',
-                side_effect=['/tmp/abc/filename'])
+                return_value='/tmp/abc/filename')
     def test_api_collection_view_remove_failed_job(self, *mocks):
         request = Request({})
-        view = None
         view = ApiCollectionView({}, request)
         resp = view.fetch()
 
-        job = view._fetch_jobs['/tmp/def']
+        job = FETCH_JOBS['/tmp/def']
         self.assertEqual(view.request, request)
         self.assertEqual(job.status, FetchJob.STATUS_PENDING)
         self.assertEqual(resp, {'status': FetchJob.STATUS_PENDING,
@@ -100,19 +100,20 @@ class TestApiCollectionView(unittest.TestCase):
 
         resp = view.fetch()
         self.assertEqual(job.status, FetchJob.STATUS_FAILED)
-        self.assertEqual(view._fetch_jobs.keys(), [])
+        self.assertEqual(FETCH_JOBS.keys(), [])
         self.assertEqual(resp, {'status': FetchJob.STATUS_FAILED,
                                 'reason': reason})
 
+    @mock.patch('bccvl_visualiser.views.api.fetch_worker')
     @mock.patch('bccvl_visualiser.utils.fetch_file',
-                side_effect=['/tmp/abc/filename'])
+                return_value='/tmp/abc/filename')
+    @mock.patch('os.path.exists', return_value=True)
     def test_api_collection_view_data_exists(self, *mocks):
         request = Request({})
-        view = None
         view = ApiCollectionView({}, request)
         resp = view.fetch()
 
-        self.assertEqual(view._fetch_jobs.keys(), [])
+        self.assertEqual(FETCH_JOBS.keys(), [])
         self.assertEqual(resp, {'status': FetchJob.STATUS_COMPLETE,
                                 'reason': None})
 
@@ -120,12 +121,11 @@ class TestApiCollectionView(unittest.TestCase):
                 side_effect=Exception("Bad file"))
     def test_api_collection_view_download_data_exception(self, *mocks):
         request = Request({})
-        view = None
         view = ApiCollectionView({}, request)
         resp = view.fetch()
 
         sleep(0.2)
-        job = view._fetch_jobs['/tmp/def']
+        job = FETCH_JOBS['/tmp/def']
         resp = view.fetch()
         self.assertEqual(job.status, FetchJob.STATUS_FAILED)
         self.assertTrue(resp['reason'].find('Bad file') != -1)

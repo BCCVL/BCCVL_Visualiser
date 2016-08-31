@@ -68,7 +68,7 @@ class ApiCollectionView(BaseView):
             if job.status in (FetchJob.STATUS_FAILED,
                               FetchJob.STATUS_COMPLETE):
                 # job in end state ... delete it and report state back
-                del self._fetch_jobs[datadir]
+                del FETCH_JOBS[datadir]
             return self.StatusResponse(status, reason)
         elif os.path.exists(datadir):
             # no job ... and path exists
