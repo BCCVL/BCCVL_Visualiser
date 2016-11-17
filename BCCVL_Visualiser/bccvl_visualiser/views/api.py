@@ -45,7 +45,6 @@ class ApiCollectionView(BaseView):
         """
 
         LOG.debug('Processing ows request')
-
         data_url = None
         try:
             data_url = self.request.GET.getone('DATA_URL')
@@ -77,7 +76,8 @@ class ApiCollectionView(BaseView):
         # Submit a new fetch job with datadir as job ID.
         job = FetchJob(datadir)
         FETCH_JOBS[datadir] = job
-        # TODO: should we really hang on to request object for a potentially long time?
+        # TODO: should we really hang on to request object for a potentially
+        # long time?
         FETCH_EXECUTOR.submit(fn=fetch_worker, request=self.request,
                               data_url=data_url, job=job)
         return self.StatusResponse(job.status, job.reason)

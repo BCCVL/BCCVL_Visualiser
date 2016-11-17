@@ -217,13 +217,16 @@ class WMSAPIViewv1(WMSAPIView):
         # TODO: check return value of setMetaData MS_SUCCESS/MS_FAILURE
         map.setMetaData("wms_enable_request", "*")
         map.setMetaData("wms_title", "BCCVL WMS Server")
-        map.setMetaData("wms_srs", "EPSG:4326 EPSG:3857")  # allow reprojection to Web Mercator
-        map.setMetaData("ows_enable_request", "*")  # wms_enable_request enough?
-        onlineresource = urlparse.urlunsplit((self.request.scheme,
-                                              "{}:{}".format(self.request.host, self.request.host_port),
-                                              self.request.path,
-                                              urllib.urlencode((('DATA_URL', self.request.params.get('DATA_URL')), ) ),
-                                              ""))
+        # allow reprojection to Web Mercator
+        map.setMetaData("wms_srs", "EPSG:4326 EPSG:3857")
+        # wms_enable_request enough?
+        map.setMetaData("ows_enable_request", "*")
+        onlineresource = urlparse.urlunsplit(
+            (self.request.scheme,
+             "{}:{}".format(self.request.host, self.request.host_port),
+             self.request.path,
+             urllib.urlencode((('DATA_URL', self.request.params.get('DATA_URL')), )),
+             ""))
         map.setMetaData("wms_onlineresource", onlineresource)
         # TODO: metadata
         #       title, author, xmp_dc_title
@@ -283,7 +286,8 @@ class WMSAPIViewv1(WMSAPIView):
         #     http://mapserver.org/el/input/raster.html#rasters-and-tile-indexing
 
         # TODO: FONTSET [filename]
-        #    set location of fontset file http://mapserver.org/el/mapfile/fontset.html
+        # set location of fontset file
+        # http://mapserver.org/el/mapfile/fontset.html
 
 
 class ShapeLayer(object):
@@ -296,7 +300,8 @@ class ShapeLayer(object):
 
     def _inspect_data(self):
         # TODO: inspect csv, remove invalid values, find extent, and min max values etc...
-        # TODO: get CRS from the meta data file? CRS is determined by the base file with geometry data.
+        # TODO: get CRS from the meta data file? CRS is determined by the base
+        # file with geometry data.
         self._data = {
             'crs': 'epsg:4326',
         }
@@ -322,32 +327,38 @@ class ShapeLayer(object):
         # mark layer as queryable
         layer.template = "query"  # anything non null and with length > 0 works here
 
-
         # Extract the base table and attribute table from layers in the format below.
         # {base_filename}-{base tablename}.{attrinute_filename}-{attribute tablename}.{column name}
-        # i.e. SH_Network.gdb.zip:catchment.stream_attributesv1.1.5.gdb.zip:climate.catannrad
+        # i.e.
+        # SH_Network.gdb.zip:catchment.stream_attributesv1.1.5.gdb.zip:climate.catannrad
         layers = self.request.params.get('layers', None)
         if layers is None:
             raise Exception("Missing layers parameter")
 
         layer.name = layers
 
-        # Parse to get filenames and short table names so that we can get the corresponding geometry and attribute tables.
-        base_fname, base_table, attr_fname, attr_table, property_name = self.parse_layers(layers)
+        # Parse to get filenames and short table names so that we can get the
+        # corresponding geometry and attribute tables.
+        base_fname, base_table, attr_fname, attr_table, property_name = self.parse_layers(
+            layers)
 
         if attr_fname is None or attr_table is None or property_name is None:
             raise Exception("Invalid layers '{layer}'".format(layer=layers))
 
         # get the attribute table and its metadata
-        db_attr_table, id_col, geom_col, extent = self.get_table_details(attr_fname, attr_table)
+        db_attr_table, id_col, geom_col, extent = self.get_table_details(
+            attr_fname, attr_table)
         if db_attr_table is None:
-            raise Exception("Invalid 'layers' parameter in request: no such table '{tablename}'".format(tablename=attr_table))
+            raise Exception("Invalid 'layers' parameter in request: no such table '{tablename}'".format(
+                tablename=attr_table))
 
-        # Get the corresposning base table, and its id and geometry column names
+        # Get the corresposning base table, and its id and geometry column
+        # names
         db_base_table = None
         common_col = None
         if base_table:
-            db_base_table, id_col, geom_col, extent = self.get_table_details(base_fname, base_table)
+            db_base_table, id_col, geom_col, extent = self.get_table_details(
+                base_fname, base_table)
 
             # Get the foreign key i.e. the joinable column
             # This is only required for joining tables
@@ -358,8 +369,8 @@ class ShapeLayer(object):
             db_base_table = db_attr_table
 
         if db_base_table is None or id_col is None or geom_col is None:
-            raise Exception("Missing or invalid table for {layer}".format(layer=base_table or attr_table))
-
+            raise Exception("Missing or invalid table for {layer}".format(
+                layer=base_table or attr_table))
 
         # DATA, in the format of "<column> from <tablename> using unique fid using srid=xxxx"
         # table must have fid and geom
@@ -376,20 +387,25 @@ class ShapeLayer(object):
             layer.connectiontype = mapscript.MS_POSTGIS
             layer.connection = DatabaseManager.connection_details()
 
-            # To speed up DB performance, simplify geometry for low resolution i.e. <= 300000 pixel per degree.
+            # To speed up DB performance, simplify geometry for low resolution
+            # i.e. <= 300000 pixel per degree.
             resolution, tolerance = self.resolution_tolerance(layer)
             the_geom = 'b.{geomcol}'.format(geomcol=geom_col)
             if resolution <= 300000 and tolerance > 0.001:
-                the_geom = "ST_Simplify(b.{geomcol}, {tol}) as {geomcol}".format(geomcol=geom_col, tol=tolerance)
+                the_geom = "ST_Simplify(b.{geomcol}, {tol}) as {geomcol}".format(
+                    geomcol=geom_col, tol=tolerance)
 
             # Get property as value
             if db_attr_table != db_base_table:
-                newtable = "(select a.{colname} as value, b.{idcol}, {geom} from {layer} a join {base} b on a.{ccol} = b.{ccol})".format(colname=property_name, layer=db_attr_table, base=db_base_table, ccol=common_col, idcol=id_col, geom=the_geom)
+                newtable = "(select a.{colname} as value, b.{idcol}, {geom} from {layer} a join {base} b on a.{ccol} = b.{ccol})".format(
+                    colname=property_name, layer=db_attr_table, base=db_base_table, ccol=common_col, idcol=id_col, geom=the_geom)
             else:
-                newtable = "(select b.{colname} as value, b.{idcol}, {geom} from {base} b)".format(colname=property_name, base=db_base_table, idcol=id_col, geom=the_geom)
+                newtable = "(select b.{colname} as value, b.{idcol}, {geom} from {base} b)".format(
+                    colname=property_name, base=db_base_table, idcol=id_col, geom=the_geom)
 
             srid = self.request.params.get('SRID', '4326')
-            layer.data = "{geom} from {table} as new_layer using unique {idcol} using srid={srid}".format(geom=geom_col, table=newtable, idcol=id_col, srid=srid)
+            layer.data = "{geom} from {table} as new_layer using unique {idcol} using srid={srid}".format(
+                geom=geom_col, table=newtable, idcol=id_col, srid=srid)
 
             # Defer closing connection
             layer.addProcessing("CLOSE_CONNECTION=DEFER")
@@ -398,27 +414,31 @@ class ShapeLayer(object):
             # TO DO: read from file
             raise Exception("Database server is not configured")
 
-
         # PROJECTION ... should we set this properly?
         crs = self._data['crs']
         # set the min and max of the attribute
-        self._data['min'], self._data['max'] = self.get_minmax_value(property_name, db_attr_table)
+        self._data['min'], self._data['max'] = self.get_minmax_value(
+            property_name, db_attr_table)
 
         layer.setProjection("init={}".format(crs))
 
         # METADATA
         # TODO: check return value of setMetaData MS_SUCCESS/MS_FAILURE
         layer.setMetaData("gml_types", "auto")
-        layer.setMetaData("gml_featureid", id_col) # Shall be the id column of the base table
+        # Shall be the id column of the base table
+        layer.setMetaData("gml_featureid", id_col)
         layer.setMetaData("gml_include_items", "all")  # allow raster queries
         layer.setMetaData("wfs_include_items", "all")
-        layer.setMetaData("wfs_srs", "EPSG:4326 EPSG:3857")  # projection to serve
-        layer.setMetaData("wfs_title", "BCCVL Layer")  # title required for GetCapabilities
+        # projection to serve
+        layer.setMetaData("wfs_srs", "EPSG:4326 EPSG:3857")
+        # title required for GetCapabilities
+        layer.setMetaData("wfs_title", "BCCVL Layer")
 
         # TODO: metadata
         #       other things like title, author, attribution etc...
 
-        # TODO: if we have a STYLES parameter we should add a STYLES element here
+        # TODO: if we have a STYLES parameter we should add a STYLES element
+        # here
         if not (self.request.params.get('STYLES') or
                 'SLD' in self.request.params or
                 'SLD_BODY' in self.request.params):
@@ -438,7 +458,8 @@ class ShapeLayer(object):
     def parse_layers(self, layerstr):
         # Parse the string to get filenames and table names.
         # Expected input: {base filename}-{base tablename}.{attribute filename}-{attribute tablename}.{columnName}
-        # or {attribute filename}-{attribute tablename}.{columnName} if both geometry and attribute are in 1 file
+        # or {attribute filename}-{attribute tablename}.{columnName} if both
+        # geometry and attribute are in 1 file
         tokens = layerstr.split('-')
         base_fname = base_table = None
         attr_fname = attr_table = attr_property = None
@@ -465,14 +486,17 @@ class ShapeLayer(object):
 
     def get_minmax_value(self, attrname, table):
         # return the min and max for a given attribute of a table.
-        connect = 'PG:{dbconn}'.format(dbconn=DatabaseManager.connection_details())
+        connect = 'PG:{dbconn}'.format(
+            dbconn=DatabaseManager.connection_details())
         dbconn = ogr.Open(connect)
 
-        sql = 'select min({attr}), max({attr}) from {table}'.format(attr=attrname, table=table)
+        sql = 'select min({attr}), max({attr}) from {table}'.format(
+            attr=attrname, table=table)
         result = dbconn.ExecuteSQL(sql)
 
         if result is None:
-            raise Exception("Error in getting min/max value for {} from table {}".format(attrname, table))
+            raise Exception(
+                "Error in getting min/max value for {} from table {}".format(attrname, table))
 
         row = result.next()
         return row.GetField(0), row.GetField(1)   # min, max
@@ -488,14 +512,18 @@ class ShapeLayer(object):
             bbox = self.request.params.get('BBOX')  # This is in meter
             if bbox:
                 xmin, ymin, xmax, ymax = [float(a) for a in bbox.split(',')]
-                area = ((xmax - xmin)/1000.0) * ((ymax - ymin)/1000.0)  # in square KM
+                area = ((xmax - xmin) / 1000.0) * \
+                    ((ymax - ymin) / 1000.0)  # in square KM
             else:
                 # Use the extent of the layer, which is in degree. Calculate
                 # area in square km.
                 lx = layer.getExtent()
-                area = ((lx.maxx - lx.minx) * 111.1) * ((lx.maxy - lx.miny) * 111.1)
-            resolution = (width * height * 111.1) / math.sqrt(area)  # number of pixels per degree
-            tolerance = 0.1/(math.log(resolution) - 4.5)  # tolerance used for simplify geometry
+                area = ((lx.maxx - lx.minx) * 111.1) * \
+                    ((lx.maxy - lx.miny) * 111.1)
+            resolution = (width * height * 111.1) / \
+                math.sqrt(area)  # number of pixels per degree
+            # tolerance used for simplify geometry
+            tolerance = 0.1 / (math.log(resolution) - 4.5)
         except Exception:
             pass
 
@@ -548,7 +576,8 @@ class TiffLayer(object):
             else:
                 self._data['crs'] = 'epsg:4326'  # use epsg:4326 as default
             band = df.GetRasterBand(1)
-            self._data['min'], self._data['max'], _, _ = band.GetStatistics(True, False)
+            self._data['min'], self._data[
+                'max'], _, _ = band.GetStatistics(True, False)
             self._data['nodata'] = band.GetNoDataValue()
             self._data['datatype'] = band.DataType
 
@@ -587,8 +616,10 @@ class TiffLayer(object):
         # TODO: check return value of setMetaData MS_SUCCESS/MS_FAILURE
         layer.setMetaData("gml_include_items", "all")  # allow raster queries
         layer.setMetaData("wms_include_items", "all")
-        layer.setMetaData("wms_srs", "EPSG:4326 EPSG:3857")  # projection to serve
-        layer.setMetaData("wms_title", "BCCVL Layer")  # title required for GetCapabilities
+        # projection to serve
+        layer.setMetaData("wms_srs", "EPSG:4326 EPSG:3857")
+        # title required for GetCapabilities
+        layer.setMetaData("wms_title", "BCCVL Layer")
         # TODO: metadata
         #       other things like title, author, attribution etc...
         # OPACITY
@@ -636,13 +667,15 @@ class TiffLayer(object):
         elif sld:
             map.applySLD(sld)
         if ((sld or sld_url) and (self._data['datatype'] == gdal.GDT_Byte and self._data['nodata'] is not None)):
-            # if we have 8bit data, mapserver ignores the NODATA value, so let's classify it as transparent
+            # if we have 8bit data, mapserver ignores the NODATA value, so
+            # let's classify it as transparent
             styleobj = mapscript.styleObj()
             styleobj.color = mapscript.colorObj(0, 0, 0, 0)
             styleobj.rangeitem = "[pixel]"
             clsobj = mapscript.classObj()
             clsobj.name = 'NODATA'
-            clsobj.setExpression("([pixel] = {})".format(int(self._data['nodata'])))
+            clsobj.setExpression(
+                "([pixel] = {})".format(int(self._data['nodata'])))
             clsobj.insertStyle(styleobj)
             layer.insertClass(clsobj, 0)
 
@@ -717,7 +750,8 @@ class CSVLayer(object):
         layer.setMetaData("gml_include_items", "all")
         layer.setMetaData("wms_include_items", "all")
         layer.setMetaData("wms_title", "BCCVL Occurrences")
-        layer.setMetaData("wms_srs", self._data['crs'])  # can be a space separated list
+        # can be a space separated list
+        layer.setMetaData("wms_srs", self._data['crs'])
         # TODO: metadata
         #       other things like title, author, attribution etc...
         if not (self.request.params.get('STYLES') or

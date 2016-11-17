@@ -11,7 +11,6 @@ from org.bccvl import movelib
 
 from bccvl_visualiser.auth import update_auth_cookie
 
-
 LOG = logging.getLogger(__name__)
 
 # TODO: replace existing DataMover classes with a configurable utility to remove
@@ -135,7 +134,6 @@ def fetch_file(request, url):
     #   add overview image to raster (after possible translate)
     #     gdaladdo [-r average] tiled.tif 2 4 8 16 32 64 128
     # for rs point data maybe convert to shapefile?
-
     if not (url.startswith('http://') or url.startswith('https://')):
         # TODO: probably allow more than just http and https
         #       and use better exception
@@ -144,8 +142,8 @@ def fetch_file(request, url):
     # Check if a local data file is already exist
     datadir = data_dir(request, url)
     url, fragment = urlparse.urldefrag(url)
-
-    from pyramid.settings import asbool  # FIXME: have to import here due to circular import
+    # FIXME: have to import here due to circular import
+    from pyramid.settings import asbool
     with LockFile(datadir + '.lock'):
         if not os.path.exists(datadir):
             # the folder doesn't exist so we'll have to fetch the file
@@ -153,17 +151,21 @@ def fetch_file(request, url):
             os.makedirs(datadir)
             # not available yet so fetch it
             try:
+                settings = request.registry.settings
                 destfile = os.path.join(datadir, os.path.basename(url))
                 try:
                     src = {
                         'url': url,
-                        'verify': asbool(request.registry.settings.get('bccvl.ssl.verify', True))
+                        'verify': asbool(settings.get('bccvl.ssl.verify', True))
                     }
                     # do we have an __ac cookie?
                     cookie = request.cookies.get('__ac')
                     # get my tokens
-                    tokens = ','.join([token.strip() for token in
-                                       request.registry.settings.get('authtkt.tokens', '').split('\n') if token.strip()])
+                    tokens = ','.join([
+                        token.strip()
+                        for token in settings.get(
+                            'authtkt.tokens', '').split('\n') if token.strip()
+                    ])
                     if cookie:
                         src['cookies'] = {
                             'name': '__ac',
@@ -172,9 +174,7 @@ def fetch_file(request, url):
                             'domain': request.host,
                             'path': '/'
                         }
-                    dst = {
-                        'url': 'file://{0}'.format(destfile)
-                    }
+                    dst = {'url': 'file://{0}'.format(destfile)}
                     movelib.move(src, dst)
                 except Exception as e:
                     # direct download failed what now?
@@ -213,19 +213,21 @@ from osgeo import ogr
 import shlex
 import subprocess
 
-
 FETCH_EXECUTOR = ThreadPoolExecutor(max_workers=3)
 FETCH_JOBS = {}
 
 
 def fetch_worker(request, data_url, job):
     # get location of local data file
-    job.update(status=FetchJob.STATUS_IN_PROGRESS,
-               start_timestamp=datetime.datetime.now())
+    job.update(
+        status=FetchJob.STATUS_IN_PROGRESS,
+        start_timestamp=datetime.datetime.now())
 
     try:
         loc = fetch_file(request, data_url)
-        install_to_db = request.params.get('INSTALL_TO_DB', False)
+        # FIXME: have to import here due to circular import
+        from pyramid.settings import asbool
+        install_to_db = asbool(request.params.get('INSTALL_TO_DB', False))
 
         # Check the dataset is to be imported to database server
         if install_to_db:
@@ -241,14 +243,17 @@ def fetch_worker(request, data_url, job):
             if DatabaseManager.is_configured():
                 # TODO: To support other file type?
                 # Check for shape file, then for gdb directories
-                dbFiles = [dbfile for dbfile in
-                           glob.glob(os.path.join(datadir,
-                                                  fname, 'data/*.dbf'))]
+                dbFiles = [
+                    dbfile
+                    for dbfile in glob.glob(
+                        os.path.join(datadir, fname, 'data/*.dbf'))
+                ]
                 if len(dbFiles) == 0:
-                    dbFiles = [dbfile for dbfile in
-                               glob.glob(os.path.join(datadir,
-                                                      fname,
-                                                      'data/*.gdb.zip'))]
+                    dbFiles = [
+                        dbfile
+                        for dbfile in glob.glob(
+                            os.path.join(datadir, fname, 'data/*.gdb.zip'))
+                    ]
                 if len(dbFiles) == 0:
                     raise Exception("Unsupported dataset type")
 
@@ -280,13 +285,16 @@ def fetch_worker(request, data_url, job):
                 json.dump(metadata, jsonfile, indent=4)
                 jsonfile.close()
 
-        job.update(status=FetchJob.STATUS_COMPLETE,
-                   end_timestamp=datetime.datetime.now())
+        job.update(
+            status=FetchJob.STATUS_COMPLETE,
+            end_timestamp=datetime.datetime.now())
     except Exception as e:
         reason = 'Failed to fetch data from {0}. {1}'.format(data_url, str(e))
         LOG.warning(reason)
-        job.update(status=FetchJob.STATUS_FAILED,
-                   end_timestamp=datetime.datetime.now(), reason=reason)
+        job.update(
+            status=FetchJob.STATUS_FAILED,
+            end_timestamp=datetime.datetime.now(),
+            reason=reason)
 
 
 def get_dataset_metadata(schemaname, filepath):
@@ -299,17 +307,17 @@ def get_dataset_metadata(schemaname, filepath):
         tablename = schemaname + '.' + name.lower()
         extent, fieldnames = get_layerinfo_from_db(tablename)
 
-        md = {
-            'table': tablename,
-            'fields': fieldnames,
-            'id_column': 'fid'
-        }
+        md = {'table': tablename, 'fields': fieldnames, 'id_column': 'fid'}
 
         # dataset only has extent if it has geometry column.
         if extent:
             xmin, xmax, ymin, ymax = extent
-            md['base_extent'] = {'xmin': xmin, 'ymin': ymin,
-                                 'xmax': xmax, 'ymax': ymax}
+            md['base_extent'] = {
+                'xmin': xmin,
+                'ymin': ymin,
+                'xmax': xmax,
+                'ymax': ymax
+            }
             md['geometry_column'] = 'geom'
         metadata[name.lower()] = md
     return metadata
@@ -325,8 +333,10 @@ def get_layerinfo_from_db(tablename):
 
     # Get a list of user defined column names
     layerdefn = layerdata.GetLayerDefn()
-    fieldnames = [layerdefn.GetFieldDefn(i).GetName() for i in
-                  range(layerdefn.GetFieldCount())]
+    fieldnames = [
+        layerdefn.GetFieldDefn(i).GetName()
+        for i in range(layerdefn.GetFieldCount())
+    ]
 
     extent = None
     if len(layerdata.GetGeometryColumn()) > 0:
@@ -339,36 +349,47 @@ def import_into_db(dbfname, schemaname):
     # Import dataset into db server
     try:
         # create schema
-        command = 'ogrinfo -so PG:"{dbconn}" -sql "create schema if not exists {schema}"'.format(dbconn=DatabaseManager.connection_details(), schema=schemaname)
-        p = subprocess.Popen(shlex.split(command),
-                             stdout=subprocess.PIPE, stderr=subprocess.PIPE)
+        command = 'ogrinfo -so PG:"{dbconn}" -sql "create schema if not exists {schema}"'.format(
+            dbconn=DatabaseManager.connection_details(), schema=schemaname)
+        p = subprocess.Popen(
+            shlex.split(command),
+            stdout=subprocess.PIPE,
+            stderr=subprocess.PIPE)
         output, err = p.communicate()
         if p.returncode != 0 or len(err) > 0:
-            raise Exception("Fail to create schema '{}'. {}".format(schemaname, err))
+            raise Exception("Fail to create schema '{}'. {}".format(schemaname,
+                                                                    err))
 
         # import the dataset. Set FID and geometry name.
-        command = 'ogr2ogr -f PostgreSQL PG:"{dbconn}" -lco schema={schema} -lco FID=fid -lco GEOMETRY_NAME=geom  {dbfile} -skipfailures -overwrite --config PG_USE_COPY YES'.format(dbconn=DatabaseManager.connection_details(), schema=schemaname, dbfile=dbfname)
-        p = subprocess.Popen(shlex.split(command),
-                             stdout=subprocess.PIPE, stderr=subprocess.PIPE)
+        command = 'ogr2ogr -f PostgreSQL PG:"{dbconn}" -lco schema={schema} -lco FID=fid -lco GEOMETRY_NAME=geom  {dbfile} -skipfailures -overwrite --config PG_USE_COPY YES'.format(
+            dbconn=DatabaseManager.connection_details(),
+            schema=schemaname,
+            dbfile=dbfname)
+        p = subprocess.Popen(
+            shlex.split(command),
+            stdout=subprocess.PIPE,
+            stderr=subprocess.PIPE)
         output, err = p.communicate()
         if p.returncode != 0 or len(err) > 0:
-            raise Exception("Fail to import dataset '{}. {}'".format(dbfname, err))
+            raise Exception("Fail to import dataset '{}. {}'".format(dbfname,
+                                                                     err))
 
     except Exception as e:
-        raise Exception("Failed to import dataset into DB server. {0}".format(str(e)))
+        raise Exception("Failed to import dataset into DB server. {0}".format(
+            str(e)))
 
 
 def get_tablenames(dbfname):
     command = "ogrinfo -so -q {filename}".format(filename=dbfname)
-    p = subprocess.Popen(shlex.split(command),
-                         stdout=subprocess.PIPE, stderr=subprocess.PIPE)
+    p = subprocess.Popen(
+        shlex.split(command), stdout=subprocess.PIPE, stderr=subprocess.PIPE)
     output, err = p.communicate()
     if p.returncode != 0 or len(err) > 0:
-        raise Exception("Fail to get table names from '{}': {}".format(dbfname, err))
+        raise Exception("Fail to get table names from '{}': {}".format(dbfname,
+                                                                       err))
 
     # parse for tablenames.
     # output format: 1: tablename1 (None) \n\r2: tablename2 (polygon) \n\r3:
     tokens = output.split(":")
     names = [tokens[i].split()[0].strip() for i in range(1, len(tokens))]
     return names
-
