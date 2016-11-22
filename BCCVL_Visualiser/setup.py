@@ -8,9 +8,9 @@ CHANGES = open(os.path.join(here, 'CHANGES.txt')).read()
 
 requires = [
     'pyramid >= 1.4.4',
-#    'psycopg2',
-#    'SQLAlchemy',
-#    'GeoAlchemy2',
+    #    'psycopg2',
+    #    'SQLAlchemy',
+    #    'GeoAlchemy2',
 
 
     # mapscript and GDAL is now installed during the buildout.
@@ -39,18 +39,18 @@ requires = [
     'csvvalidator',
     'futures',
     'org.bccvl.movelib [http]',
-    ]
+]
 
 setup(name='BCCVL_Visualiser',
-      version='1.8.0.dev',
+      version='1.8.0rc0',
       description='BCCVL_Visualiser',
       long_description=README + '\n\n' + CHANGES,
       classifiers=[
-        "Programming Language :: Python",
-        "Framework :: Pyramid",
-        "Topic :: Internet :: WWW/HTTP",
-        "Topic :: Internet :: WWW/HTTP :: WSGI :: Application",
-        ],
+          "Programming Language :: Python",
+          "Framework :: Pyramid",
+          "Topic :: Internet :: WWW/HTTP",
+          "Topic :: Internet :: WWW/HTTP :: WSGI :: Application",
+      ],
       author='',
       author_email='',
       url='',
