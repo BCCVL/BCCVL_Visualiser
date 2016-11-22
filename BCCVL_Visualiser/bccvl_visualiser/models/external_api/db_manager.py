@@ -3,6 +3,7 @@ import os
 import glob
 import json
 
+
 class DatabaseManager(object):
 
     USER = None
@@ -23,12 +24,12 @@ class DatabaseManager(object):
             log.warn("Warning, %s is already configured. Ignoring new configuration.", str(class_))
             return
 
-        class_.HOST = settings['bccvl.database_manager.host']
-        class_.PORT = settings['bccvl.database_manager.port']
-        class_.DB_NAME = settings['bccvl.database_manager.db_name']
-        class_.USER = settings['bccvl.database_manager.user']
-        class_.PASSWORD = settings['bccvl.database_manager.password']
-        class_.MAP_FILES_DIR = settings['bccvl.mapscript.map_data_files_root_path']
+        class_.HOST = settings.get('bccvl.database_manager.host', None)
+        class_.PORT = settings.get('bccvl.database_manager.port', None)
+        class_.DB_NAME = settings.get('bccvl.database_manager.db_name', None)
+        class_.USER = settings.get('bccvl.database_manager.user', None)
+        class_.PASSWORD = settings.get('bccvl.database_manager.password', None)
+        class_.MAP_FILES_DIR = settings.get('bccvl.mapscript.map_data_files_root_path', None)
 
         # Read in the metadata for each dataset
         for mdfile in glob.glob(os.path.join(class_.MAP_FILES_DIR, '*/layer_info.json')):
