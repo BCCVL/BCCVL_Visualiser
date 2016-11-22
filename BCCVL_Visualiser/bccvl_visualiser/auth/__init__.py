@@ -24,6 +24,11 @@ def update_auth_cookie(cookie, tokens, request):
         LOG.warn("Can't update cookie because we don't have a valid identity")
         return None
 
+    if not 'userid' in identity:
+        # under some circumstances we may not get a userid
+        LOG.warn("Can't update cookie because we have no userid")
+        return None
+
     ticket = authpol.cookie.AuthTicket(
         authpol.cookie.secret,
         identity['userid'],
