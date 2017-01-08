@@ -71,7 +71,12 @@ class ApiCollectionView(BaseView):
             return self.StatusResponse(status, reason)
         elif os.path.exists(datadir):
             # no job ... and path exists
-            return self.StatusResponse(FetchJob.STATUS_COMPLETE)
+            lockfile = datadir + '.lock'
+            if os.path.exists(lockfile):
+                # no job ... lockfile exists -> job in progress
+                return self.StatusResponse(FetchJob.STATUS_IN_PROGRESS)
+            else:
+                return self.StatusResponse(FetchJob.STATUS_COMPLETE)
 
         # Submit a new fetch job with datadir as job ID.
         job = FetchJob(datadir)
