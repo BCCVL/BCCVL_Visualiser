@@ -229,6 +229,26 @@ def fetch_worker(request, data_url, job):
         from pyramid.settings import asbool
         install_to_db = asbool(request.params.get('INSTALL_TO_DB', False))
 
+        # search all tifs and try to generate overviews
+        for rasterfile in [r
+                           for r in glob.glob(
+                                   os.path.join(datadir, fname, 'data/*.tif'))]:
+            ds = gdal.Open(rasterfile)
+            if ds:
+                maxlevel = min(ds.RasterXSize, ds.RasterYSize) / 512
+                ovrclear = ['gdaladdo', '-clean', data]
+                ovradd = ['gdaladdo', '-ro',
+                          #'--config', 'COMPRESS_OVERVIEW', 'LZW',
+                          data,
+                ]
+                level = 2
+                while level < maxlevel:
+                    ovradd.append(str(level))
+                    level = level * 2
+                if maxlevel >= 2:
+                    subprocess.check_call(ovrclear)
+                    subprocess.check_call(ovradd)
+
         # Check the dataset is to be imported to database server
         if install_to_db:
             datadir, filename = os.path.split(loc)
