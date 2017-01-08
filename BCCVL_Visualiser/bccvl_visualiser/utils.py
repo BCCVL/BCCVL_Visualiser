@@ -229,6 +229,7 @@ def fetch_worker(request, data_url, job):
         from pyramid.settings import asbool
         install_to_db = asbool(request.params.get('INSTALL_TO_DB', False))
 
+        datadir, filename = os.path.split(loc)
         # search all tifs and try to generate overviews
         for rasterfile in [r
                            for r in glob.glob(
@@ -251,7 +252,6 @@ def fetch_worker(request, data_url, job):
 
         # Check the dataset is to be imported to database server
         if install_to_db:
-            datadir, filename = os.path.split(loc)
             fname, fext = os.path.splitext(filename)
             if fext == '.zip':
                 # Check if shape file exists. If so, already unzip.
