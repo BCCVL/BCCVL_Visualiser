@@ -1,12 +1,15 @@
-import hashlib
-import os
-import os.path
 import fcntl
-import zipfile
-import urlparse
-import shutil
+import fnmatch
+import hashlib
 import logging
 import mimetypes
+import os
+import os.path
+import shutil
+import urlparse
+import zipfile
+
+import gdal
 from org.bccvl import movelib
 
 from bccvl_visualiser.auth import update_auth_cookie
@@ -187,6 +190,27 @@ def fetch_file(request, url):
                         zipf.extractall(datadir)
                     # remove zipfile
                     os.remove(destfile)
+
+                # search all tifs and try to generate overviews
+                for root, dirnames, filenames in os.walk(datadir):
+                    for filename in fnmatch.filter(filenames, '*.tif'):
+                        rasterfile = os.path.join(root, filename)
+                        ds = gdal.Open(rasterfile)
+                        if ds:
+                            maxlevel = min(ds.RasterXSize, ds.RasterYSize) / 512
+                            ovrclear = ['gdaladdo', '-clean', rasterfile]
+                            ovradd = ['gdaladdo', '-ro',
+                                      #'--config', 'COMPRESS_OVERVIEW', 'LZW',
+                                      rasterfile,
+                            ]
+                            level = 2
+                            while level < maxlevel:
+                                ovradd.append(str(level))
+                                level = level * 2
+                            if maxlevel >= 2:
+                                subprocess.check_call(ovrclear)
+                                subprocess.check_call(ovradd)
+
             except Exception as e:
                 LOG.error('Could not download %s to %s : %s', url, datadir, e)
                 shutil.rmtree(datadir)
@@ -229,30 +253,10 @@ def fetch_worker(request, data_url, job):
         from pyramid.settings import asbool
         install_to_db = asbool(request.params.get('INSTALL_TO_DB', False))
 
-        datadir, filename = os.path.split(loc)
-        fname, fext = os.path.splitext(filename)
-        # search all tifs and try to generate overviews
-        for rasterfile in [r
-                           for r in glob.glob(
-                                   os.path.join(datadir, fname, 'data/*.tif'))]:
-            ds = gdal.Open(rasterfile)
-            if ds:
-                maxlevel = min(ds.RasterXSize, ds.RasterYSize) / 512
-                ovrclear = ['gdaladdo', '-clean', data]
-                ovradd = ['gdaladdo', '-ro',
-                          #'--config', 'COMPRESS_OVERVIEW', 'LZW',
-                          data,
-                ]
-                level = 2
-                while level < maxlevel:
-                    ovradd.append(str(level))
-                    level = level * 2
-                if maxlevel >= 2:
-                    subprocess.check_call(ovrclear)
-                    subprocess.check_call(ovradd)
-
         # Check the dataset is to be imported to database server
         if install_to_db:
+            datadir, filename = os.path.split(loc)
+            fname, fext = os.path.splitext(filename)
             if fext == '.zip':
                 # Check if shape file exists. If so, already unzip.
                 with zipfile.ZipFile(loc, 'r') as zipf:
