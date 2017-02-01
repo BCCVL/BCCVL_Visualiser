@@ -74,20 +74,23 @@ pipeline {
             }
 
         }
-        stage('End') {
+
+        stage('Package') {
             when {
+                branch "docker"
                 expression { currentBuild.result && currentBuild.result == 'SUCCESS' }
             }
             steps {
-                echo "End Stage ran"
+                sh 'rm -rf build; rm -rf dist'
+                sh './virtualenv/bin/python BCCVL_Visualiser/setup.py bdist_wheel')
             }
         }
-        //stage('Build Image') {
 
-        //}
-        //stage('Deploy') {
+        // stage('Push Artifact') {
+        //     // archiveArtifacts artifacts: 'BCCVL_Visualiser/dist/*.whl', onlyIfSuccessful: true
+        //     // stash 'climatemapcode'
+        // }
 
-        //}
     }
 
     post {
