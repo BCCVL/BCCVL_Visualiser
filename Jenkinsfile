@@ -77,12 +77,13 @@ pipeline {
 
         stage('Package') {
             when {
+                // branch accepts wildcards as well... e.g. "*/master"
                 branch "docker"
                 expression { currentBuild.result && currentBuild.result == 'SUCCESS' }
             }
             steps {
                 sh 'rm -rf build; rm -rf dist'
-                sh './virtualenv/bin/python BCCVL_Visualiser/setup.py bdist_wheel')
+                sh './virtualenv/bin/python BCCVL_Visualiser/setup.py bdist_wheel'
             }
         }
 
