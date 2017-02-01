@@ -13,16 +13,16 @@ pipeline {
 
     stages {
 
-        stage('Checkout') {
+        // stage('Checkout') {
 
-            steps {
+        //     steps {
 
-                // checkout scm
-                git url: 'https://github.com/BCCVL/BCCVL_Visualiser', branch:'docker'
+        //         // checkout scm
+        //         git url: 'https://github.com/BCCVL/BCCVL_Visualiser', branch:'docker'
 
-            }
+        //     }
 
-        }
+        // }
 
         stage('Build') {
 
