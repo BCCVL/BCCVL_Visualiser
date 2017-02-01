@@ -39,7 +39,7 @@ pipeline {
                 sh 'virtualenv -p python2.7 --system-site-packages ./virtualenv'
                 // convert virtualenv to relocatable to avoid problems with too long shebangs
                 sh 'virtualenv --relocatable ./virtualenv'
-                sh './virtualenv/bin/pip install --upgrade setuptools'
+                sh './virtualenv/bin/pip install --upgrade setuptools pip'
                 sh './virtualenv/bin/pip install pytz'
                 sh './virtualenv/bin/pip install -r BCCVL_Visualiser/requirements.txt'
                 sh './virtualenv/bin/pip install -e BCCVL_Visualiser'
@@ -97,7 +97,7 @@ pipeline {
             // alternative would be to put get commiter email ourselves, and list of people who need to be notified
             // and put mail(...) step into each appropriate section
             // => would this then send 2 emails? e.g. changed + state email?
-            step([$class: 'Mailer', notifyEveryUnstableBuild: true, recipients: 'g.weis@griffith.edu.au', sendToIndividuals: true])
+            step([$class: 'Mailer', notifyEveryUnstableBuild: true, recipients: 'gerhard.weis@gmail.com', sendToIndividuals: true])
         }
         success {
             echo 'This will run only if successful'
