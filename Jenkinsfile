@@ -42,7 +42,7 @@ pipeline {
             steps {
                 sh 'mkdir -p /tmp/bccvl/map_data_files'
                 // don't fail pipeline if there are test errors, we handle that on currentBuild.result conditions later
-                sh(script: 'cd BCCVL_Visualiser; . ./virtualenv/bin/activate; nosetests -v -v --with-xunit --xunit-file=./nosetests.xml --with-coverage --cover-package=bccvl_visualiser --cover-xml --cover-xml-file=./coverage.xml',
+                sh(script: '. ./virtualenv/bin/activate; cd BCCVL_Visualiser; nosetests -v -v --with-xunit --xunit-file=./nosetests.xml --with-coverage --cover-package=bccvl_visualiser --cover-xml --cover-xml-file=./coverage.xml',
                    returnStatus: true)
 
                 // capture test result
