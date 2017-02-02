@@ -13,18 +13,9 @@ pipeline {
 
     stages {
 
-        // stage('Checkout') {
-
-        //     steps {
-
-        //         // checkout scm
-        //         git url: 'https://github.com/BCCVL/BCCVL_Visualiser', branch:'docker'
-
-        //     }
-
-        // }
-
         stage('Build') {
+
+            sh 'env'
 
             environment {
                 CPLUS_INCLUDE_PATH = '/usr/include/gdal'
@@ -34,7 +25,7 @@ pipeline {
 
             steps {
                 // we should be inside the container with the workspace mounted at current working dir
-                // and running as jenknis user (should have read/write access to workspace)
+                // and running as jenkins user (should have read/write access to workspace)
                 // we need a virtual env here
                 sh 'virtualenv -p python2.7 --system-site-packages ./virtualenv'
                 // convert virtualenv to relocatable to avoid problems with too long shebangs
@@ -77,7 +68,7 @@ pipeline {
         stage('Package') {
             when {
                 // branch accepts wildcards as well... e.g. "*/master"
-                branch "docker"
+                branch "master"
                 expression { currentBuild.result && currentBuild.result == 'SUCCESS' }
             }
             steps {
