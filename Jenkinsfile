@@ -41,7 +41,7 @@ pipeline {
                 sh 'virtualenv --relocatable ./virtualenv'
                 sh '. ./virtualenv/bin/activate; pip install pytz'
                 sh '. ./virtualenv/bin/activate; pip install -r BCCVL_Visualiser/requirements.txt'
-                sh '. ./virtualenv/bit/activate; pip install -e BCCVL_Visualiser'
+                sh '. ./virtualenv/bin/activate; pip install -e BCCVL_Visualiser'
             }
 
         }
