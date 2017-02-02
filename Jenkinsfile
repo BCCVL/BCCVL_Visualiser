@@ -1,96 +1,113 @@
+pipeline {
 
-def image;
-def imagename;
-def imagetag;
-
-node {
-
-    stage 'Checkout'
-
-    checkout scm
-
-    stage 'Build Image'
-
-    imagename = "hub.bccvl.org.au/bccvl/visualiser"
-
-    image = docker.build(imagename)
-
-    stage 'Test'
-
-    docker.image(imagename).inside("-u root") {
-
-        sh "ENV=UNIT /cmd.sh"
-
-        // copy test results to workdir
-        sh 'cp /tmp/nosetests.xml "${PWD}/"'
-        sh 'cp /tmp/coverage.xml "${PWD}/"'
-
-        // capture unit test outputs in jenkins
-        step([$class: 'JUnitResultArchiver', testResults: 'nosetests.xml'])
-
-        // install cobertura -> clover transform (until robertura is supported in pipelines)
-        sh "yum install -y python-pip libxslt-devel "
-        sh "pip install cobertura-clover-transform"  // needs lxml
-        sh "cobertura-clover-transform coverage.xml > clover.xml"
-
-        step([$class: 'CloverPublisher', cloverReportDir: '', cloverReportFileName: 'clover.xml'])
-
-        // generate coverage report as html and capture it?
-        //sh "cd /opt/zope; ./bin/coverage html -d parts/jenkins-test/coverage-report"
-        //publishHTML(target: [allowMissing: false, alwaysLinkToLastBuild: false,
-        //             keepAll: false,
-        //             reportDir: 'jenkins-test/coverage-report',
-        //             reportFiles: 'index.html',
-        //             reportName: 'Coverage Report'])
+    agent {
+        docker {
+            image 'hub.bccvl.org.au/bccvl/visualiserbase:2017-02-01'
+        }
     }
 
-    switch(env.BRANCH_NAME) {
-        case 'docker':
-            stage 'Image Push'
+    stages {
 
-            image.push('latest')
+        stage('Build') {
 
-            slackSend color: 'good', message: "New Image ${imagename}:latest\n${env.JOB_NAME} ${env.BUILD_NUMBER}"
+            environment {
+                CPLUS_INCLUDE_PATH = '/usr/include/gdal'
+                C_INCLUDE_PATH = '/usr/include/gdal'
+                HOME = "${env.WORKSPACE}"
+            }
 
-            break
-    }
+            steps {
+                sh 'env'
 
-}
+                // we should be inside the container with the workspace mounted at current working dir
+                // and running as jenkins user (should have read/write access to workspace)
+                // we need a virtual env here
+                sh 'virtualenv -p python2.7 --system-site-packages ./virtualenv'
+                // convert virtualenv to relocatable to avoid problems with too long shebangs
+                sh 'virtualenv --relocatable ./virtualenv'
+                sh '. ./virtualenv/bin/activate; pip install pytz'
+                sh '. ./virtualenv/bin/activate; pip install -r BCCVL_Visualiser/requirements.txt'
+                sh '. ./virtualenv/bin/activate; pip install -e BCCVL_Visualiser'
+            }
 
-switch(env.BRANCH_NAME) {
+        }
+        stage('Test') {
 
-    case 'master':
+            environment {
+                PYTHONWARNINGS="ignore:Unverified HTTPS request"
+            }
 
-        stage 'Approve'
+            steps {
+                sh 'mkdir -p /tmp/bccvl/map_data_files'
+                // don't fail pipeline if there are test errors, we handle that on currentBuild.result conditions later
+                sh(script: 'cd BCCVL_Visualiser; ../virtualenv/bin/nosetests -v -v --with-xunit --xunit-file=./nosetests.xml --with-coverage --cover-package=bccvl_visualiser --cover-xml --cover-xml-file=./coverage.xml',
+                   returnStatus: true)
 
-        mail(to: 'g.weis@griffith.edu.au',
-             subject: "Job '${env.JOB_NAME}' (${env.BUILD_NUMBER}) is waiting for input",
-             body: "Please go to ${env.BUILD_URL}.");
+                // capture test result
+                //junit 'BCCVL_Visualiser/nosetests.xml'
+                step([
+                    $class: 'XUnitBuilder',
+                    thresholds: [
+                        [$class: 'FailedThreshold', failureThreshold: '1',
+                                                    unstableThreshold: '1']
+                    ],
+                    tools: [
+                        [$class: 'JUnitType', pattern: 'BCCVL_Visualiser/nosetests.xml']
+                    ]
+                ])
 
-        slackSend color: 'good', message: "Ready to deploy ${env.JOB_NAME} ${env.BUILD_NUMBER} (<${env.BUILD_URL}|Open>)"
-
-        input 'Ready to deploy?';
-
-    case 'docker':
-    case 'qa':
-
-        stage 'Deploy'
-
-        node {
-
-            // Tag image for deployment
-            def version = getPythonVersion('BCCVL_Visualiser/setup.py')
-            imagetag = "${version}-${env.BUILD_NUMBER}"
-
-            image.push(imagetag)
-            slackSend color: 'good', message: "New Image ${imagename}:${imagetag}\n${env.JOB_NAME} ${env.BUILD_NUMBER}"
-
-            deploy("Visualiser", env.BRANCH_NAME, "${imagename}:${imagetag}")
-
-            slackSend color: 'good', message: "Deployed ${imagename}:${imagetag}\n${env.JOB_NAME} ${env.BUILD_NUMBER}"
+            }
 
         }
 
-        break
+        stage('Package') {
+            when {
+                // branch accepts wildcards as well... e.g. "*/master"
+                branch "master"
+                expression { currentBuild.result && currentBuild.result == 'SUCCESS' }
+            }
+            steps {
+                sh 'rm -rf build; rm -rf dist'
+                sh './virtualenv/bin/python BCCVL_Visualiser/setup.py bdist_wheel'
+            }
+        }
+
+        // stage('Push Artifact') {
+        //     // archiveArtifacts artifacts: 'BCCVL_Visualiser/dist/*.whl', onlyIfSuccessful: true
+        //     // stash 'climatemapcode'
+        // }
+
+    }
+
+    post {
+        always {
+            echo "This runs always"
+            // does this plugin get committer emails by themselves?
+            // alternative would be to put get commiter email ourselves, and list of people who need to be notified
+            // and put mail(...) step into each appropriate section
+            // => would this then send 2 emails? e.g. changed + state email?
+            step([
+                $class: 'Mailer',
+                notifyEveryUnstableBuild: true,
+                recipients: 'gerhard.weis@gmail.com ' + emailextrecipients([
+                    [$class: 'CulpritsRecipientProvider'],
+                    [$class: 'RequesterRecipientProvider']
+                ])
+            ])
+        }
+        success {
+            echo 'This will run only if successful'
+        }
+        failure {
+            echo 'This will run only if failed'
+        }
+        unstable {
+            echo 'This will run only if the run was marked as unstable'
+        }
+        changed {
+            echo 'This will run only if the state of the Pipeline has changed'
+            echo 'For example, the Pipeline was previously failing but is now successful'
+        }
+    }
 
 }
