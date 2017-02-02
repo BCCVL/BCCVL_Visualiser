@@ -1,7 +1,7 @@
 pipeline {
 
     options {
-        buildDiscarder(logRotator(numToKeepStr: '5'))
+        buildDiscarder(logRotator(numToKeepStr: '10'))
 
     }
 
@@ -52,7 +52,7 @@ pipeline {
             }
 
             steps {
-                sh 'mkdir -p /tmp/bccvl/map_data_files'
+                //sh 'mkdir -p /tmp/bccvl/map_data_files'
                 // don't fail pipeline if there are test errors, we handle that on currentBuild.result conditions later
                 sh(script: 'cd BCCVL_Visualiser; ../virtualenv/bin/nosetests -v -v --with-xunit --xunit-file=./nosetests.xml --with-coverage --cover-package=bccvl_visualiser --cover-xml --cover-xml-file=./coverage.xml',
                    returnStatus: true)
@@ -101,6 +101,14 @@ pipeline {
             // and put mail(...) step into each appropriate section
             // => would this then send 2 emails? e.g. changed + state email?
             step([$class: 'Mailer', notifyEveryUnstableBuild: true, recipients: 'gerhard.weis@gmail.com', sendToIndividuals: true])
+            step([
+                $class: 'Mailer',
+                notifyEveryUnstableBuild: true,
+                recipients: 'g.weis@griffith.edu.au ' + emailextrecipients([
+                    [$class: 'CulpritsRecipientProvider'],
+                    [$class: 'RequesterRecipientProvider']
+                ])
+            ])
         }
         success {
             echo 'This will run only if successful'
