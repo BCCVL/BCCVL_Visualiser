@@ -39,9 +39,9 @@ pipeline {
                 sh 'virtualenv -p python2.7 --system-site-packages ./virtualenv'
                 // convert virtualenv to relocatable to avoid problems with too long shebangs
                 sh 'virtualenv --relocatable ./virtualenv'
-                sh './virtualenv/bin/pip install pytz'
-                sh './virtualenv/bin/pip install -r BCCVL_Visualiser/requirements.txt'
-                sh './virtualenv/bin/pip install -e BCCVL_Visualiser'
+                sh '. ./virtualenv/bin/activate; pip install pytz'
+                sh '. ./virtualenv/bin/activate; pip install -r BCCVL_Visualiser/requirements.txt'
+                sh '. ./virtualenv/bit/activate; pip install -e BCCVL_Visualiser'
             }
 
         }
