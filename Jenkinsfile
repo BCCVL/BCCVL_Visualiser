@@ -1,9 +1,9 @@
 pipeline {
 
-    options {
-        buildDiscarder(logRotator(numToKeepStr: '10'))
-
-    }
+    //options {
+    //    buildDiscarder(logRotator(numToKeepStr: '10'))
+    //
+    //}
 
     agent {
         docker {
@@ -43,7 +43,7 @@ pipeline {
             }
 
             steps {
-                sh 'mkdir -p /tmp/bccvl/map_data_files'
+                //sh 'mkdir -p /tmp/bccvl/map_data_files'
                 // don't fail pipeline if there are test errors, we handle that on currentBuild.result conditions later
                 sh(script: 'cd BCCVL_Visualiser; ../virtualenv/bin/nosetests -v -v --with-xunit --xunit-file=./nosetests.xml --with-coverage --cover-package=bccvl_visualiser --cover-xml --cover-xml-file=./coverage.xml',
                    returnStatus: true)
@@ -91,7 +91,6 @@ pipeline {
             // alternative would be to put get commiter email ourselves, and list of people who need to be notified
             // and put mail(...) step into each appropriate section
             // => would this then send 2 emails? e.g. changed + state email?
-            step([$class: 'Mailer', notifyEveryUnstableBuild: true, recipients: 'gerhard.weis@gmail.com', sendToIndividuals: true])
             step([
                 $class: 'Mailer',
                 notifyEveryUnstableBuild: true,
