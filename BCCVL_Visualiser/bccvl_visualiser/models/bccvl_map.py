@@ -3,6 +3,7 @@ import csv
 from mapscript import mapObj, OWSRequest
 import logging
 import os
+import os.path
 import sys
 
 import hashlib
@@ -41,6 +42,8 @@ class BCCVLMap(mapObj):
 
         cls.MAP_FILES_ROOT_PATH      = settings['bccvl.mapscript.map_files_root_path']
         cls.MAP_DATA_FILES_ROOT_PATH = settings['bccvl.mapscript.map_data_files_root_path']
+        if not os.path.exists(cls.MAP_DATA_FILES_ROOT_PATH):
+            os.makedirs(cls.MAP_DATA_FILES_ROOT_PATH)
 
     def __init__(self, map_file_name=None, data_id=None, data_url=None, layer_name=None, query_string=None, **kwargs):
         """ initialise the map instance from a data_url """
