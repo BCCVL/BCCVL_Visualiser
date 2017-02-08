@@ -57,3 +57,4 @@ BCCVL_Visualiser/.idea
 bccvl_production.ini
 buildout.cfg
 picked-versions.cfg
+BCCVL_Visualiser/.eggs
