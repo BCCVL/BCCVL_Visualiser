@@ -98,7 +98,7 @@ class BCCVLMap(mapObj):
 
         # loadParamsFromURL causes a seg fault if passed an empty string.
         # Don't pass it an empty string...
-        if ( ( type(query_string) == str ) and ( query_string.strip() != '' ) ):
+        if ((type(query_string) == str) and (query_string.strip() != '')):
             ows_request.loadParamsFromURL(query_string)
 
         if (ows_request.getValueByName('LAYER') is None):
@@ -114,7 +114,7 @@ class BCCVLMap(mapObj):
     # TODO: call only within critical section
     def _download_data_to_file(self):
         log = logging.getLogger(__name__)
-        mover = FDataMover.new_data_mover(self.data_file_path, data_url = self.data_url)
+        mover = FDataMover.new_data_mover(self.data_file_path, data_url=self.data_url)
 
         # Make sure only one thread is trying to check for
         # the existance of, or trying to write the file
@@ -125,13 +125,12 @@ class BCCVLMap(mapObj):
         except:
             # Invalid file if data move does not complete the move
             valid = False
-            
+
         # Delete invalid file
         if not valid:
             log.info("Deleting invalid file: %s", self.data_file_path)
             os.remove(self.data_file_path)
             raise ValueError("Problem validating file. Problems: %s" % (problems))
-
 
     def _validate_file(self):
         """ Validate the file
@@ -180,11 +179,10 @@ class BCCVLMap(mapObj):
 
         # Default the map attributes:
         #   * shapepath: the path to data files
-        if self.shapepath == None:
+        if self.shapepath is None:
             map_data_files_root_path = self.MAP_DATA_FILES_ROOT_PATH
             log.debug("Setting mapObj.shapepath as not already set. Set to: %s", map_data_files_root_path)
             self.shapepath = map_data_files_root_path
-
 
     def render(self):
         """ Render this map object
@@ -205,7 +203,7 @@ class BCCVLMap(mapObj):
         retval = None           # the OWS return value, useful for debugging
 
         # TODO: do I need alock here?
-        #with LockFile(self.data_file_path + '.lock'):
+        # with LockFile(self.data_file_path + '.lock'):
         if True:
             try:
                 ows_request_type = self.ows_request.getValueByName('REQUEST')
@@ -262,7 +260,7 @@ class RasterBCCVLMap(BCCVLMap):
 
     COLOR_BANDS = 8
     MIN_COLOR = [255, 255, 255]
-    MAX_COLOR = [255, 0,   0]
+    MAX_COLOR = [255,   0,   0]
 
     def __init__(self, **kwargs):
         super(RasterBCCVLMap, self).__init__(**kwargs)
@@ -293,7 +291,7 @@ class RasterBCCVLMap(BCCVLMap):
         # Get the expected value range
         min_exp, max_exp = self.get_expected_value_range()
         min_exp = float(min_exp)
-        max_exp= float(max_exp)
+        max_exp = float(max_exp)
 
         # Get the map layer
         layer = self.getLayerByName(self.layer_name)
@@ -329,13 +327,13 @@ class RasterBCCVLMap(BCCVLMap):
             this_color = ' '.join(map(str, [this_color_r, this_color_g, this_color_b]))
 
             # Calc. the next color along
-            next_color_r = min_color[0] + ( r_color_diff * ( (val+the_inc-min_exp) / float(the_range)) )
-            next_color_g = min_color[1] + ( g_color_diff * ( (val+the_inc-min_exp) / float(the_range)) )
-            next_color_b = min_color[2] + ( b_color_diff * ( (val+the_inc-min_exp) / float(the_range)) )
+            next_color_r = min_color[0] + (r_color_diff * ((val + the_inc - min_exp) / float(the_range)))
+            next_color_g = min_color[1] + (g_color_diff * ((val + the_inc - min_exp) / float(the_range)))
+            next_color_b = min_color[2] + (b_color_diff * ((val + the_inc - min_exp) / float(the_range)))
 
             next_color = ' '.join(map(str, [next_color_r, next_color_g, next_color_b]))
 
-            self._update_range_style_information(layer, val, val+the_inc, this_color, next_color, max_exp)
+            self._update_range_style_information(layer, val, val + the_inc, this_color, next_color, max_exp)
             # inc the value
             val = val + the_inc
 
@@ -393,7 +391,7 @@ END
         # Default the layer attributes:
         #   * data: the file path relative to shape path
         layer = self.getLayerByName(self.layer_name)
-        if layer != None and layer.data == None:
+        if layer is not None and layer.data is None:
             log.debug("Setting mapObj.layer.data as not already set. Set to: %s", self.file_name)
             layer.data = self.file_name
 
@@ -410,13 +408,13 @@ END
 
         band_number = self.BAND_NUMBER
         dataset = self.get_gdal_dataset()
-        if dataset == None:
+        if dataset is None:
             raise ValueError("Failed to open data_file (%s) as a gdal dataset" % self.data_file_path)
         else:
             # Get the raster band
             band = dataset.GetRasterBand(band_number)
             the_min = band.GetMinimum()
-            if the_min == None:
+            if the_min is None:
                 # if the min isn't available directly, compute it
                 (the_min, the_max) = band.ComputeRasterMinMax(band_number)
             # Return the minimum value
@@ -427,13 +425,13 @@ END
 
         band_number = self.BAND_NUMBER
         dataset = self.get_gdal_dataset()
-        if dataset == None:
+        if dataset is None:
             raise ValueError("Failed to open data_file (%s) as a gdal dataset" % self.data_file_path)
         else:
             # Get the raster band
             band = dataset.GetRasterBand(band_number)
             the_max = band.GetMaximum()
-            if the_max == None:
+            if the_max is None:
                 # if the max isn't available directly, compute it
                 (the_min, the_max) = band.ComputeRasterMinMax(band_number)
 
@@ -523,7 +521,7 @@ END
 
         band_number = self.BAND_NUMBER
         dataset = self.get_gdal_dataset()
-        if dataset == None:
+        if dataset is None:
             raise ValueError("Failed to open data_file (%s) as a gdal dataset" % self.data_file_path)
         else:
             # Get the raster band
@@ -531,18 +529,21 @@ END
             # Return the scale
             return band.GetScale()
 
+
 class GeoTiffBCCVLMap(RasterBCCVLMap):
     EXTENSION = ".tif"
 
+
 class AsciiGridBCCVLMap(RasterBCCVLMap):
     EXTENSION = ".asc"
+
 
 class OccurrencesBCCVLMap(BCCVLMap):
     EXTENSION = ".csv"
     DEFAULT_MAP_FILE_NAME = "default_occurrences.map"
 
     LNG_COLUMN_NAME = 'lon'
-    LAT_COLUMN_NAME= 'lat'
+    LAT_COLUMN_NAME = 'lat'
 
     class OccurrencesDialect(csv.Dialect):
         strict = True
@@ -564,7 +565,7 @@ class OccurrencesBCCVLMap(BCCVLMap):
 
         layer = self.getLayerByName(self.layer_name)
 
-        if layer != None and layer.connection == None:
+        if layer is not None and layer.connection is None:
             connection = self._get_connection(lng_column, lat_column)
             log.debug("Setting map layer connection to: %s", connection)
             layer.connection = connection
@@ -592,7 +593,7 @@ class OccurrencesBCCVLMap(BCCVLMap):
             valid, problems = self._check_if_occurrences_csv_valid(self.data_file_path, lng=lng_column, lat=lat_column)
         except:
             log.error("Error validating the file: %s", sys.exc_info()[0])
-            return False, [ "Error validating the file: %s" % sys.exc_info()[0] ]
+            return False, ["Error validating the file: %s" % sys.exc_info()[0]]
 
         return valid, problems
 
@@ -655,8 +656,8 @@ class OccurrencesBCCVLMap(BCCVLMap):
                         problems.append("CSV (%s) contains an invalid %s: %s" % (file_path, lat, lat_s))
 
                     # Only provide info on at most +limit+ problems
-                    if limit and ( len(problems) >= limit ):
+                    if limit and (len(problems) >= limit):
                         break
 
-        valid = ( len(problems) == 0 )
+        valid = (len(problems) == 0)
         return valid, problems

@@ -5,6 +5,7 @@ import unittest
 import os
 import logging
 
+
 class TestMyCode(unittest.TestCase):
     def setUp(self):
         pass
@@ -13,8 +14,6 @@ class TestMyCode(unittest.TestCase):
         pass
 
     def test_gdal_load_raster_fixture_as_dataset(self):
-        log = logging.getLogger(__name__)
-
         test_dir = os.path.dirname(os.path.realpath(__file__))
         fixtures_dir = os.path.join(test_dir, 'fixtures')
         raster_fixture_path = os.path.join(fixtures_dir, 'raster.tif')
@@ -22,7 +21,7 @@ class TestMyCode(unittest.TestCase):
         dataset = gdal.Open(raster_fixture_path, GA_ReadOnly)
 
         # We should have no error loading the dataset
-        self.assertTrue(dataset != None)
+        self.assertTrue(dataset is not None)
 
         # Pixels wide
         self.assertEqual(dataset.RasterXSize, 886)
@@ -41,7 +40,7 @@ class TestMyCode(unittest.TestCase):
         self.assertEqual(band.GetMaximum(), 0.62908011869436)
 
         # The min and max can also be calculated this way
-        (imin,imax) = band.ComputeRasterMinMax(1)
+        (imin, imax) = band.ComputeRasterMinMax(1)
         self.assertEqual(imin, 0)
         self.assertEqual(imax, 0.62908011869436)
 
@@ -50,16 +49,16 @@ class TestMyCode(unittest.TestCase):
 
         # Get the transform object (provides access to position information)
         geotransform = dataset.GetGeoTransform()
-        self.assertTrue(geotransform != None)
+        self.assertTrue(geotransform is not None)
 
         # From GDAL Docs:
         #
-        #adfGeoTransform[0] /* top left x */
-        #adfGeoTransform[1] /* w-e pixel resolution */
-        #adfGeoTransform[2] /* 0 */
-        #adfGeoTransform[3] /* top left y */
-        #adfGeoTransform[4] /* 0 */
-        #adfGeoTransform[5] /* n-s pixel resolution (negative value) */
+        # adfGeoTransform[0] /* top left x */
+        # adfGeoTransform[1] /* w-e pixel resolution */
+        # adfGeoTransform[2] /* 0 */
+        # adfGeoTransform[3] /* top left y */
+        # adfGeoTransform[4] /* 0 */
+        # adfGeoTransform[5] /* n-s pixel resolution (negative value) */
 
         origin_x = geotransform[0]
         origin_y = geotransform[3]
@@ -75,10 +74,7 @@ class TestMyCode(unittest.TestCase):
         self.assertEqual(round(pixel_size_x, 6), 0.05)
         self.assertEqual(round(pixel_size_y, 6), -0.05)
 
-
     def test_gdal_load_a_missing_dataset(self):
-        log = logging.getLogger(__name__)
-
         test_dir = os.path.dirname(os.path.realpath(__file__))
         fixtures_dir = os.path.join(test_dir, 'fixtures')
         raster_fixture_path = os.path.join(fixtures_dir, 'raster_no_such_file.tif')

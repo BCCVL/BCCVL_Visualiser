@@ -1,15 +1,14 @@
 import unittest
-import transaction
 import mapscript
 import os
-
-from pyramid import testing
 
 from bccvl_visualiser.models import OccurrencesBCCVLMap, AsciiGridBCCVLMap, GeoTiffBCCVLMap
 
 from paste.deploy.loadwsgi import appconfig
 
+
 class TestBCCVLMap(unittest.TestCase):
+
     def setUp(self):
         self.config = appconfig('config:development.ini', 'pyramid', relative_to='.')
         from bccvl_visualiser import main

@@ -1,12 +1,11 @@
 import unittest
-import transaction
-
-from pyramid import testing
 
 from bccvl_visualiser.models import BaseZIPAPI, ZIPAPIv1, APICollection
 from paste.deploy.loadwsgi import appconfig
 
+
 class TestZIPAPIv1(unittest.TestCase):
+
     def setUp(self):
         self.config = appconfig('config:development.ini', 'pyramid', relative_to='.')
         from bccvl_visualiser import main
@@ -18,12 +17,12 @@ class TestZIPAPIv1(unittest.TestCase):
         pass
 
     def test_view_zip_api_r(self):
-       res = self.testapp.get('/api/zip', status='*')
-       self.assertEqual(res.status_int, 200)
+        res = self.testapp.get('/api/zip', status='*')
+        self.assertEqual(res.status_int, 200)
 
     def test_view_zip_api_v1_r(self):
-       res = self.testapp.get('/api/zip/1', status='*')
-       self.assertEqual(res.status_int, 200)
+        res = self.testapp.get('/api/zip/1', status='*')
+        self.assertEqual(res.status_int, 200)
 
     def test_test_env_working(self):
         self.assertEqual(True, True)
@@ -61,8 +60,8 @@ class TestZIPAPIv1(unittest.TestCase):
 
     def test_view_zip_api_v1_with_file_name(self):
         params = {
-            'data_url':     'https://raw.github.com/BCCVL/BCCVL_Visualiser/master/BCCVL_Visualiser/bccvl_visualiser/tests/fixtures/env_layers.zip',
-            'file_name':    'bioclim_15.tif'
+            'data_url':  'https://raw.github.com/BCCVL/BCCVL_Visualiser/master/BCCVL_Visualiser/bccvl_visualiser/tests/fixtures/env_layers.zip',
+            'file_name': 'bioclim_15.tif'
         }
 
         res = self.testapp.get('/api/zip/1/default', status='*', params=params)
@@ -71,7 +70,7 @@ class TestZIPAPIv1(unittest.TestCase):
 
     def test_view_zip_api_v1_with_multiple(self):
         params = {
-            'data_url':     'https://raw.github.com/BCCVL/BCCVL_Visualiser/master/BCCVL_Visualiser/bccvl_visualiser/tests/fixtures/env_layers.zip',
+            'data_url': 'https://raw.github.com/BCCVL/BCCVL_Visualiser/master/BCCVL_Visualiser/bccvl_visualiser/tests/fixtures/env_layers.zip',
         }
 
         res = self.testapp.get('/api/zip/1/default', status='*', params=params)

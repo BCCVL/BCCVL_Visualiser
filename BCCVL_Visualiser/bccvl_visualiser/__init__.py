@@ -8,14 +8,12 @@ from bccvl_visualiser.models.external_api import DataManager, DatabaseManager
 from bccvl_visualiser.models.external_api import FDataMover, DataMover
 
 
-
-
 def initialise_cache(settings):
     """ Initialise the application's cache regions
     """
 
     log = logging.getLogger(__name__)
-    
+
     from bccvl_visualiser import cache as cache_module
 
     settings['cache.regions'] = aslist(settings['cache.regions'])
@@ -25,27 +23,31 @@ def initialise_cache(settings):
             prefix = 'cache.{}.'.format(cache_name)
             expiration_time_key = prefix + 'expiration_time'
             if expiration_time_key in settings:
-                settings[expiration_time_key] = \
-                        int(settings[expiration_time_key])
+                settings[expiration_time_key] = int(settings[expiration_time_key])
             cache.configure_from_config(settings, prefix)
         else:
             log.warn('Cache {} is already configured.'.format(cache))
+
 
 def configure_bccvl_map(settings):
     """ Configure the BCCVL Map """
     BCCVLMap.configure_from_config(settings)
 
+
 def configure_data_manager(settings):
     """ Configure the Data Manager """
     DataManager.configure_from_config(settings)
+
 
 def configure_data_mover(settings):
     """ Configure the Data Mover """
     FDataMover.configure_from_config(settings)
 
+
 def configure_database_manager(settings):
     """ Configure the Database Manager """
     DatabaseManager.configure_from_config(settings)
+
 
 def main(global_config, **settings):
     """ This function returns a Pyramid WSGI application.

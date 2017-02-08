@@ -1,10 +1,8 @@
 import unittest
-import transaction
-
-from pyramid import testing
 
 from bccvl_visualiser.models import BaseHTMLAPI, HTMLAPIv1, APICollection
 from paste.deploy.loadwsgi import appconfig
+
 
 class TestHTMLAPIv1(unittest.TestCase):
     def setUp(self):
@@ -18,8 +16,8 @@ class TestHTMLAPIv1(unittest.TestCase):
         pass
 
     def test_view_html_api_html(self):
-       res = self.testapp.get('/api/html', status='*')
-       self.assertEqual(res.status_int, 200)
+        res = self.testapp.get('/api/html', status='*')
+        self.assertEqual(res.status_int, 200)
 
     def test_test_env_working(self):
         self.assertEqual(True, True)
@@ -57,7 +55,7 @@ class TestHTMLAPIv1(unittest.TestCase):
 
     def test_view_html_api_v1_html(self):
         params = {
-            'data_url':     'https://raw.github.com/BCCVL/BCCVL_Visualiser/master/BCCVL_Visualiser/bccvl_visualiser/tests/fixtures/hello_world.html',
+            'data_url': 'https://raw.github.com/BCCVL/BCCVL_Visualiser/master/BCCVL_Visualiser/bccvl_visualiser/tests/fixtures/hello_world.html',
         }
 
         res = self.testapp.get('/api/html/1/data_url_view', status='*', params=params)

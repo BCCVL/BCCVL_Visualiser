@@ -1,13 +1,9 @@
 import unittest
-import transaction
-import pprint
-import json
 
-from pyramid import testing
+from paste.deploy.loadwsgi import appconfig
 
 from bccvl_visualiser.models import BaseCSVAPI, CSVAPIv1, APICollection
 
-from paste.deploy.loadwsgi import appconfig
 
 class TestCSVAPIv1(unittest.TestCase):
 
@@ -22,12 +18,12 @@ class TestCSVAPIv1(unittest.TestCase):
         pass
 
     def test_view_csv_api_html(self):
-       res = self.testapp.get('/api/csv', status='*')
-       self.assertEqual(res.status_int, 200)
+        res = self.testapp.get('/api/csv', status='*')
+        self.assertEqual(res.status_int, 200)
 
     def test_view_csv_api_v1_html(self):
-       res = self.testapp.get('/api/csv/1', status='*')
-       self.assertEqual(res.status_int, 200)
+        res = self.testapp.get('/api/csv/1', status='*')
+        self.assertEqual(res.status_int, 200)
 
     def test_csv_in_api_collection(self):
         self.assertTrue(BaseCSVAPI in APICollection.base_api_inheritors())
@@ -62,7 +58,7 @@ class TestCSVAPIv1(unittest.TestCase):
 
     def test_create_and_render_csv_as_html_tabl_via_point_api_v1(self):
         params = {
-            'data_url':     'https://raw.github.com/BCCVL/BCCVL_Visualiser/master/BCCVL_Visualiser/bccvl_visualiser/tests/fixtures/occurrences.csv',
+            'data_url': 'https://raw.github.com/BCCVL/BCCVL_Visualiser/master/BCCVL_Visualiser/bccvl_visualiser/tests/fixtures/occurrences.csv',
         }
 
         res = self.testapp.get('/api/csv/1/data_url_view', status='*', params=params)

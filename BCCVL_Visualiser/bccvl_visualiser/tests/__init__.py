@@ -1,13 +1,11 @@
 import unittest
-import transaction
-import pprint
 
 from pyramid import testing
+
 
 class TestMyCode(unittest.TestCase):
     def setUp(self):
         self.config = testing.setUp()
-        pass
 
     def tearDown(self):
         pass

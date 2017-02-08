@@ -2,14 +2,13 @@ import tempfile
 import os
 
 import unittest
-import transaction
-import types
 
 from pyramid import testing
 
 from bccvl_visualiser.models.external_api.data_mover import DataMover, FDataMover, LocalDataMover
 
 from paste.deploy.loadwsgi import appconfig
+
 
 class TestBCCVLMap(unittest.TestCase):
 

@@ -1,12 +1,11 @@
 import unittest
-import transaction
-
-from pyramid import testing
 
 from bccvl_visualiser.models import BasePNGAPI, PNGAPIv1, APICollection
 from paste.deploy.loadwsgi import appconfig
 
+
 class TestPNGAPIv1(unittest.TestCase):
+
     def setUp(self):
         self.config = appconfig('config:development.ini', 'pyramid', relative_to='.')
         from bccvl_visualiser import main
@@ -18,12 +17,12 @@ class TestPNGAPIv1(unittest.TestCase):
         pass
 
     def test_view_png_api_r(self):
-       res = self.testapp.get('/api/png', status='*')
-       self.assertEqual(res.status_int, 200)
+        res = self.testapp.get('/api/png', status='*')
+        self.assertEqual(res.status_int, 200)
 
     def test_view_png_api_v1_r(self):
-       res = self.testapp.get('/api/png/1', status='*')
-       self.assertEqual(res.status_int, 200)
+        res = self.testapp.get('/api/png/1', status='*')
+        self.assertEqual(res.status_int, 200)
 
     def test_test_env_working(self):
         self.assertEqual(True, True)
@@ -61,7 +60,7 @@ class TestPNGAPIv1(unittest.TestCase):
 
     def test_view_png_api_v1_data_url_view(self):
         params = {
-            'data_url':     'https://raw.github.com/BCCVL/BCCVL_Visualiser/master/BCCVL_Visualiser/bccvl_visualiser/tests/fixtures/smile.png',
+            'data_url': 'https://raw.github.com/BCCVL/BCCVL_Visualiser/master/BCCVL_Visualiser/bccvl_visualiser/tests/fixtures/smile.png',
         }
 
         res = self.testapp.get('/api/png/1/data_url_view', status='*', params=params)

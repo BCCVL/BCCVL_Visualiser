@@ -1,12 +1,11 @@
 import unittest
-import transaction
-
-from pyramid import testing
 
 from bccvl_visualiser.models import BaseRAPI, RAPIv1, APICollection
 from paste.deploy.loadwsgi import appconfig
 
+
 class TestRAPIv1(unittest.TestCase):
+
     def setUp(self):
         self.config = appconfig('config:development.ini', 'pyramid', relative_to='.')
         from bccvl_visualiser import main
@@ -18,12 +17,12 @@ class TestRAPIv1(unittest.TestCase):
         pass
 
     def test_view_r_api_r(self):
-       res = self.testapp.get('/api/r', status='*')
-       self.assertEqual(res.status_int, 200)
+        res = self.testapp.get('/api/r', status='*')
+        self.assertEqual(res.status_int, 200)
 
     def test_view_r_api_v1_r(self):
-       res = self.testapp.get('/api/r/1', status='*')
-       self.assertEqual(res.status_int, 200)
+        res = self.testapp.get('/api/r/1', status='*')
+        self.assertEqual(res.status_int, 200)
 
     def test_test_env_working(self):
         self.assertEqual(True, True)
@@ -61,7 +60,7 @@ class TestRAPIv1(unittest.TestCase):
 
     def test_view_r_api_v1_data_url_view(self):
         params = {
-            'data_url':     'https://raw.github.com/BCCVL/BCCVL_Visualiser/master/BCCVL_Visualiser/bccvl_visualiser/tests/fixtures/hello_world.r',
+            'data_url': 'https://raw.github.com/BCCVL/BCCVL_Visualiser/master/BCCVL_Visualiser/bccvl_visualiser/tests/fixtures/hello_world.r',
         }
 
         res = self.testapp.get('/api/r/1/data_url_view', status='*', params=params)

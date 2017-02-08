@@ -9,7 +9,7 @@ import tempfile
 from contextlib import contextmanager
 import xmlrpclib
 from pyramid.settings import asbool
-import zipfile
+
 
 class IDataMover(zope.interface.Interface):
     #: The base_url of the data mover
@@ -26,12 +26,12 @@ class IDataMover(zope.interface.Interface):
     #: The data_url of the file we're moving
     data_url = zope.interface.Attribute("The data_url that defines what we're moving")
     #: The data_id of the file we're moving
-    data_id  = zope.interface.Attribute("The data_id that defines what we're moving")
+    data_id = zope.interface.Attribute("The data_id that defines what we're moving")
     #: We should only have either the data_id or the data_url
     zope.interface.invariant(bccvl_visualiser.invariants.data_id_xor_data_url_invariant)
 
     #: The move job_id
-    job_id   = zope.interface.Attribute("The move job id")
+    job_id = zope.interface.Attribute("The move job id")
 
     #: The destination file path
     dest_file_path = zope.interface.Attribute("The destination of the file we're moving")
@@ -56,6 +56,7 @@ class IDataMover(zope.interface.Interface):
     def get_status():
         """ Get the status of the current move """
         pass
+
 
 class FDataMover(object):
     LOCAL = None
@@ -92,20 +93,21 @@ class FDataMover(object):
         else:
             return DataMover
 
+
 class DataMover(object):
     zope.interface.implements(IDataMover)
 
     BASE_URL = None
-    DEST_HOST  = None
+    DEST_HOST = None
     DEST_USER = None
     PUBLIC_DIR = None
     MAP_FILES_DIR = None
 
     COMPLETE_STATUS = 'COMPLETED'
     REJECTED_STATUS = 'REJECTED'
-    PENDING_STATUS  = 'PENDING'
+    PENDING_STATUS = 'PENDING'
     IN_PROGRESS_STATUS = 'IN_PROGRESS'
-    FAILED_STATUS   = 'FAILED'
+    FAILED_STATUS = 'FAILED'
 
     # The time to sleep between data mover checks
     SLEEP_BETWEEN_DATA_MOVER_CHECKS = 2
@@ -174,9 +176,9 @@ class DataMover(object):
         """ initialise the map instance from a data_url """
 
         self.dest_file_path = dest_file_path
-        self.job_id   = None
+        self.job_id = None
         self.data_url = None
-        self.data_id  = None
+        self.data_id = None
 
         if data_id and data_url:
             raise ValueError("The DataMover API can't be provided a data_id and a data_url (there can be only one)")
@@ -225,7 +227,7 @@ class DataMover(object):
             raise NotImplementedError("move_file for data_id is not yet supported")
 
     def get_status(self):
-        assert self.job_id != None, "can't check the status of a job without an id"
+        assert self.job_id is not None, "can't check the status of a job without an id"
 
         log = logging.getLogger(__name__)
 
@@ -265,20 +267,21 @@ class DataMover(object):
                 # it's in progress, so wait
                 time.sleep(cls.SLEEP_BETWEEN_DATA_MOVER_CHECKS)
 
+
 class LocalDataMover(DataMover):
 
     def move_file(self):
-        if ( self.job_id is None ):
-            self.job_id = random.randint(1,1000000)
+        if (self.job_id is None):
+            self.job_id = random.randint(1, 1000000)
             self._move_the_file()
-            return { 'status': self.__class__.PENDING_STATUS, 'id': self.job_id }
+            return {'status': self.__class__.PENDING_STATUS, 'id': self.job_id}
         else:
             raise AssertionError("You can only move a file once per data mover instance")
 
     def get_status(self):
         if self.job_id:
             if self.status_code == 200:
-                return { 'status': self.__class__.COMPLETE_STATUS, 'id': self.job_id }
+                return {'status': self.__class__.COMPLETE_STATUS, 'id': self.job_id}
             else:
                 return {
                     'status': self.__class__.FAILED_STATUS,
@@ -299,6 +302,6 @@ class LocalDataMover(DataMover):
             os.makedirs(dirname)
 
         # write the data from the url to the map file path
-        output = open(self.dest_file_path,'wb')
+        output = open(self.dest_file_path, 'wb')
         output.write(r.content)
         output.close()

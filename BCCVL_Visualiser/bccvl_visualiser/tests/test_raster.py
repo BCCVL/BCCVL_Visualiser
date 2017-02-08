@@ -1,12 +1,10 @@
 import unittest
-import transaction
 import json
-
-from pyramid import testing
 
 from bccvl_visualiser.models import BaseRasterAPI, RasterAPIv1, APICollection
 
 from paste.deploy.loadwsgi import appconfig
+
 
 class TestRasterAPIv1(unittest.TestCase):
 
@@ -38,40 +36,40 @@ class TestRasterAPIv1(unittest.TestCase):
         self.assertEqual(BaseRasterAPI.identifier(), 'raster')
 
     def test_view_raster_api_html(self):
-       res = self.testapp.get('/api/raster', status='*')
-       self.assertEqual(res.status_int, 200)
+        res = self.testapp.get('/api/raster', status='*')
+        self.assertEqual(res.status_int, 200)
 
     def test_view_raster_api_v1_html(self):
-       res = self.testapp.get('/api/raster/1', status='*')
-       self.assertEqual(res.status_int, 200)
+        res = self.testapp.get('/api/raster/1', status='*')
+        self.assertEqual(res.status_int, 200)
 
     def test_view_raster_api_v1_json(self):
-       res = self.testapp.get('/api/raster/1.json', status='*')
-       self.assertEqual(res.status_int, 200)
+        res = self.testapp.get('/api/raster/1.json', status='*')
+        self.assertEqual(res.status_int, 200)
 
-       loaded_json = json.loads(res.body)
-       self.assertEqual(loaded_json['version'], RasterAPIv1.version())
-       self.assertEqual(loaded_json['name'], RasterAPIv1.identifier())
+        loaded_json = json.loads(res.body)
+        self.assertEqual(loaded_json['version'], RasterAPIv1.version())
+        self.assertEqual(loaded_json['name'], RasterAPIv1.identifier())
 
     def test_view_raster_api_v1_json_with_bad_version(self):
-       res = self.testapp.get('/api/raster/bad_version.json', status='*')
-       self.assertEqual(res.status_int, 404)
+        res = self.testapp.get('/api/raster/bad_version.json', status='*')
+        self.assertEqual(res.status_int, 404)
 
     # SRS -> Spherical Mercator
     def test_view_raster_api_wms_srs_epsg_3857(self):
         params = {
-            'DATA_URL':     'https://raw.github.com/BCCVL/BCCVL_Visualiser/master/BCCVL_Visualiser/bccvl_visualiser/tests/fixtures/raster.tif',
-            'TRANSPARENT':  'true',
-            'FORMAT':       'image/png',
-            'SERVICE':      'WMS',
-            'VERSION':      '1.1.1',
-            'REQUEST':      'GetMap',
-            'STYLES':       '',
-            'SRS':          'EPSG:3857',
-            'BBOX':         '-20037508.34,-10018754.17,-15028131.255,-5009377.085',
-            'WIDTH':        '512',
-            'HEIGHT':       '512',
-            'LAYERS':       'DEFAULT',
+            'DATA_URL':    'https://raw.github.com/BCCVL/BCCVL_Visualiser/master/BCCVL_Visualiser/bccvl_visualiser/tests/fixtures/raster.tif',
+            'TRANSPARENT': 'true',
+            'FORMAT':      'image/png',
+            'SERVICE':     'WMS',
+            'VERSION':     '1.1.1',
+            'REQUEST':     'GetMap',
+            'STYLES':      '',
+            'SRS':         'EPSG:3857',
+            'BBOX':        '-20037508.34,-10018754.17,-15028131.255,-5009377.085',
+            'WIDTH':       '512',
+            'HEIGHT':      '512',
+            'LAYERS':      'DEFAULT',
         }
 
         res = self.testapp.get('/api/raster/1/wms_data_url', status='*', params=params)
@@ -82,18 +80,18 @@ class TestRasterAPIv1(unittest.TestCase):
     # SRS -> Lat/Lng Decimal
     def test_view_raster_api_wms_srs_epsg_4326(self):
         params = {
-            'DATA_URL':     'https://raw.github.com/BCCVL/BCCVL_Visualiser/master/BCCVL_Visualiser/bccvl_visualiser/tests/fixtures/raster.tif',
-            'TRANSPARENT':  'true',
-            'FORMAT':       'image/png',
-            'SERVICE':      'WMS',
-            'VERSION':      '1.1.1',
-            'REQUEST':      'GetMap',
-            'STYLES':       '',
-            'SRS':          'EPSG:4326',
-            'BBOX':         '-180,-90,180,90',
-            'WIDTH':        '100',
-            'HEIGHT':       '100',
-            'LAYERS':       'DEFAULT',
+            'DATA_URL':    'https://raw.github.com/BCCVL/BCCVL_Visualiser/master/BCCVL_Visualiser/bccvl_visualiser/tests/fixtures/raster.tif',
+            'TRANSPARENT': 'true',
+            'FORMAT':      'image/png',
+            'SERVICE':     'WMS',
+            'VERSION':     '1.1.1',
+            'REQUEST':     'GetMap',
+            'STYLES':      '',
+            'SRS':         'EPSG:4326',
+            'BBOX':        '-180,-90,180,90',
+            'WIDTH':       '100',
+            'HEIGHT':      '100',
+            'LAYERS':      'DEFAULT',
         }
 
         res = self.testapp.get('/api/raster/1/wms_data_url', status='*', params=params)
@@ -105,15 +103,15 @@ class TestRasterAPIv1(unittest.TestCase):
     # Get Legend
     def test_view_raster_api_wms_srs_epsg_4326_get_legend(self):
         params = {
-            'DATA_URL':     'https://raw.github.com/BCCVL/BCCVL_Visualiser/master/BCCVL_Visualiser/bccvl_visualiser/tests/fixtures/raster.tif',
-            'FORMAT':       'image/png',
-            'SERVICE':      'WMS',
-            'VERSION':      '1.0.0',
-            'REQUEST':      'GetLegendGraphic',
-            'SRS':          'EPSG:4326',
-            'BBOX':         '-180,-90,180,90',
-            'WIDTH':        '100',
-            'HEIGHT':       '100',
+            'DATA_URL': 'https://raw.github.com/BCCVL/BCCVL_Visualiser/master/BCCVL_Visualiser/bccvl_visualiser/tests/fixtures/raster.tif',
+            'FORMAT':   'image/png',
+            'SERVICE':  'WMS',
+            'VERSION':  '1.0.0',
+            'REQUEST':  'GetLegendGraphic',
+            'SRS':      'EPSG:4326',
+            'BBOX':     '-180,-90,180,90',
+            'WIDTH':    '100',
+            'HEIGHT':   '100',
         }
 
         res = self.testapp.get('/api/raster/1/wms_data_url', status='*', params=params)
