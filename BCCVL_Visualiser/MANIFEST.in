@@ -1,2 +1,2 @@
-include *.txt *.ini *.cfg *.rst
-recursive-include bccvl_visualiser *.ico *.png *.css *.gif *.jpg *.pt *.txt *.mak *.mako *.js *.html *.xml
+include *.txt
+recursive-include bccvl_visualiser *.ico *.png *.css *.gif *.jpg *.pt *.js *.html
