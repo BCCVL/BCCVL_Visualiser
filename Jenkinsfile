@@ -10,24 +10,21 @@ pipeline {
 
         stage('Build') {
 
-            environment {
-                CPLUS_INCLUDE_PATH = '/usr/include/gdal'
-                C_INCLUDE_PATH = '/usr/include/gdal'
-                HOME = "${env.WORKSPACE}"
-            }
-
             steps {
-                // we should be inside the container with the workspace mounted at current working dir
-                // and running as jenkins user (should have read/write access to workspace)
-                // we need a virtual env here
-                sh 'virtualenv -p python2.7 --system-site-packages ./virtualenv'
-                // convert virtualenv to relocatable to avoid problems with too long shebangs
-                sh 'virtualenv --relocatable ./virtualenv'
-                sh '. ./virtualenv/bin/activate; pip install pytz'
-                sh '. ./virtualenv/bin/activate; pip install -r BCCVL_Visualiser/requirements.txt'
-                sh '. ./virtualenv/bin/activate; pip install -e BCCVL_Visualiser'
-                // make the additionally installed scripts relocatable to avoid long path problems with those as well
-                sh 'virtualenv --relocatable ./virtualenv'
+                // environment {} is executed in node context, and there is no WORKSPACE defined
+                with_pypirc(pwd()) {
+                    // clear virtualenv
+                    sh 'rm -fr ./virtualenv'
+                    // we should be inside the container with the workspace mounted at current working dir
+                    // and running as jenkins user (should have read/write access to workspace)
+                    // we need a virtual env here
+                    sh 'virtualenv -p python2.7 --system-site-packages ./virtualenv'
+                    // convert virtualenv to relocatable to avoid problems with too long shebangs
+                    sh 'virtualenv --relocatable ./virtualenv'
+                    sh '. ./virtualenv/bin/activate; pip install --upgrade -e BCCVL_Visualiser'
+                    // make the additionally installed scripts relocatable to avoid long path problems with those as well
+                    sh 'virtualenv --relocatable ./virtualenv'
+                }
             }
 
         }
@@ -38,22 +35,39 @@ pipeline {
             }
 
             steps {
-                sh 'mkdir -p /tmp/bccvl/map_data_files'
-                // don't fail pipeline if there are test errors, we handle that on currentBuild.result conditions later
-                sh(script: '. ./virtualenv/bin/activate; cd BCCVL_Visualiser; nosetests -v -v --with-xunit --xunit-file=./nosetests.xml --with-coverage --cover-package=bccvl_visualiser --cover-xml --cover-xml-file=./coverage.xml',
-                   returnStatus: true)
-
+                with_pypirc(pwd()) {
+                    // make sure an old .coverage files doesn't interfere
+                    sh 'rm -f BCCVL_Visualiser/.coverage'
+                    // don't fail pipeline if there are test errors, we handle that on currentBuild.result conditions later
+                    //sh(script: '. ./virtualenv/bin/activate; cd BCCVL_Visualiser; python setup.py nosetests --verbosity=2 --with-xunit --xunit-file=./nosetests.xml --with-coverage --cover-package=bccvl_visualiser --cover-xml --cover-xml-file=./coverage.xml',
+                    //   returnStatus: true)
+                    // For now generate html report as the jenkins cobertura plugin is not yet compatible with pipelines
+                    sh(script: '. ./virtualenv/bin/activate; cd BCCVL_Visualiser; python setup.py nosetests --verbosity=2 --with-xunit --xunit-file=./nosetests.xml --with-coverage --cover-package=bccvl_visualiser --cover-html --cover-branches',
+                       returnStatus: true)
+                }
                 // capture test result
                 //junit 'BCCVL_Visualiser/nosetests.xml'
                 step([
                     $class: 'XUnitBuilder',
                     thresholds: [
-                        [$class: 'FailedThreshold', failureThreshold: '1',
+                        [$class: 'FailedThreshold', failureThreshold: '0',
                                                     unstableThreshold: '1']
                     ],
                     tools: [
-                        [$class: 'JUnitType', pattern: 'BCCVL_Visualiser/nosetests.xml']
+                        [$class: 'JUnitType', deleteOutputFiles: true,
+                                              failIfNotNew: true,
+                                              pattern: 'BCCVL_Visualiser/nosetests.xml',
+                                              stopProcessingIfError: true]
                     ]
+                ])
+                // publish html coverage report
+                publishHTML(target: [
+                    allowMissing: false,
+                    alwaysLinkToLastBuild: false,
+                    keepAll: true,
+                    reportDir: 'BCCVL_Visualiser/cover',
+                    reportFiles: 'index.html',
+                    reportName: 'Coverage Report'
                 ])
 
             }
@@ -63,25 +77,33 @@ pipeline {
         stage('Package') {
             when {
                 // branch accepts wildcards as well... e.g. "*/master"
-                branch "master"
+                //branch "master"
                 expression { currentBuild.result && currentBuild.result == 'SUCCESS' }
             }
             steps {
                 sh 'rm -rf build; rm -rf dist'
-                sh './virtualenv/bin/python BCCVL_Visualiser/setup.py bdist_wheel'
+                with_pypirc(pwd()) {
+                    sh '. ./virtualenv/bin/activate; python BCCVL_Visualiser/setup.py register -r dev sdist bdist_wheel upload -r dev'
+                    sh '. ./virtualenv/bin/activate; pip freeze > requirements.txt'
+                }
             }
         }
 
-        // stage('Push Artifact') {
-        //     // archiveArtifacts artifacts: 'BCCVL_Visualiser/dist/*.whl', onlyIfSuccessful: true
-        //     // stash 'climatemapcode'
-        // }
+        stage ('Push Artifact') {
+            steps {
+                archiveArtifacts artifacts: 'requirements.txt', fingerprint: true, onlyIfSuccessful: true
+            }
+        }
 
     }
 
     post {
         always {
             echo "This runs always"
+
+            // cleanup virtualenv
+            sh 'rm -fr ./virtualenv'
+
             // does this plugin get committer emails by themselves?
             // alternative would be to put get commiter email ourselves, and list of people who need to be notified
             // and put mail(...) step into each appropriate section
@@ -110,4 +132,24 @@ pipeline {
         }
     }
 
+}
+
+
+def with_pypirc(home, Closure body) {
+    withEnv(["HOME=${home}"]) {
+        configFileProvider([configFile(fileId: 'pypirc', variable: 'PYPIRC'),
+                            configFile(fileId: 'pip.conf', variable: 'PIPCONF'),
+                            configFile(fileId: 'pydistutils.cfg', variable: 'PYDISTUTILSCFG'),
+                            configFile(fileId: 'buildout.cfg', variable: 'BUILDOUTCFG')]) {
+            sh 'rm -f ~/.pypirc ~/.pydistutils.cfg ~/.pip ~/.buildout'
+            sh 'ln -s "$PYPIRC" ~/.pypirc'
+            sh 'lt -s "$PYDISTUTILSCFG ~/.pydistutils.cfg'
+            sh 'mkdir ~/.pip'
+            sh 'ln -s "$PIPCONF" ~/.pip/pip.conf'
+            sh 'mkdir ~/.buildout'
+            sh 'ln -s "$BUILDOUTCFG" ~/.buildout/default.cfg'
+            body()
+            sh 'rm -fr ~/.pypirc ~/.pydistutils.cfg ~/.pip ~/.buildout'
+        }
+    }
 }
