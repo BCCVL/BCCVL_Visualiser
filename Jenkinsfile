@@ -3,6 +3,8 @@ pipeline {
     agent {
         docker {
             image 'hub.bccvl.org.au/bccvl/visualiserbase:2017-02-01'
+            // TODO: remove this, once repository is set up properly
+            args '--network jenkins'
         }
     }
 
