@@ -10,6 +10,7 @@ CHANGES = open(os.path.join(here, 'CHANGES.txt')).read()
 requires = [
     'pyramid',
     'pyramid_chameleon',
+    'pyramid_tm',
     'SQLAlchemy',
     #'GDAL >= 1.7.3',       # Better to depend on system installed version
     #'MapScript >= 7.0.0',  # There is no distirbution we can deppend on.. it's either there ore not
