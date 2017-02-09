@@ -107,8 +107,9 @@ class TestApiCollectionView(unittest.TestCase):
     @mock.patch('bccvl_visualiser.views.api.fetch_worker')
     @mock.patch('bccvl_visualiser.utils.fetch_file',
                 return_value='/tmp/abc/filename')
-    @mock.patch('os.path.exists', return_value=True)
+    @mock.patch('os.path.exists', side_effect=[True, False])
     def test_api_collection_view_data_exists(self, *mocks):
+        import pdb; pdb.set_trace()
         request = Request({})
         view = ApiCollectionView({}, request)
         resp = view.fetch()
