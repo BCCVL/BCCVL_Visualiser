@@ -144,12 +144,12 @@ def with_pypirc(home, Closure body) {
                             configFile(fileId: 'pydistutils.cfg', variable: 'PYDISTUTILSCFG'),
                             configFile(fileId: 'buildout.cfg', variable: 'BUILDOUTCFG')]) {
             sh 'rm -f ~/.pypirc ~/.pydistutils.cfg ~/.pip ~/.buildout'
-            sh 'ln -s "$PYPIRC" ~/.pypirc'
-            sh 'lt -s "$PYDISTUTILSCFG ~/.pydistutils.cfg'
+            sh 'ln -s "${PYPIRC}" ~/.pypirc'
+            sh 'lt -s "${PYDISTUTILSCFG}" ~/.pydistutils.cfg'
             sh 'mkdir ~/.pip'
-            sh 'ln -s "$PIPCONF" ~/.pip/pip.conf'
+            sh 'ln -s "${PIPCONF}" ~/.pip/pip.conf'
             sh 'mkdir ~/.buildout'
-            sh 'ln -s "$BUILDOUTCFG" ~/.buildout/default.cfg'
+            sh 'ln -s "${BUILDOUTCFG}" ~/.buildout/default.cfg'
             body()
             sh 'rm -fr ~/.pypirc ~/.pydistutils.cfg ~/.pip ~/.buildout'
         }
