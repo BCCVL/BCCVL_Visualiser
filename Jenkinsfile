@@ -145,7 +145,7 @@ def with_pypirc(home, Closure body) {
                             configFile(fileId: 'buildout.cfg', variable: 'BUILDOUTCFG')]) {
             sh 'rm -f ~/.pypirc ~/.pydistutils.cfg ~/.pip ~/.buildout'
             sh 'ln -s "${PYPIRC}" ~/.pypirc'
-            sh 'lt -s "${PYDISTUTILSCFG}" ~/.pydistutils.cfg'
+            sh 'ln -s "${PYDISTUTILSCFG}" ~/.pydistutils.cfg'
             sh 'mkdir ~/.pip'
             sh 'ln -s "${PIPCONF}" ~/.pip/pip.conf'
             sh 'mkdir ~/.buildout'
