@@ -1,4 +1,3 @@
-pyrmaid_tm
 pyramid_debugtoolbar
 pyramid_vhm
 waitress
