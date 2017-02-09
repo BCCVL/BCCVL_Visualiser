@@ -109,7 +109,6 @@ class TestApiCollectionView(unittest.TestCase):
                 return_value='/tmp/abc/filename')
     @mock.patch('os.path.exists', side_effect=[True, False])
     def test_api_collection_view_data_exists(self, *mocks):
-        import pdb; pdb.set_trace()
         request = Request({})
         view = ApiCollectionView({}, request)
         resp = view.fetch()
