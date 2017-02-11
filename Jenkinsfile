@@ -83,9 +83,9 @@ pipeline {
                 expression { currentBuild.result && currentBuild.result == 'SUCCESS' }
             }
             steps {
-                sh 'rm -rf build; rm -rf dist'
+                sh 'cd BCCVL_Visualiser; rm -rf build; rm -rf dist'
                 with_pypirc(pwd()) {
-                    sh '. ./virtualenv/bin/activate; python BCCVL_Visualiser/setup.py register -r dev sdist bdist_wheel upload -r dev'
+                    sh '. ./virtualenv/bin/activate; cd BCCVL_Visualiser; python setup.py register -r dev sdist bdist_wheel upload -r dev'
                     sh '. ./virtualenv/bin/activate; pip freeze > requirements.txt'
                 }
             }
