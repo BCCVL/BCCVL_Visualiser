@@ -133,5 +133,5 @@ def main(global_config, **settings):
     # Base API (API Collection)
     config.add_route('api', '/api*traverse')
 
-    config.scan()
+    config.scan(ignore='bccvl_visualiser.tests')
     return config.make_wsgi_app()
