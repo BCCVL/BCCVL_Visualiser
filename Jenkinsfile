@@ -85,6 +85,7 @@ pipeline {
             steps {
                 sh 'cd BCCVL_Visualiser; rm -rf build; rm -rf dist'
                 with_pypirc(pwd()) {
+                    // Build has to happen in correct folder or setup.py won't find MANIFEST.in file and other files
                     sh '. ./virtualenv/bin/activate; cd BCCVL_Visualiser; python setup.py register -r dev sdist bdist_wheel upload -r dev'
                     sh '. ./virtualenv/bin/activate; pip freeze > requirements.txt'
                 }
