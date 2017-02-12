@@ -1,2 +1,2 @@
 include *.txt
-recursive-include bccvl_visualiser *.py *.ico *.png *.css *.gif *.jpg *.pt *.js *.html
+recursive-include bccvl_visualiser *.py *.ico *.png *.css *.gif *.jpg *.pt *.js *.html *.map *.tmpl
