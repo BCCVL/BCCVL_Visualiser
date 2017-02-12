@@ -1,19 +1,19 @@
-import mapscript
 import csv
-from mapscript import mapObj, OWSRequest
+import hashlib
 import logging
 import os
 import os.path
+import pkg_resources
+import string
 import sys
 
-import hashlib
+import mapscript
+from mapscript import mapObj, OWSRequest
+import gdal
+from gdalconst import GA_ReadOnly
 
 from bccvl_visualiser.models.external_api.data_mover import FDataMover
 from bccvl_visualiser.utils import LockFile
-
-import gdal
-from gdalconst import GA_ReadOnly
-import string
 
 
 class BCCVLMap(mapObj):
@@ -40,7 +40,7 @@ class BCCVLMap(mapObj):
             log.warn("Warning, %s is already configured. Ignoring new configuration.", str(cls))
             return
 
-        cls.MAP_FILES_ROOT_PATH      = settings['bccvl.mapscript.map_files_root_path']
+        cls.MAP_FILES_ROOT_PATH = pkg_resources.resource_filename('bccvl_visualiser', 'map_files')
         cls.MAP_DATA_FILES_ROOT_PATH = settings['bccvl.mapscript.map_data_files_root_path']
         if not os.path.exists(cls.MAP_DATA_FILES_ROOT_PATH):
             os.makedirs(cls.MAP_DATA_FILES_ROOT_PATH)
