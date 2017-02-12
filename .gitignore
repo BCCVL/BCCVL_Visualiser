@@ -58,3 +58,5 @@ bccvl_production.ini
 buildout.cfg
 picked-versions.cfg
 BCCVL_Visualiser/.eggs
+.cache
+pip-selfcheck.json
