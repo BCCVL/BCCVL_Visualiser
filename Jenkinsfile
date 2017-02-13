@@ -23,7 +23,7 @@ pipeline {
                     sh 'virtualenv -p python2.7 --system-site-packages ./virtualenv'
                     // convert virtualenv to relocatable to avoid problems with too long shebangs
                     sh 'virtualenv --relocatable ./virtualenv'
-                    sh '. ./virtualenv/bin/activate; pip install --upgrade BCCVL_Visualiser'
+                    sh '. ./virtualenv/bin/activate; pip install --upgrade ./BCCVL_Visualiser'
                     // make the additionally installed scripts relocatable to avoid long path problems with those as well
                     sh 'virtualenv --relocatable ./virtualenv'
                 }
