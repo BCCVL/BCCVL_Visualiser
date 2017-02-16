@@ -13,8 +13,8 @@ pipeline {
             steps {
                 // environment {} is executed in node context, and there is no WORKSPACE defined
                 withPyPi() {
-                    // clear virtualenv
-                    sh 'rm -fr ./virtualenv .cache ./BCCVL_Visualiser/.eggs'
+                    // clean git clone (removes all build files like virtualenv etc..)
+                    sh 'git clean -x -d'
                     // we should be inside the container with the workspace mounted at current working dir
                     // and running as jenkins user (should have read/write access to workspace)
                     // we need a virtual env here
@@ -103,8 +103,8 @@ pipeline {
         always {
             echo "This runs always"
 
-            // cleanup virtualenv
-            sh 'rm -fr ./virtualenv'
+            // clean git clone (removes all build files like virtualenv etc..)
+            sh 'git clean -x -d'
 
             // does this plugin get committer emails by themselves?
             // alternative would be to put get commiter email ourselves, and list of people who need to be notified
