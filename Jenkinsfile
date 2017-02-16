@@ -15,13 +15,15 @@ pipeline {
                 withPyPi() {
                     // clear virtualenv
                     sh 'rm -fr ./virtualenv .cache ./BCCVL_Visualiser/.eggs'
+                    sh 'ls -la'
                     // we should be inside the container with the workspace mounted at current working dir
                     // and running as jenkins user (should have read/write access to workspace)
                     // we need a virtual env here
                     sh 'virtualenv -p python2.7 --system-site-packages ./virtualenv'
                     // convert virtualenv to relocatable to avoid problems with too long shebangs
                     sh 'virtualenv --relocatable ./virtualenv'
-                    sh '. ./virtualenv/bin/activate; pip install --upgrade ./BCCVL_Visualiser'
+                    // we want to run tests, so we should rather do an editable install
+                    sh '. ./virtualenv/bin/activate; pip install -e ./BCCVL_Visualiser'
                     // make the additionally installed scripts relocatable to avoid long path problems with those as well
                     sh 'virtualenv --relocatable ./virtualenv'
                 }
