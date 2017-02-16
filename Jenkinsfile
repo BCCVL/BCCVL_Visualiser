@@ -24,10 +24,10 @@ pipeline {
                     // convert virtualenv to relocatable to avoid problems with too long shebangs
                     sh 'virtualenv --relocatable ./virtualenv'
                     // build wheel to install (workaround where pip install would install via a tmp directory vhere no .git repo is and guscmversion wolud fail to determine correct version)
-                    sh '. ./virtualenv/bin/activate; pip wheel --no-deps ./BCCVL_Visualiser'
+                    sh '. ./virtualenv/bin/activate; cd BCCVL_Visualiser; python setup.py bdist_wheel'
                     // we want to run tests, so we should rather do an editable install but we also don't want to have '-e links' in pip freeze output
                     //   pro: non editable tests packaging as well; con: weirdness with running tests form different location
-                    sh '. ./virtualenv/bin/activate; pip install BCCVL_Visualiser*.whl'
+                    sh '. ./virtualenv/bin/activate; pip install BCCVL_Visualiser/dist/*.whl'
                     // make the additionally installed scripts relocatable to avoid long path problems with those as well
                     sh 'virtualenv --relocatable ./virtualenv'
                 }
