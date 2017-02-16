@@ -10,11 +10,13 @@ pipeline {
 
         stage('Build') {
 
+            // environment {} is executed in node context, and there is no WORKSPACE defined
+
             steps {
-                // environment {} is executed in node context, and there is no WORKSPACE defined
+                // clean git clone (removes all build files like virtualenv etc..)
+                sh 'git clean -x -d -f'
+
                 withPyPi() {
-                    // clean git clone (removes all build files like virtualenv etc..)
-                    sh 'git clean -x -d -f'
                     // we should be inside the container with the workspace mounted at current working dir
                     // and running as jenkins user (should have read/write access to workspace)
                     // we need a virtual env here
