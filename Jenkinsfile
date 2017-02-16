@@ -14,7 +14,7 @@ pipeline {
                 // environment {} is executed in node context, and there is no WORKSPACE defined
                 withPyPi() {
                     // clear virtualenv
-                    sh 'rm -fr ./virtualenv'
+                    sh 'rm -fr ./virtualenv .cache ./BCCVL_Visualiser/.eggs'
                     // we should be inside the container with the workspace mounted at current working dir
                     // and running as jenkins user (should have read/write access to workspace)
                     // we need a virtual env here
