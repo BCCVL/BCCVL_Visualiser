@@ -22,7 +22,7 @@ pipeline {
                     // convert virtualenv to relocatable to avoid problems with too long shebangs
                     sh 'virtualenv --relocatable ./virtualenv'
                     // we want to run tests, so we should rather do an editable install
-                    sh '. ./virtualenv/bin/activate; pip install -e ./BCCVL_Visualiser'
+                    sh '. ./virtualenv/bin/activate; pip install --upgrade ./BCCVL_Visualiser'
                     // make the additionally installed scripts relocatable to avoid long path problems with those as well
                     sh 'virtualenv --relocatable ./virtualenv'
                 }
