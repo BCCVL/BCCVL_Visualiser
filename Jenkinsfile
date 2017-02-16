@@ -3,8 +3,6 @@ pipeline {
     agent {
         docker {
             image 'hub.bccvl.org.au/bccvl/visualiserbase:2017-02-01'
-            // TODO: remove this, once repository is set up properly
-            args '--network jenkins'
         }
     }
 
@@ -14,7 +12,7 @@ pipeline {
 
             steps {
                 // environment {} is executed in node context, and there is no WORKSPACE defined
-                with_pypirc(pwd()) {
+                withPyPi() {
                     // clear virtualenv
                     sh 'rm -fr ./virtualenv'
                     // we should be inside the container with the workspace mounted at current working dir
@@ -37,7 +35,7 @@ pipeline {
             }
 
             steps {
-                with_pypirc(pwd()) {
+                withPyPi() {
                     // make sure an old .coverage files doesn't interfere
                     sh 'rm -f BCCVL_Visualiser/.coverage'
                     // don't fail pipeline if there are test errors, we handle that on currentBuild.result conditions later
@@ -48,7 +46,6 @@ pipeline {
                        returnStatus: true)
                 }
                 // capture test result
-                //junit 'BCCVL_Visualiser/nosetests.xml'
                 step([
                     $class: 'XUnitBuilder',
                     thresholds: [
@@ -78,13 +75,12 @@ pipeline {
 
         stage('Package') {
             when {
-                // branch accepts wildcards as well... e.g. "*/master"
-                //branch "master"
-                expression { currentBuild.result && currentBuild.result == 'SUCCESS' }
+                // check if we want to publish a package
+                return publishPackage(currentBuild.result, env.BRANCH_NAME)
             }
             steps {
                 sh 'cd BCCVL_Visualiser; rm -rf build; rm -rf dist'
-                with_pypirc(pwd()) {
+                withPyPi() {
                     // Build has to happen in correct folder or setup.py won't find MANIFEST.in file and other files
                     sh '. ./virtualenv/bin/activate; cd BCCVL_Visualiser; python setup.py register -r dev sdist bdist_wheel upload -r dev'
                     sh '. ./virtualenv/bin/activate; pip freeze > requirements.txt'
@@ -135,24 +131,4 @@ pipeline {
         }
     }
 
-}
-
-
-def with_pypirc(home, Closure body) {
-    withEnv(["HOME=${home}"]) {
-        configFileProvider([configFile(fileId: 'pypirc', variable: 'PYPIRC'),
-                            configFile(fileId: 'pip.conf', variable: 'PIPCONF'),
-                            configFile(fileId: 'pydistutils.cfg', variable: 'PYDISTUTILSCFG'),
-                            configFile(fileId: 'buildout.cfg', variable: 'BUILDOUTCFG')]) {
-            sh 'rm -f ~/.pypirc ~/.pydistutils.cfg ~/.pip ~/.buildout'
-            sh 'ln -s "${PYPIRC}" ~/.pypirc'
-            sh 'ln -s "${PYDISTUTILSCFG}" ~/.pydistutils.cfg'
-            sh 'mkdir ~/.pip'
-            sh 'ln -s "${PIPCONF}" ~/.pip/pip.conf'
-            sh 'mkdir ~/.buildout'
-            sh 'ln -s "${BUILDOUTCFG}" ~/.buildout/default.cfg'
-            body()
-            sh 'rm -fr ~/.pypirc ~/.pydistutils.cfg ~/.pip ~/.buildout'
-        }
-    }
 }
