@@ -15,7 +15,6 @@ pipeline {
                 withPyPi() {
                     // clear virtualenv
                     sh 'rm -fr ./virtualenv .cache ./BCCVL_Visualiser/.eggs'
-                    sh 'ls -la'
                     // we should be inside the container with the workspace mounted at current working dir
                     // and running as jenkins user (should have read/write access to workspace)
                     // we need a virtual env here
@@ -87,13 +86,13 @@ pipeline {
                 withPyPi() {
                     // Build has to happen in correct folder or setup.py won't find MANIFEST.in file and other files
                     sh '. ./virtualenv/bin/activate; cd BCCVL_Visualiser; python setup.py register -r dev sdist bdist_wheel upload -r dev'
-                    sh '. ./virtualenv/bin/activate; pip freeze > requirements.txt'
                 }
             }
         }
 
         stage ('Push Artifact') {
             steps {
+                sh '. ./virtualenv/bin/activate; pip freeze > requirements.txt'
                 archiveArtifacts artifacts: 'requirements.txt', fingerprint: true, onlyIfSuccessful: true
             }
         }
