@@ -76,7 +76,9 @@ pipeline {
         stage('Package') {
             when {
                 // check if we want to publish a package
-                return publishPackage(currentBuild.result, env.BRANCH_NAME)
+                expression {
+                    return publishPackage(currentBuild.result, env.BRANCH_NAME)
+                }
             }
             steps {
                 sh 'cd BCCVL_Visualiser; rm -rf build; rm -rf dist'
