@@ -31,8 +31,8 @@ tests_require = [
 
 setup(
     name='BCCVL_Visualiser',
-    setup_requires=['gu_scm_version'],
-    gu_scm_version=True,
+    setup_requires=['guscmversion'],
+    guscmversion=True,
     description='BCCVL_Visualiser',
     long_description=README + '\n\n' + CHANGES,
     classifiers=[
