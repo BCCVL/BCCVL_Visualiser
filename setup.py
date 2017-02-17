@@ -1,11 +1,18 @@
-import os
-
+from os import path
+from codec import open
 from setuptools import setup, find_packages
 
-here = os.path.dirname(__file__)
+here = path.abspath(path.dirname(__file__))
 
-README = open(os.path.join(here, 'README')).read()
-CHANGES = open(os.path.join(here, 'CHANGES.txt')).read()
+
+def read(fname):
+    open(path.join(here, fname), encoding='utf-8').read()
+
+
+long_description = '\n'.join((
+    read('README.rst'),
+    read('CHANGES.rst')
+))
 
 requires = [
     'pyramid',
@@ -34,7 +41,7 @@ setup(
     setup_requires=['guscmversion'],
     guscmversion=True,
     description='BCCVL_Visualiser',
-    long_description=README + '\n\n' + CHANGES,
+    long_description=long_description,
     classifiers=[
         "Programming Language :: Python",
         "Framework :: Pyramid",

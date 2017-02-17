@@ -24,10 +24,10 @@ pipeline {
                     // convert virtualenv to relocatable to avoid problems with too long shebangs
                     sh 'virtualenv --relocatable ./virtualenv'
                     // build wheel to install (workaround where pip install would install via a tmp directory vhere no .git repo is and guscmversion wolud fail to determine correct version)
-                    sh '. ./virtualenv/bin/activate; cd BCCVL_Visualiser; python setup.py bdist_wheel'
+                    sh '. ./virtualenv/bin/activate; python setup.py bdist_wheel'
                     // we want to run tests, so we should rather do an editable install but we also don't want to have '-e links' in pip freeze output
                     //   pro: non editable tests packaging as well; con: weirdness with running tests form different location
-                    sh '. ./virtualenv/bin/activate; pip install BCCVL_Visualiser/dist/*.whl'
+                    sh '. ./virtualenv/bin/activate; pip install ./dist/*.whl'
                     // make the additionally installed scripts relocatable to avoid long path problems with those as well
                     sh 'virtualenv --relocatable ./virtualenv'
                 }
@@ -42,15 +42,13 @@ pipeline {
 
             steps {
                 withPyPi() {
-                    // make sure an old .coverage files doesn't interfere
-                    sh 'rm -f BCCVL_Visualiser/.coverage'
                     // don't fail pipeline if there are test errors, we handle that on currentBuild.result conditions later
                     // also we shouldn't run the tests form source clone against non editable install of package
                     //     nose happily does that, py.test warns and fails to properly generate xml test output
-                    //sh(script: '. ./virtualenv/bin/activate; cd BCCVL_Visualiser; python setup.py nosetests --verbosity=2 --with-xunit --xunit-file=./nosetests.xml --with-coverage --cover-package=bccvl_visualiser --cover-xml --cover-xml-file=./coverage.xml',
+                    //sh(script: '. ./virtualenv/bin/activate; python setup.py nosetests --verbosity=2 --with-xunit --xunit-file=./nosetests.xml --with-coverage --cover-package=bccvl_visualiser --cover-xml --cover-xml-file=./coverage.xml',
                     //   returnStatus: true)
                     // For now generate html report as the jenkins cobertura plugin is not yet compatible with pipelines
-                    sh(script: '. ./virtualenv/bin/activate; cd BCCVL_Visualiser; python setup.py nosetests --verbosity=2 --with-xunit --xunit-file=./nosetests.xml --with-coverage --cover-package=bccvl_visualiser --cover-html --cover-branches',
+                    sh(script: '. ./virtualenv/bin/activate; python setup.py nosetests --verbosity=2 --with-xunit --xunit-file=./nosetests.xml --with-coverage --cover-package=bccvl_visualiser --cover-html --cover-branches',
                        returnStatus: true)
                 }
                 // capture test result
@@ -63,7 +61,7 @@ pipeline {
                     tools: [
                         [$class: 'JUnitType', deleteOutputFiles: true,
                                               failIfNotNew: true,
-                                              pattern: 'BCCVL_Visualiser/nosetests.xml',
+                                              pattern: 'nosetests.xml',
                                               stopProcessingIfError: true]
                     ]
                 ])
@@ -72,7 +70,7 @@ pipeline {
                     allowMissing: false,
                     alwaysLinkToLastBuild: false,
                     keepAll: true,
-                    reportDir: 'BCCVL_Visualiser/cover',
+                    reportDir: 'cover',
                     reportFiles: 'index.html',
                     reportName: 'Coverage Report'
                 ])
@@ -89,10 +87,9 @@ pipeline {
                 }
             }
             steps {
-                sh 'cd BCCVL_Visualiser; rm -rf build; rm -rf dist'
                 withPyPi() {
                     // Build has to happen in correct folder or setup.py won't find MANIFEST.in file and other files
-                    sh '. ./virtualenv/bin/activate; cd BCCVL_Visualiser; python setup.py register -r devpi sdist bdist_wheel upload -r devpi'
+                    sh '. ./virtualenv/bin/activate; python setup.py register -r devpi sdist bdist_wheel upload -r devpi'
                 }
             }
         }
