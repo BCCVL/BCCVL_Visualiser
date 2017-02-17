@@ -2,14 +2,15 @@ from os import path
 from codecs import open
 from setuptools import setup, find_packages
 
+
 here = path.abspath(path.dirname(__file__))
 
 
 def read(fname):
-    open(path.join(here, fname), encoding='utf-8').read()
+    return open(path.join(here, fname), encoding='utf-8').read()
 
 
-long_description = '\n'.join((
+long_description = '\n\n'.join((
     read('README.rst'),
     read('CHANGES.rst')
 ))
