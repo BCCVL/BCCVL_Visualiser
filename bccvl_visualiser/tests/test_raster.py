@@ -58,7 +58,7 @@ class TestRasterAPIv1(unittest.TestCase):
     # SRS -> Spherical Mercator
     def test_view_raster_api_wms_srs_epsg_3857(self):
         params = {
-            'DATA_URL':    'https://raw.github.com/BCCVL/BCCVL_Visualiser/master/BCCVL_Visualiser/bccvl_visualiser/tests/fixtures/raster.tif',
+            'DATA_URL':    'https://raw.github.com/BCCVL/BCCVL_Visualiser/master/bccvl_visualiser/tests/fixtures/raster.tif',
             'TRANSPARENT': 'true',
             'FORMAT':      'image/png',
             'SERVICE':     'WMS',
@@ -80,7 +80,7 @@ class TestRasterAPIv1(unittest.TestCase):
     # SRS -> Lat/Lng Decimal
     def test_view_raster_api_wms_srs_epsg_4326(self):
         params = {
-            'DATA_URL':    'https://raw.github.com/BCCVL/BCCVL_Visualiser/master/BCCVL_Visualiser/bccvl_visualiser/tests/fixtures/raster.tif',
+            'DATA_URL':    'https://raw.github.com/BCCVL/BCCVL_Visualiser/master/bccvl_visualiser/tests/fixtures/raster.tif',
             'TRANSPARENT': 'true',
             'FORMAT':      'image/png',
             'SERVICE':     'WMS',
@@ -103,7 +103,7 @@ class TestRasterAPIv1(unittest.TestCase):
     # Get Legend
     def test_view_raster_api_wms_srs_epsg_4326_get_legend(self):
         params = {
-            'DATA_URL': 'https://raw.github.com/BCCVL/BCCVL_Visualiser/master/BCCVL_Visualiser/bccvl_visualiser/tests/fixtures/raster.tif',
+            'DATA_URL': 'https://raw.github.com/BCCVL/BCCVL_Visualiser/master/bccvl_visualiser/tests/fixtures/raster.tif',
             'FORMAT':   'image/png',
             'SERVICE':  'WMS',
             'VERSION':  '1.0.0',

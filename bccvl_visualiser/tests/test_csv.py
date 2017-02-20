@@ -58,7 +58,7 @@ class TestCSVAPIv1(unittest.TestCase):
 
     def test_create_and_render_csv_as_html_tabl_via_point_api_v1(self):
         params = {
-            'data_url': 'https://raw.github.com/BCCVL/BCCVL_Visualiser/master/BCCVL_Visualiser/bccvl_visualiser/tests/fixtures/occurrences.csv',
+            'data_url': 'https://raw.github.com/BCCVL/BCCVL_Visualiser/master/bccvl_visualiser/tests/fixtures/occurrences.csv',
         }
 
         res = self.testapp.get('/api/csv/1/data_url_view', status='*', params=params)

@@ -60,7 +60,7 @@ class TestZIPAPIv1(unittest.TestCase):
 
     def test_view_zip_api_v1_with_file_name(self):
         params = {
-            'data_url':  'https://raw.github.com/BCCVL/BCCVL_Visualiser/master/BCCVL_Visualiser/bccvl_visualiser/tests/fixtures/env_layers.zip',
+            'data_url':  'https://raw.github.com/BCCVL/BCCVL_Visualiser/master/bccvl_visualiser/tests/fixtures/env_layers.zip',
             'file_name': 'bioclim_15.tif'
         }
 
@@ -70,7 +70,7 @@ class TestZIPAPIv1(unittest.TestCase):
 
     def test_view_zip_api_v1_with_multiple(self):
         params = {
-            'data_url': 'https://raw.github.com/BCCVL/BCCVL_Visualiser/master/BCCVL_Visualiser/bccvl_visualiser/tests/fixtures/env_layers.zip',
+            'data_url': 'https://raw.github.com/BCCVL/BCCVL_Visualiser/master/bccvl_visualiser/tests/fixtures/env_layers.zip',
         }
 
         res = self.testapp.get('/api/zip/1/default', status='*', params=params)

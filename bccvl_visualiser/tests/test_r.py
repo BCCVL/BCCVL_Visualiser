@@ -60,7 +60,7 @@ class TestRAPIv1(unittest.TestCase):
 
     def test_view_r_api_v1_data_url_view(self):
         params = {
-            'data_url': 'https://raw.github.com/BCCVL/BCCVL_Visualiser/master/BCCVL_Visualiser/bccvl_visualiser/tests/fixtures/hello_world.r',
+            'data_url': 'https://raw.github.com/BCCVL/BCCVL_Visualiser/master/bccvl_visualiser/tests/fixtures/hello_world.r',
         }
 
         res = self.testapp.get('/api/r/1/data_url_view', status='*', params=params)

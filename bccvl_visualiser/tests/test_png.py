@@ -60,7 +60,7 @@ class TestPNGAPIv1(unittest.TestCase):
 
     def test_view_png_api_v1_data_url_view(self):
         params = {
-            'data_url': 'https://raw.github.com/BCCVL/BCCVL_Visualiser/master/BCCVL_Visualiser/bccvl_visualiser/tests/fixtures/smile.png',
+            'data_url': 'https://raw.github.com/BCCVL/BCCVL_Visualiser/master/bccvl_visualiser/tests/fixtures/smile.png',
         }
 
         res = self.testapp.get('/api/png/1/data_url_view', status='*', params=params)

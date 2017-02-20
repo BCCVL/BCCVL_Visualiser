@@ -39,7 +39,7 @@ class TestBCCVLMap(unittest.TestCase):
     def test_move_file_successfully_status(self):
         tmp = tempfile.gettempdir()
         tmp_file_path = os.path.join(tmp, 'hello_world.html')
-        url = 'https://raw.github.com/BCCVL/BCCVL_Visualiser/master/BCCVL_Visualiser/bccvl_visualiser/tests/fixtures/hello_world.html'
+        url = 'https://raw.github.com/BCCVL/BCCVL_Visualiser/master/bccvl_visualiser/tests/fixtures/hello_world.html'
 
         # Delete the file (if it exists)
         if os.path.exists(tmp_file_path):
@@ -59,7 +59,7 @@ class TestBCCVLMap(unittest.TestCase):
         self.assertEqual(move_status['id'], move_job_id)
 
     def test_open_yield(self):
-        data_url = 'https://raw.github.com/BCCVL/BCCVL_Visualiser/master/BCCVL_Visualiser/bccvl_visualiser/tests/fixtures/hello_world.r'
+        data_url = 'https://raw.github.com/BCCVL/BCCVL_Visualiser/master/bccvl_visualiser/tests/fixtures/hello_world.r'
         MyDataMover = FDataMover.get_data_mover_class()
         self.assertEqual(MyDataMover, LocalDataMover)
 

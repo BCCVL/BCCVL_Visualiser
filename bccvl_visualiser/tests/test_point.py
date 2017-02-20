@@ -63,7 +63,7 @@ class TestPointAPIv1(unittest.TestCase):
         self.assertEqual(the_dict['version'], version, msg="Version should match")
 
     def test_create_and_render_wms_map_via_point_api_v1(self):
-        data_url = "https://raw.github.com/BCCVL/BCCVL_Visualiser/master/BCCVL_Visualiser/bccvl_visualiser/tests/fixtures/occurrences.csv"
+        data_url = "https://raw.github.com/BCCVL/BCCVL_Visualiser/master/bccvl_visualiser/tests/fixtures/occurrences.csv"
         query_string = "TRANSPARENT=true&FORMAT=image%2Fpng&SERVICE=WMS&VERSION=1.1.1&REQUEST=GetMap&STYLES=&SRS=EPSG%3A3857&BBOX=-20037508.34,-10018754.17,-15028131.255,-5009377.085&WIDTH=512&HEIGHT=1024&LAYERS=DEFAULT"
         my_map = PointAPIv1(data_url=data_url, query_string=query_string)
         map_content, map_content_type, retval = my_map.render()
@@ -72,7 +72,7 @@ class TestPointAPIv1(unittest.TestCase):
         self.assertEqual(retval, mapscript.MS_SUCCESS, "Should return success code: %s, but didn't" % mapscript.MS_SUCCESS)
 
     def test_create_and_render_wfs_map_via_point_api_v1(self):
-        data_url = "https://raw.github.com/BCCVL/BCCVL_Visualiser/master/BCCVL_Visualiser/bccvl_visualiser/tests/fixtures/occurrences.csv"
+        data_url = "https://raw.github.com/BCCVL/BCCVL_Visualiser/master/bccvl_visualiser/tests/fixtures/occurrences.csv"
         query_string = "request=GetFeature&service=WFS&version=1.1.0&typeName=DEFAULT&outputFormat=geojson"
         my_map = PointAPIv1(data_url=data_url, query_string=query_string)
         map_content, map_content_type, retval = my_map.render()
@@ -83,7 +83,7 @@ class TestPointAPIv1(unittest.TestCase):
     # TODO - Check if this is fixed in newer versions of mapscript.
     @unittest.skip("WFS GeoJSON response is missing the point with the largest lat and lng value. This is a bug in mapscript")
     def test_create_and_render_wfs_map_via_point_api_v1__check_content(self):
-        data_url = "https://raw.github.com/BCCVL/BCCVL_Visualiser/master/BCCVL_Visualiser/bccvl_visualiser/tests/fixtures/occurrences.csv"
+        data_url = "https://raw.github.com/BCCVL/BCCVL_Visualiser/master/bccvl_visualiser/tests/fixtures/occurrences.csv"
         query_string = "request=GetFeature&service=WFS&version=1.1.0&typeName=DEFAULT&outputFormat=geojson"
         my_map = PointAPIv1(data_url=data_url, query_string=query_string)
         map_content, map_content_type, retval = my_map.render()
@@ -103,7 +103,7 @@ class TestPointAPIv1(unittest.TestCase):
 
     def test_view_point_api_wfs(self):
         params = {
-            'DATA_URL':     'https://raw.github.com/BCCVL/BCCVL_Visualiser/master/BCCVL_Visualiser/bccvl_visualiser/tests/fixtures/occurrences.csv',
+            'DATA_URL':     'https://raw.github.com/BCCVL/BCCVL_Visualiser/master/bccvl_visualiser/tests/fixtures/occurrences.csv',
             'request':      'GetFeature',
             'service':      'WFS',
             'version':      '1.1.0',
@@ -121,7 +121,7 @@ class TestPointAPIv1(unittest.TestCase):
     @unittest.skip("WFS GeoJSON response is missing the point with the largest lat and lng value. This is a bug in mapscript")
     def test_view_point_api_wfs_content(self):
         params = {
-            'DATA_URL':     'https://raw.github.com/BCCVL/BCCVL_Visualiser/master/BCCVL_Visualiser/bccvl_visualiser/tests/fixtures/occurrences.csv',
+            'DATA_URL':     'https://raw.github.com/BCCVL/BCCVL_Visualiser/master/bccvl_visualiser/tests/fixtures/occurrences.csv',
             'request':      'GetFeature',
             'service':      'WFS',
             'version':      '1.1.0',
@@ -139,7 +139,7 @@ class TestPointAPIv1(unittest.TestCase):
     # Spherical Mercator
     def test_view_point_api_wms_srs_epsg_3857(self):
         params = {
-            'DATA_URL':    'https://raw.github.com/BCCVL/BCCVL_Visualiser/master/BCCVL_Visualiser/bccvl_visualiser/tests/fixtures/occurrences.csv',
+            'DATA_URL':    'https://raw.github.com/BCCVL/BCCVL_Visualiser/master/bccvl_visualiser/tests/fixtures/occurrences.csv',
             'TRANSPARENT': 'true',
             'FORMAT':      'image/png',
             'SERVICE':     'WMS',
@@ -161,7 +161,7 @@ class TestPointAPIv1(unittest.TestCase):
     # Lat/Lng Decimal
     def test_view_point_api_wms_srs_epsg_4326(self):
         params = {
-            'DATA_URL':    'https://raw.github.com/BCCVL/BCCVL_Visualiser/master/BCCVL_Visualiser/bccvl_visualiser/tests/fixtures/occurrences.csv',
+            'DATA_URL':    'https://raw.github.com/BCCVL/BCCVL_Visualiser/master/bccvl_visualiser/tests/fixtures/occurrences.csv',
             'TRANSPARENT': 'true',
             'FORMAT':      'image/png',
             'SERVICE':     'WMS',
@@ -183,7 +183,7 @@ class TestPointAPIv1(unittest.TestCase):
     # Lat/Lng Decimal
     def test_view_point_api_wms_srs_epsg_4326_with_absences(self):
         params = {
-            'DATA_URL':    'https://raw.github.com/BCCVL/BCCVL_Visualiser/master/BCCVL_Visualiser/bccvl_visualiser/tests/fixtures/absences.csv',
+            'DATA_URL':    'https://raw.github.com/BCCVL/BCCVL_Visualiser/master/bccvl_visualiser/tests/fixtures/absences.csv',
             'TRANSPARENT': 'true',
             'FORMAT':      'image/png',
             'SERVICE':     'WMS',
@@ -204,7 +204,7 @@ class TestPointAPIv1(unittest.TestCase):
 
     def test_view_point_api_csv_bad_data_not_a_number(self):
         params = {
-            'DATA_URL':    'https://raw.github.com/BCCVL/BCCVL_Visualiser/master/BCCVL_Visualiser/bccvl_visualiser/tests/fixtures/bad_occurrences_lon_values_nan.csv',
+            'DATA_URL':    'https://raw.github.com/BCCVL/BCCVL_Visualiser/master/bccvl_visualiser/tests/fixtures/bad_occurrences_lon_values_nan.csv',
             'TRANSPARENT': 'true',
             'FORMAT':      'image/png',
             'SERVICE':     'WMS',
@@ -225,7 +225,7 @@ class TestPointAPIv1(unittest.TestCase):
 
     def test_view_point_api_csv_bad_header(self):
         params = {
-            'DATA_URL':    'https://raw.github.com/BCCVL/BCCVL_Visualiser/master/BCCVL_Visualiser/bccvl_visualiser/tests/fixtures/bad_occurrences_header.csv',
+            'DATA_URL':    'https://raw.github.com/BCCVL/BCCVL_Visualiser/master/bccvl_visualiser/tests/fixtures/bad_occurrences_header.csv',
             'TRANSPARENT': 'true',
             'FORMAT':      'image/png',
             'SERVICE':     'WMS',
@@ -272,7 +272,7 @@ class TestPointAPIv1(unittest.TestCase):
 
     def test_view_point_api_wfs_with_additional_columns(self):
         params = {
-            'DATA_URL':     'https://raw.github.com/BCCVL/BCCVL_Visualiser/master/BCCVL_Visualiser/bccvl_visualiser/tests/fixtures/occurrences_with_additional_columns.csv',
+            'DATA_URL':     'https://raw.github.com/BCCVL/BCCVL_Visualiser/master/bccvl_visualiser/tests/fixtures/occurrences_with_additional_columns.csv',
             'request':      'GetFeature',
             'service':      'WFS',
             'version':      '1.1.0',
@@ -291,7 +291,7 @@ class TestPointAPIv1(unittest.TestCase):
     # Get Legend
     def test_view_point_api_wms_srs_epsg_4326_get_legend(self):
         params = {
-            'DATA_URL': 'https://raw.github.com/BCCVL/BCCVL_Visualiser/master/BCCVL_Visualiser/bccvl_visualiser/tests/fixtures/occurrences.csv',
+            'DATA_URL': 'https://raw.github.com/BCCVL/BCCVL_Visualiser/master/bccvl_visualiser/tests/fixtures/occurrences.csv',
             'FORMAT':   'image/png',
             'SERVICE':  'WMS',
             'VERSION':  '1.0.0',

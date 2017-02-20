@@ -55,7 +55,7 @@ class TestHTMLAPIv1(unittest.TestCase):
 
     def test_view_html_api_v1_html(self):
         params = {
-            'data_url': 'https://raw.github.com/BCCVL/BCCVL_Visualiser/master/BCCVL_Visualiser/bccvl_visualiser/tests/fixtures/hello_world.html',
+            'data_url': 'https://raw.github.com/BCCVL/BCCVL_Visualiser/master/bccvl_visualiser/tests/fixtures/hello_world.html',
         }
 
         res = self.testapp.get('/api/html/1/data_url_view', status='*', params=params)

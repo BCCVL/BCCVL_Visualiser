@@ -27,13 +27,13 @@ class TestBCCVLMap(unittest.TestCase):
 
     def test_new_bccvl_map_from_data_url(self):
         # This shouldn't die...
-        my_map = OccurrencesBCCVLMap(data_url="https://raw.github.com/BCCVL/BCCVL_Visualiser/master/BCCVL_Visualiser/bccvl_visualiser/tests/fixtures/occurrences.csv")
+        my_map = OccurrencesBCCVLMap(data_url="https://raw.github.com/BCCVL/BCCVL_Visualiser/master/bccvl_visualiser/tests/fixtures/occurrences.csv")
 
     def test_new_bccvl_map_from_data_url_file_exists(self):
         # This shouldn't die...
-        my_map = OccurrencesBCCVLMap(data_url="https://raw.github.com/BCCVL/BCCVL_Visualiser/master/BCCVL_Visualiser/bccvl_visualiser/tests/fixtures/occurrences.csv")
+        my_map = OccurrencesBCCVLMap(data_url="https://raw.github.com/BCCVL/BCCVL_Visualiser/master/bccvl_visualiser/tests/fixtures/occurrences.csv")
         # This should make a second map with the same file path
-        my_map_2 = OccurrencesBCCVLMap(data_url="https://raw.github.com/BCCVL/BCCVL_Visualiser/master/BCCVL_Visualiser/bccvl_visualiser/tests/fixtures/occurrences.csv")
+        my_map_2 = OccurrencesBCCVLMap(data_url="https://raw.github.com/BCCVL/BCCVL_Visualiser/master/bccvl_visualiser/tests/fixtures/occurrences.csv")
 
         # Get the data file's path
         fp = my_map.data_file_path
@@ -47,7 +47,7 @@ class TestBCCVLMap(unittest.TestCase):
         os.remove(fp)
         self.assertFalse(os.path.isfile(fp), "file should no longer exist on disk")
 
-        my_map_3 = OccurrencesBCCVLMap(data_url="https://raw.github.com/BCCVL/BCCVL_Visualiser/master/BCCVL_Visualiser/bccvl_visualiser/tests/fixtures/occurrences.csv")
+        my_map_3 = OccurrencesBCCVLMap(data_url="https://raw.github.com/BCCVL/BCCVL_Visualiser/master/bccvl_visualiser/tests/fixtures/occurrences.csv")
         fp_3 = my_map_3.data_file_path
 
         self.assertEqual(fp, fp_3, "The same URL should download to the same file")
@@ -55,7 +55,7 @@ class TestBCCVLMap(unittest.TestCase):
 
     def test_new_bccvl_map_from_data_url_layer_exists(self):
         # This shouldn't die...
-        my_map = OccurrencesBCCVLMap(data_url="https://raw.github.com/BCCVL/BCCVL_Visualiser/master/BCCVL_Visualiser/bccvl_visualiser/tests/fixtures/occurrences.csv")
+        my_map = OccurrencesBCCVLMap(data_url="https://raw.github.com/BCCVL/BCCVL_Visualiser/master/bccvl_visualiser/tests/fixtures/occurrences.csv")
 
         # Get the number of layers
         self.assertEqual(my_map.numlayers, 1)
@@ -67,13 +67,13 @@ class TestBCCVLMap(unittest.TestCase):
 
     def test_new_bccvl_map_from_data_url_with_query_string(self):
         # This shouldn't die...
-        my_map = OccurrencesBCCVLMap(data_url="https://raw.github.com/BCCVL/BCCVL_Visualiser/master/BCCVL_Visualiser/bccvl_visualiser/tests/fixtures/occurrences.csv", query_string="HEIGHT=1024&LAYERS=DEFAULT&WIDTH=512")
+        my_map = OccurrencesBCCVLMap(data_url="https://raw.github.com/BCCVL/BCCVL_Visualiser/master/bccvl_visualiser/tests/fixtures/occurrences.csv", query_string="HEIGHT=1024&LAYERS=DEFAULT&WIDTH=512")
         self.assertEqual(my_map.ows_request.getValueByName('HEIGHT'), '1024')
         self.assertEqual(my_map.ows_request.getValueByName('WIDTH'), '512')
 
     def test_new_bccvl_map_render(self):
         # This shouldn't die...
-        my_map = OccurrencesBCCVLMap(data_url="https://raw.github.com/BCCVL/BCCVL_Visualiser/master/BCCVL_Visualiser/bccvl_visualiser/tests/fixtures/occurrences.csv", query_string="TRANSPARENT=true&FORMAT=image%2Fpng&SERVICE=WMS&VERSION=1.1.1&REQUEST=GetMap&STYLES=&SRS=EPSG%3A3857&BBOX=-20037508.34,-10018754.17,-15028131.255,-5009377.085&WIDTH=512&HEIGHT=1024&LAYERS=DEFAULT")
+        my_map = OccurrencesBCCVLMap(data_url="https://raw.github.com/BCCVL/BCCVL_Visualiser/master/bccvl_visualiser/tests/fixtures/occurrences.csv", query_string="TRANSPARENT=true&FORMAT=image%2Fpng&SERVICE=WMS&VERSION=1.1.1&REQUEST=GetMap&STYLES=&SRS=EPSG%3A3857&BBOX=-20037508.34,-10018754.17,-15028131.255,-5009377.085&WIDTH=512&HEIGHT=1024&LAYERS=DEFAULT")
         # Our height, width, etc. should now be applied
         self.assertEqual(my_map.ows_request.getValueByName('HEIGHT'), '1024')
         self.assertEqual(my_map.ows_request.getValueByName('WIDTH'), '512')
@@ -88,17 +88,17 @@ class TestBCCVLMap(unittest.TestCase):
             my_map = OccurrencesBCCVLMap(data_id="908h08h")
 
     def test_ascii_grid_get_scale(self):
-        my_map = AsciiGridBCCVLMap(data_url="https://raw.github.com/BCCVL/BCCVL_Visualiser/master/BCCVL_Visualiser/bccvl_visualiser/tests/fixtures/biomod_2_pkg_0_to_1000.asc", query_string="HEIGHT=1024&LAYERS=DEFAULT&WIDTH=512")
+        my_map = AsciiGridBCCVLMap(data_url="https://raw.github.com/BCCVL/BCCVL_Visualiser/master/bccvl_visualiser/tests/fixtures/biomod_2_pkg_0_to_1000.asc", query_string="HEIGHT=1024&LAYERS=DEFAULT&WIDTH=512")
         self.assertEqual(my_map.get_scale(), 1)
         self.assertEqual(my_map.get_maximum_value(), 985)
 
     def test_geotiff_gdal_dataset_querying(self):
-        my_map = GeoTiffBCCVLMap(data_url="https://raw.github.com/BCCVL/BCCVL_Visualiser/master/BCCVL_Visualiser/bccvl_visualiser/tests/fixtures/raster.tif", query_string="HEIGHT=1024&LAYERS=DEFAULT&WIDTH=512")
+        my_map = GeoTiffBCCVLMap(data_url="https://raw.github.com/BCCVL/BCCVL_Visualiser/master/bccvl_visualiser/tests/fixtures/raster.tif", query_string="HEIGHT=1024&LAYERS=DEFAULT&WIDTH=512")
         self.assertEqual(my_map.get_scale(), 1)
         self.assertEqual(my_map.get_maximum_value(), 0.62908011869436)
 
     def test_geotiff_gdal_dataset_metadata_access(self):
-        my_map = GeoTiffBCCVLMap(data_url="https://raw.github.com/BCCVL/BCCVL_Visualiser/master/BCCVL_Visualiser/bccvl_visualiser/tests/fixtures/raster.tif", query_string="HEIGHT=1024&LAYERS=DEFAULT&WIDTH=512")
+        my_map = GeoTiffBCCVLMap(data_url="https://raw.github.com/BCCVL/BCCVL_Visualiser/master/bccvl_visualiser/tests/fixtures/raster.tif", query_string="HEIGHT=1024&LAYERS=DEFAULT&WIDTH=512")
 
         self.assertEqual(my_map.get_metadata(), {})
 
@@ -111,16 +111,16 @@ class TestBCCVLMap(unittest.TestCase):
         self.assertEqual(my_map.get_band_metadata(), expected_band_metadata)
 
     def test_raster_get_expected_value_range(self):
-        my_map = GeoTiffBCCVLMap(data_url="https://raw.github.com/BCCVL/BCCVL_Visualiser/master/BCCVL_Visualiser/bccvl_visualiser/tests/fixtures/biomod_2_pkg_0_to_1000.asc", query_string="HEIGHT=1024&LAYERS=DEFAULT&WIDTH=512")
+        my_map = GeoTiffBCCVLMap(data_url="https://raw.github.com/BCCVL/BCCVL_Visualiser/master/bccvl_visualiser/tests/fixtures/biomod_2_pkg_0_to_1000.asc", query_string="HEIGHT=1024&LAYERS=DEFAULT&WIDTH=512")
         self.assertEqual(my_map.get_expected_value_range(), (0, 985))
 
-        my_map_2 = GeoTiffBCCVLMap(data_url="https://raw.github.com/BCCVL/BCCVL_Visualiser/master/BCCVL_Visualiser/bccvl_visualiser/tests/fixtures/raster.tif", query_string="HEIGHT=1024&LAYERS=DEFAULT&WIDTH=512")
+        my_map_2 = GeoTiffBCCVLMap(data_url="https://raw.github.com/BCCVL/BCCVL_Visualiser/master/bccvl_visualiser/tests/fixtures/raster.tif", query_string="HEIGHT=1024&LAYERS=DEFAULT&WIDTH=512")
         self.assertEqual(my_map_2.get_expected_value_range(), (0, 1))
 
     # class/style/
     # This test will pass for now, if the existing feature gets fix/reused then this test should also be changed
     def test_raster_has_expected_class_style_legend_information(self):
-        my_map = GeoTiffBCCVLMap(data_url="https://raw.github.com/BCCVL/BCCVL_Visualiser/master/BCCVL_Visualiser/bccvl_visualiser/tests/fixtures/biomod_2_pkg_0_to_1000.asc", query_string="HEIGHT=1024&LAYERS=DEFAULT&WIDTH=512")
+        my_map = GeoTiffBCCVLMap(data_url="https://raw.github.com/BCCVL/BCCVL_Visualiser/master/bccvl_visualiser/tests/fixtures/biomod_2_pkg_0_to_1000.asc", query_string="HEIGHT=1024&LAYERS=DEFAULT&WIDTH=512")
         layer_name = my_map.layer_name
         layer = my_map.getLayerByName(layer_name)
 
