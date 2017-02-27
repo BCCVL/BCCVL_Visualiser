@@ -2,7 +2,7 @@ pipeline {
 
     agent {
         docker {
-            image 'hub.bccvl.org.au/bccvl/visualiserbase:2017-02-01'
+            image 'hub.bccvl.org.au/bccvl/visualiserbase:2017-02-27'
         }
     }
 
