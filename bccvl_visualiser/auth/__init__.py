@@ -90,7 +90,11 @@ class AuthTktCookieHelper(BaseCookieHelper):
             remote_addr = environ['REMOTE_ADDR']
         else:
             remote_addr = '0.0.0.0'
-        ticket = binascii.a2b_base64(unquote(cookie))
+        try:
+            ticket = binascii.a2b_base64(unquote(cookie))
+        except binascii.Error as e:
+            # Can't decode cookie ... wrong format
+            return None
 
         try:
             timestamp, userid, tokens, user_data = self.parse_ticket(

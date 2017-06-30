@@ -207,7 +207,7 @@ def fetch_file(request, url):
                             while level < maxlevel:
                                 ovradd.append(str(level))
                                 level = level * 2
-                            if maxlevel >= 2:
+                            if maxlevel > 2:
                                 subprocess.check_call(ovrclear)
                                 subprocess.check_call(ovradd)
 
