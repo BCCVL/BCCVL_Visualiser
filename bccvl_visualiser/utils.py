@@ -111,7 +111,7 @@ def data_dir(request, data_url):
     """ Return an unique directory path for the data_url """
     # get fragment identifier and hash url without fragment
     url, fragment = urlparse.urldefrag(data_url)
-    urlhash = hashlib.md5(url).hexdigest()
+    urlhash = hashlib.md5(url.encode('utf-8')).hexdigest()
     dataroot = request.registry.settings['bccvl.mapscript.map_data_files_root_path']
     return os.path.join(dataroot, urlhash)
 
@@ -177,7 +177,7 @@ def fetch_file(request, url):
                             'domain': request.host,
                             'path': '/'
                         }
-                    dst = {'url': 'file://{0}'.format(destfile)}
+                    dst = {'url': u'file://{0}'.format(destfile)}
                     movelib.move(src, dst)
                 except Exception as e:
                     # direct download failed what now?
