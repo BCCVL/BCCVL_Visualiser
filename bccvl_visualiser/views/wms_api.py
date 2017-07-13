@@ -225,7 +225,7 @@ class WMSAPIViewv1(WMSAPIView):
             (self.request.scheme,
              "{}:{}".format(self.request.host, self.request.host_port),
              self.request.path,
-             urllib.urlencode((('DATA_URL', self.request.params.get('DATA_URL')), )),
+             urllib.urlencode((('DATA_URL', self.request.params.get('DATA_URL').encode('utf-8')), )),
              ""))
         map.setMetaData("wms_onlineresource", onlineresource)
         # TODO: metadata
@@ -604,7 +604,7 @@ class TiffLayer(object):
         # CONNECTION_TYPE local|ogr?
         # layer.setConnectionType(MS_RASTER) MS_OGR?
         # DATA
-        layer.data = self.filename
+        layer.data = self.filename.encode('utf-8')
 
         layer.tolerance = 10.0  # TODO: this should be dynamic based on zoom level
         # layer.toleranceunits = mapscript.MS_PIXELS

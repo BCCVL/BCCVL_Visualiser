@@ -26,7 +26,7 @@ class Context(object):
         user_id = security.authenticated_userid(self.request) or security.Everyone
 
         self.__acl__ = [
-            self._get_acls(user_id, data_url),
+            self._get_acls(user_id, data_url.encode('utf-8')),
             security.DENY_ALL
         ]
 
