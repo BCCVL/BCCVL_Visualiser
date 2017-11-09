@@ -139,5 +139,3 @@ pipeline {
     }
 
 }
-
-trigger visualiser image build here?
