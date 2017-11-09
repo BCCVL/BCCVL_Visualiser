@@ -2,7 +2,7 @@ pipeline {
 
     agent {
         docker {
-            image 'hub.bccvl.org.au/bccvl/visualiserbase:2017-02-27'
+            image 'hub.bccvl.org.au/bccvl/visualiserbase:2017-11-09'
         }
     }
 
@@ -139,3 +139,5 @@ pipeline {
     }
 
 }
+
+trigger visualiser image build here?
