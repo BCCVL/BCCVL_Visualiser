@@ -23,9 +23,9 @@ node('docker') {
                     stage('Test') {
 
                         // install test tools
-                        sh '. ${VIRTUAELNV}/bin/activate; pip install .[test] pytest pytest-cov'
+                        sh '. ${VIRTUALENV}/bin/activate; pip install .[test] pytest pytest-cov'
                         // run tests
-                        sh(script: '. ${VIRTUALENV}/bin/activate; PYTHONWARNINGS="ignore:Unverified HTTPS request"; pytest -v --junitxml=junit.xml --cov-report=xml --cov=BCCVL_Visualiser --pyarg BCCVL_Visualiser',
+                        sh(script: '. ${VIRTUALENV}/bin/activate; PYTHONWARNINGS="ignore:Unverified HTTPS request" pytest -v --junitxml=junit.xml --cov-report=xml --cov=bccvl_visualiser --pyarg bccvl_visualiser',
                            returnStatus: true)
 
                         // capture test result
